@@ -1,16 +1,45 @@
+function splitKey(key: string) {
+  if (isArrayKey(key)) {
+    const [arrayKey, index] = key.split("[");
+    return {
+      type: "array",
+      key: [arrayKey!, parseInt(index!.replace("]", ""))!],
+    } as const;
+  }
+
+  return {
+    type: "normal",
+    key: key.split("."),
+  } as const;
+
+  function isArrayKey(key: string) {
+    return key.includes("[") && key.includes("]");
+  }
+}
+
 export function parseObjectFromFlattenedEntries(entries: [string, unknown][]) {
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of entries) {
-    const keys = key.split(".");
-    let current = result;
-    for (const key of keys.slice(0, -1)) {
-      if (!current[key]) {
-        current[key] = {};
+    const { type, key: keyParts } = splitKey(key);
+    if (type === "array") {
+      const [arrayKey, index] = keyParts;
+      if (!result[arrayKey]) {
+        result[arrayKey] = [];
       }
-      current = current[key];
+      result[arrayKey][index] = value;
+      continue;
     }
-    current[keys[keys.length - 1]] = value;
+    if (type === "normal") {
+      let current = result;
+      for (const key of keyParts.slice(0, -1)) {
+        if (!current[key]) {
+          current[key] = {};
+        }
+        current = current[key];
+      }
+      current[keyParts[keyParts.length - 1]] = value;
+    }
   }
   return result;
 }

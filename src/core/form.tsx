@@ -41,6 +41,14 @@ function isZodEnum(schema: unknown): schema is ZodAnyEnum {
   return typeName === "ZodEnum";
 }
 
+type ZodAnyArray = zod.ZodArray<any>;
+function isZodArray(schema: unknown): schema is ZodAnyArray {
+  const typeName = getZodTypeNameFromSchema(schema);
+  nn(typeName, "Invalid schema");
+
+  return typeName === "ZodArray";
+}
+
 function ComponentErrors({ name }: { name: string }) {
   const { errors } = useFormErrors();
   const thisErrors = errors?.[name];
@@ -94,20 +102,46 @@ function ZodEnumComponent({
   );
 }
 
-function ZodObjectComponent({
+function ZodArrayComponent({
   schema,
   name,
 }: {
-  schema: ZodAny;
-  name?: string;
+  schema: ZodAnyArray;
+  name: string;
 }) {
+  const [items, setItems] = React.useState<ZodAny[]>([]);
+
+  return (
+    <div>
+      {items.map((item, index) => {
+        const uniqueName = `${name}[${index}]`;
+        return (
+          <ZodAnyComponent key={uniqueName} name={uniqueName} schema={item} />
+        );
+      })}
+
+      <button
+        type="button"
+        onClick={() => {
+          setItems([...items, schema.element]);
+        }}
+      >
+        Add
+      </button>
+
+      <ComponentErrors name={name} />
+    </div>
+  );
+}
+
+function ZodAnyComponent({ schema, name }: { schema: ZodAny; name?: string }) {
   if (isZodObject(schema)) {
     return (
       <div>
         {Object.entries(schema.shape).map(([key, value]) => {
           const uniqueName = name ? [name, key].join(".") : key;
           return (
-            <ZodObjectComponent
+            <ZodAnyComponent
               key={uniqueName}
               name={uniqueName}
               schema={value}
@@ -128,6 +162,10 @@ function ZodObjectComponent({
 
   if (isZodEnum(schema)) {
     return <ZodEnumComponent schema={schema} name={name} />;
+  }
+
+  if (isZodArray(schema)) {
+    return <ZodArrayComponent schema={schema} name={name} />;
   }
 
   return null;
@@ -153,9 +191,9 @@ export function Form<Schema extends AnyZodObject>({
           new FormData(event.target as HTMLFormElement).entries()
         );
 
-        const parsed = schema.safeParse(
-          parseObjectFromFlattenedEntries(entries)
-        );
+        const tmp = parseObjectFromFlattenedEntries(entries);
+
+        const parsed = schema.safeParse(tmp);
 
         if (parsed.success) {
           setErrors(undefined);
@@ -168,7 +206,7 @@ export function Form<Schema extends AnyZodObject>({
       }}
     >
       <FormErrorsProvider value={{ errors }}>
-        <ZodObjectComponent schema={schema} />
+        <ZodAnyComponent schema={schema} />
       </FormErrorsProvider>
 
       <button type="submit">Submit</button>
