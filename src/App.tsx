@@ -3,7 +3,11 @@ import { Form } from "./form";
 import { z } from "zod";
 
 const schema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters long"),
+  name: z.string().min(1, "Name must be at least 3 characters long"),
+  organization: z.object({
+    name: z.string().min(1, "Name must be at least 3 characters long"),
+    ssn: z.string(),
+  }),
 });
 
 function App() {

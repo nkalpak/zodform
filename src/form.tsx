@@ -1,6 +1,8 @@
 import type { AnyZodObject, ZodString } from "zod";
 import * as zod from "zod";
 import { isNil } from "remeda";
+import { ZodAny } from "zod";
+import { parseObjectFromFlattenedEntries } from "./utils/parse-object-from-flattened-names";
 
 function isZodString(schema: unknown): schema is ZodString {
   const typeName = schema?._def?.typeName;
@@ -11,8 +13,44 @@ function isZodString(schema: unknown): schema is ZodString {
   return typeName === "ZodString";
 }
 
-function FormString({ schema, name }: { schema: ZodString; name: string }) {
+function isZodObject(schema: unknown): schema is AnyZodObject {
+  const typeName = schema?._def?.typeName;
+  if (isNil(typeName)) {
+    throw new Error("Invalid schema");
+  }
+
+  return typeName === "ZodObject";
+}
+
+function ZodStringComponent({
+  schema,
+  name,
+}: {
+  schema: ZodString;
+  name?: string;
+}) {
   return <input type="text" name={name} />;
+}
+
+function ZodComponent({ schema, name }: { schema: ZodAny; name?: string }) {
+  if (isZodObject(schema)) {
+    return (
+      <div>
+        {Object.entries(schema.shape).map(([key, value]) => {
+          const uniqueName = name ? [name, key].join(".") : key;
+          return (
+            <ZodComponent key={uniqueName} name={uniqueName} schema={value} />
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (isZodString(schema)) {
+    return <ZodStringComponent schema={schema} name={name} />;
+  }
+
+  return null;
 }
 
 interface IFormProps<Schema extends AnyZodObject> {
@@ -29,11 +67,13 @@ export function Form<Schema extends AnyZodObject>({
       onSubmit={(event) => {
         event.preventDefault();
 
-        const values = Object.fromEntries(
+        const entries = Array.from(
           new FormData(event.target as HTMLFormElement).entries()
         );
 
-        const parsed = schema.safeParse(values);
+        const parsed = schema.safeParse(
+          parseObjectFromFlattenedEntries(entries)
+        );
         if (parsed.success) {
           onSubmit?.(parsed.data);
         } else {
@@ -41,11 +81,7 @@ export function Form<Schema extends AnyZodObject>({
         }
       }}
     >
-      {Object.entries(schema.shape).map(([key, value]) => {
-        if (isZodString(value)) {
-          return <FormString name={key} key={key} schema={value} />;
-        }
-      })}
+      <ZodComponent schema={schema} />
 
       <button type="submit">Submit</button>
     </form>
