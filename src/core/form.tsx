@@ -33,20 +33,20 @@ function isZodObject(schema: unknown): schema is AnyZodObject {
   return typeName === "ZodObject";
 }
 
-function ZodStringComponent({
-  schema,
-  name,
-}: {
-  schema: ZodString;
-  name: string;
-}) {
+type ZodAnyEnum = zod.ZodEnum<[any]>;
+function isZodEnum(schema: unknown): schema is ZodAnyEnum {
+  const typeName = getZodTypeNameFromSchema(schema);
+  nn(typeName, "Invalid schema");
+
+  return typeName === "ZodEnum";
+}
+
+function ComponentErrors({ name }: { name: string }) {
   const { errors } = useFormErrors();
   const thisErrors = errors?.[name];
 
   return (
-    <div>
-      <input type="text" name={name} />
-
+    <React.Fragment>
       {thisErrors
         ? thisErrors.map((error) => (
             <div style={{ color: "red" }} key={error.code}>
@@ -54,18 +54,64 @@ function ZodStringComponent({
             </div>
           ))
         : null}
+    </React.Fragment>
+  );
+}
+
+function ZodStringComponent({
+  schema,
+  name,
+}: {
+  schema: ZodString;
+  name: string;
+}) {
+  return (
+    <div>
+      <input type="text" name={name} />
+
+      <ComponentErrors name={name} />
     </div>
   );
 }
 
-function ZodComponent({ schema, name }: { schema: ZodAny; name?: string }) {
+function ZodEnumComponent({
+  schema,
+  name,
+}: {
+  schema: ZodAnyEnum;
+  name: string;
+}) {
+  return (
+    <div>
+      <select name={name}>
+        {schema.options.map((value) => (
+          <option key={value}>{value}</option>
+        ))}
+      </select>
+
+      <ComponentErrors name={name} />
+    </div>
+  );
+}
+
+function ZodObjectComponent({
+  schema,
+  name,
+}: {
+  schema: ZodAny;
+  name?: string;
+}) {
   if (isZodObject(schema)) {
     return (
       <div>
         {Object.entries(schema.shape).map(([key, value]) => {
           const uniqueName = name ? [name, key].join(".") : key;
           return (
-            <ZodComponent key={uniqueName} name={uniqueName} schema={value} />
+            <ZodObjectComponent
+              key={uniqueName}
+              name={uniqueName}
+              schema={value}
+            />
           );
         })}
       </div>
@@ -78,6 +124,10 @@ function ZodComponent({ schema, name }: { schema: ZodAny; name?: string }) {
 
   if (isZodString(schema)) {
     return <ZodStringComponent schema={schema} name={name} />;
+  }
+
+  if (isZodEnum(schema)) {
+    return <ZodEnumComponent schema={schema} name={name} />;
   }
 
   return null;
@@ -118,7 +168,7 @@ export function Form<Schema extends AnyZodObject>({
       }}
     >
       <FormErrorsProvider value={{ errors }}>
-        <ZodComponent schema={schema} />
+        <ZodObjectComponent schema={schema} />
       </FormErrorsProvider>
 
       <button type="submit">Submit</button>
