@@ -1,5 +1,6 @@
 export function parseObjectFromFlattenedEntries(entries: [string, unknown][]) {
   const result: Record<string, unknown> = {};
+
   for (const [key, value] of entries) {
     const keys = key.split(".");
     let current = result;

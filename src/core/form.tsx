@@ -1,23 +1,34 @@
 import type { AnyZodObject, ZodString } from "zod";
 import * as zod from "zod";
-import { isNil } from "remeda";
+import * as R from "remeda";
 import { ZodAny } from "zod";
 import { parseObjectFromFlattenedEntries } from "../utils/parse-object-from-flattened-names";
+import { nn } from "../utils/invariant";
+import React from "react";
+import { createContext } from "../utils/create-context";
+
+type ComponentName = string;
+type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
+
+const [useFormErrors, FormErrorsProvider] = createContext<{
+  errors?: ErrorsMap;
+}>();
+
+function getZodTypeNameFromSchema(schema: unknown): string | undefined {
+  // @ts-expect-error
+  return schema?._def?.typeName;
+}
 
 function isZodString(schema: unknown): schema is ZodString {
-  const typeName = schema?._def?.typeName;
-  if (isNil(typeName)) {
-    throw new Error("Invalid schema");
-  }
+  const typeName = getZodTypeNameFromSchema(schema);
+  nn(typeName, "Invalid schema");
 
   return typeName === "ZodString";
 }
 
 function isZodObject(schema: unknown): schema is AnyZodObject {
-  const typeName = schema?._def?.typeName;
-  if (isNil(typeName)) {
-    throw new Error("Invalid schema");
-  }
+  const typeName = getZodTypeNameFromSchema(schema);
+  nn(typeName, "Invalid schema");
 
   return typeName === "ZodObject";
 }
@@ -27,9 +38,24 @@ function ZodStringComponent({
   name,
 }: {
   schema: ZodString;
-  name?: string;
+  name: string;
 }) {
-  return <input type="text" name={name} />;
+  const { errors } = useFormErrors();
+  const thisErrors = errors?.[name];
+
+  return (
+    <div>
+      <input type="text" name={name} />
+
+      {thisErrors
+        ? thisErrors.map((error) => (
+            <div style={{ color: "red" }} key={error.code}>
+              {error.message}
+            </div>
+          ))
+        : null}
+    </div>
+  );
 }
 
 function ZodComponent({ schema, name }: { schema: ZodAny; name?: string }) {
@@ -44,6 +70,10 @@ function ZodComponent({ schema, name }: { schema: ZodAny; name?: string }) {
         })}
       </div>
     );
+  }
+
+  if (R.isNil(name)) {
+    return null;
   }
 
   if (isZodString(schema)) {
@@ -62,6 +92,8 @@ export function Form<Schema extends AnyZodObject>({
   schema,
   onSubmit,
 }: IFormProps<Schema>) {
+  const [errors, setErrors] = React.useState<ErrorsMap>();
+
   return (
     <form
       onSubmit={(event) => {
@@ -76,13 +108,18 @@ export function Form<Schema extends AnyZodObject>({
         );
 
         if (parsed.success) {
+          setErrors(undefined);
           onSubmit?.(parsed.data);
         } else {
-          console.log(parsed.error);
+          setErrors(() =>
+            R.groupBy(parsed.error.errors, (item) => item.path.join("."))
+          );
         }
       }}
     >
-      <ZodComponent schema={schema} />
+      <FormErrorsProvider value={{ errors }}>
+        <ZodComponent schema={schema} />
+      </FormErrorsProvider>
 
       <button type="submit">Submit</button>
     </form>
