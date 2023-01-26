@@ -2,7 +2,7 @@ import type { AnyZodObject, ZodString } from "zod";
 import * as zod from "zod";
 import { isNil } from "remeda";
 import { ZodAny } from "zod";
-import { parseObjectFromFlattenedEntries } from "./utils/parse-object-from-flattened-names";
+import { parseObjectFromFlattenedEntries } from "../utils/parse-object-from-flattened-names";
 
 function isZodString(schema: unknown): schema is ZodString {
   const typeName = schema?._def?.typeName;
@@ -74,6 +74,7 @@ export function Form<Schema extends AnyZodObject>({
         const parsed = schema.safeParse(
           parseObjectFromFlattenedEntries(entries)
         );
+
         if (parsed.success) {
           onSubmit?.(parsed.data);
         } else {

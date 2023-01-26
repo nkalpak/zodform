@@ -1,5 +1,5 @@
 import "./App.css";
-import { Form } from "./form";
+import { Form } from "./core/form";
 import { z } from "zod";
 
 const schema = z.object({
