@@ -1,22 +1,13 @@
 import * as R from "remeda";
+import { componentNameDeserialize } from "./component-name-deserialize";
 
 function splitKey(key: string) {
-  if (isArrayKey(key)) {
-    const [arrayKey, index] = key.split("[");
-    return {
-      type: "array",
-      key: [arrayKey!, parseInt(index!.replace("]", ""))!],
-    } as const;
-  }
-
+  const path = componentNameDeserialize(key);
+  const isArray = path.some((part) => typeof part === "number");
   return {
-    type: "normal",
-    key: key.split("."),
-  } as const;
-
-  function isArrayKey(key: string) {
-    return key.includes("[") && key.includes("]");
-  }
+    type: isArray ? "array" : "normal",
+    key: path,
+  };
 }
 
 export function parseObjectFromFlattenedEntries(entries: [string, unknown][]) {
@@ -24,24 +15,14 @@ export function parseObjectFromFlattenedEntries(entries: [string, unknown][]) {
 
   for (const [key, value] of entries) {
     const { type, key: keyParts } = splitKey(key);
-    if (type === "array") {
-      const [arrayKey, index] = keyParts;
-      if (!result[arrayKey]) {
-        result[arrayKey] = [];
+    let current = result;
+    for (const key of keyParts.slice(0, -1)) {
+      if (!current[key]) {
+        current[key] = type === "array" ? [] : {};
       }
-      result[arrayKey][index] = value;
-      continue;
+      current = current[key];
     }
-    if (type === "normal") {
-      let current = result;
-      for (const key of keyParts.slice(0, -1)) {
-        if (!current[key]) {
-          current[key] = {};
-        }
-        current = current[key];
-      }
-      current[R.last(keyParts)!] = value;
-    }
+    current[R.last(keyParts)!] = value;
   }
   return result;
 }
