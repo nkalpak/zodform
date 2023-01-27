@@ -5,6 +5,9 @@ import { z } from "zod";
 export function Simple() {
   const [schema] = React.useState(() =>
     z.object({
+      details: z.object({
+        address: z.string(),
+      }),
       firstName: z.string().min(1, "Name must be at least 3 characters long"),
       lastName: z.string().min(1, "Name must be at least 3 characters long"),
       // Since HTML returns string for number inputs, we need to coerce the value
@@ -27,8 +30,11 @@ export function Simple() {
         age: 34,
         lastName: "Doe",
         password: "123456",
-        people: ["John", "Jane"],
+        people: ["Thomas", "Jane"],
         phoneNumber: "1234567890",
+        details: {
+          address: "123 Main St",
+        },
       }}
     />
   );

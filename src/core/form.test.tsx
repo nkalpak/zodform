@@ -16,6 +16,9 @@ describe("Form", function () {
       phoneNumber: z.string(),
 
       people: z.array(z.string()).min(1, "Must have at least one person"),
+      details: z.object({
+        address: z.string(),
+      }),
     });
 
     const value = {
@@ -26,20 +29,25 @@ describe("Form", function () {
       password: "123456",
       people: ["Thomas", "Jane"],
       phoneNumber: "1234567890",
+      details: {
+        address: "123 Main St",
+      },
     };
 
     test("all values show up", async function () {
       const screen = render(<Form schema={schema} value={value} />);
 
-      for (const inputValue of Object.values(value)) {
-        const valueAsArray = Array.isArray(inputValue)
-          ? inputValue
-          : [inputValue];
-        for (const value of valueAsArray) {
-          const a = await screen.getByDisplayValue(value);
-          expect(a).toBeDefined();
-        }
-      }
+      expect(await screen.getByDisplayValue(value.firstName)).toBeTruthy();
+      expect(await screen.getByDisplayValue(value.lastName)).toBeTruthy();
+      expect(await screen.getByDisplayValue(value.age)).toBeTruthy();
+      expect(await screen.getByDisplayValue(value.bio)).toBeTruthy();
+      expect(await screen.getByDisplayValue(value.password)).toBeTruthy();
+      expect(await screen.getByDisplayValue(value.phoneNumber)).toBeTruthy();
+      expect(
+        await screen.getByDisplayValue(value.details.address)
+      ).toBeTruthy();
+      expect(await screen.getByDisplayValue(value.people[0]!)).toBeTruthy();
+      expect(await screen.getByDisplayValue(value.people[1]!)).toBeTruthy();
     });
   });
 });

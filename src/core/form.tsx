@@ -252,17 +252,19 @@ function ZodAnyComponent({
     return (
       <div>
         {Object.entries(schema.shape).map(([thisName, thisSchema]) => {
-          const uniqueName = name ? [name, thisName].join(".") : thisName;
+          const childName = name ? [name, thisName].join(".") : thisName;
           const result = value
-            ? schema.safeParse(name ? value[name ?? ""] : value)
+            ? (thisSchema as ZodFirstPartySchemaTypes).safeParse(
+                value[thisName]
+              )
             : undefined;
 
           return (
             <ZodAnyComponent
-              key={uniqueName}
-              name={uniqueName}
+              key={childName}
+              name={childName}
               schema={thisSchema as ZodFirstPartySchemaTypes}
-              value={result?.success ? result.data[thisName] : undefined}
+              value={result?.success ? result.data : undefined}
             />
           );
         })}
