@@ -58,6 +58,13 @@ function isZodOptional(schema: unknown): schema is ZodAnyOptional {
   return typeName === "ZodOptional";
 }
 
+function isZodNumber(schema: unknown): schema is zod.ZodNumber {
+  const typeName = getZodTypeNameFromSchema(schema);
+  nn(typeName, "Invalid schema");
+
+  return typeName === "ZodNumber";
+}
+
 function ComponentErrors({ name }: { name: string }) {
   const { errors } = useFormErrors();
   const thisErrors = errors?.[name];
@@ -145,6 +152,17 @@ function ZodArrayComponent({
   );
 }
 
+function ZodNumberComponent({ name }: IZodLeafComponentProps<zod.ZodNumber>) {
+  return (
+    <label>
+      {name}
+      <input type="number" name={name} />
+
+      <ComponentErrors name={name} />
+    </label>
+  );
+}
+
 function ZodAnyComponent({
   schema,
   name,
@@ -190,6 +208,12 @@ function ZodAnyComponent({
   if (isZodArray(schema)) {
     return (
       <ZodArrayComponent schema={schema} name={name} isRequired={isRequired} />
+    );
+  }
+
+  if (isZodNumber(schema)) {
+    return (
+      <ZodNumberComponent schema={schema} name={name} isRequired={isRequired} />
     );
   }
 

@@ -7,7 +7,8 @@ export function Simple() {
     z.object({
       firstName: z.string().min(1, "Name must be at least 3 characters long"),
       lastName: z.string().min(1, "Name must be at least 3 characters long"),
-      age: z.number().min(1, "Age must be at least 1"),
+      // Since HTML returns string for number inputs, we need to coerce the value
+      age: z.coerce.number().min(1, "Age must be at least 1"),
       bio: z.string().optional(),
       password: z.string(),
       phoneNumber: z.string(),
