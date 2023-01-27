@@ -12,8 +12,10 @@ export function Simple() {
       bio: z.string().optional(),
       password: z.string().describe("Needs to be strong"),
       phoneNumber: z.string(),
+
+      people: z.array(z.string()).min(1, "Must have at least one person"),
     })
   );
 
-  return <Form schema={schema} />;
+  return <Form schema={schema} onSubmit={console.log} />;
 }

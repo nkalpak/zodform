@@ -104,14 +104,16 @@ function ComponentErrorsOrDescription({
 interface IZodAnyComponentProps<Schema extends ZodFirstPartySchemaTypes> {
   schema: Schema;
   name?: string;
+  description?: string;
   isRequired?: boolean;
 }
 
 interface IZodLeafComponentProps<Schema extends ZodFirstPartySchemaTypes>
   extends Pick<
-    Required<IZodAnyComponentProps<Schema>>,
-    "name" | "schema" | "isRequired"
-  > {}
+      Required<IZodAnyComponentProps<Schema>>,
+      "name" | "schema" | "isRequired"
+    >,
+    Pick<IZodAnyComponentProps<Schema>, "description"> {}
 
 function ZodStringComponent({
   name,
@@ -151,11 +153,20 @@ function ZodEnumComponent({
   );
 }
 
+interface IZodArrayComponentProps extends IZodLeafComponentProps<ZodAnyArray> {
+  minLength?: number;
+  maxLength?: number;
+  exactLength?: number;
+}
 function ZodArrayComponent({
   schema,
   name,
-}: IZodLeafComponentProps<ZodAnyArray>) {
-  const [items, setItems] = React.useState<ZodFirstPartySchemaTypes[]>([]);
+  exactLength,
+  minLength,
+}: IZodArrayComponentProps) {
+  const [items, setItems] = React.useState<ZodFirstPartySchemaTypes[]>(() => {
+    return R.range(0, exactLength ?? minLength ?? 0).map(() => schema.element);
+  });
 
   return (
     <div>
@@ -243,8 +254,17 @@ function ZodAnyComponent({
   }
 
   if (isZodArray(schema)) {
+    const { minLength, maxLength, exactLength, description } = schema._def;
     return (
-      <ZodArrayComponent schema={schema} name={name} isRequired={isRequired} />
+      <ZodArrayComponent
+        schema={schema}
+        name={name}
+        isRequired={isRequired}
+        exactLength={exactLength?.value}
+        maxLength={maxLength?.value}
+        minLength={minLength?.value}
+        description={description}
+      />
     );
   }
 
