@@ -1,3 +1,5 @@
+import * as R from "remeda";
+
 function splitKey(key: string) {
   if (isArrayKey(key)) {
     const [arrayKey, index] = key.split("[");
@@ -38,7 +40,7 @@ export function parseObjectFromFlattenedEntries(entries: [string, unknown][]) {
         }
         current = current[key];
       }
-      current[keyParts[keyParts.length - 1]] = value;
+      current[R.last(keyParts)!] = value;
     }
   }
   return result;
