@@ -10,7 +10,7 @@ export function Simple() {
       // Since HTML returns string for number inputs, we need to coerce the value
       age: z.coerce.number().min(1, "Age must be at least 1"),
       bio: z.string().optional(),
-      password: z.string(),
+      password: z.string().describe("Needs to be strong"),
       phoneNumber: z.string(),
     })
   );

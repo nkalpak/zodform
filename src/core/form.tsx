@@ -1,7 +1,6 @@
 import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString } from "zod";
 import * as zod from "zod";
 import * as R from "remeda";
-import { ZodAny } from "zod";
 import { parseObjectFromFlattenedEntries } from "../utils/parse-object-from-flattened-names";
 import { nn } from "../utils/invariant";
 import React from "react";
@@ -65,21 +64,41 @@ function isZodNumber(schema: unknown): schema is zod.ZodNumber {
   return typeName === "ZodNumber";
 }
 
-function ComponentErrors({ name }: { name: string }) {
+function ComponentErrors({ errors }: { errors: zod.ZodIssue[] }) {
+  return (
+    <React.Fragment>
+      {errors.map((error) => (
+        <div style={{ color: "red" }} key={error.code}>
+          {error.message}
+        </div>
+      ))}
+    </React.Fragment>
+  );
+}
+
+function ComponentDescription({ description }: { description?: string }) {
+  if (!description) {
+    return null;
+  }
+
+  return <span style={{ color: "#7a7a7a" }}>{description}</span>;
+}
+
+function ComponentErrorsOrDescription({
+  name,
+  description,
+}: {
+  name: string;
+  description?: string;
+}) {
   const { errors } = useFormErrors();
   const thisErrors = errors?.[name];
 
-  return (
-    <React.Fragment>
-      {thisErrors
-        ? thisErrors.map((error) => (
-            <div style={{ color: "red" }} key={error.code}>
-              {error.message}
-            </div>
-          ))
-        : null}
-    </React.Fragment>
-  );
+  if (thisErrors) {
+    return <ComponentErrors errors={thisErrors} />;
+  }
+
+  return <ComponentDescription description={description} />;
 }
 
 interface IZodAnyComponentProps<Schema extends ZodFirstPartySchemaTypes> {
@@ -94,13 +113,19 @@ interface IZodLeafComponentProps<Schema extends ZodFirstPartySchemaTypes>
     "name" | "schema" | "isRequired"
   > {}
 
-function ZodStringComponent({ name }: IZodLeafComponentProps<ZodString>) {
+function ZodStringComponent({
+  name,
+  schema,
+}: IZodLeafComponentProps<ZodString>) {
   return (
     <label>
       {name}
       <input type="text" name={name} />
 
-      <ComponentErrors name={name} />
+      <ComponentErrorsOrDescription
+        name={name}
+        description={schema.description}
+      />
     </label>
   );
 }
@@ -118,7 +143,10 @@ function ZodEnumComponent({
         ))}
       </select>
 
-      <ComponentErrors name={name} />
+      <ComponentErrorsOrDescription
+        name={name}
+        description={schema.description}
+      />
     </label>
   );
 }
@@ -127,7 +155,7 @@ function ZodArrayComponent({
   schema,
   name,
 }: IZodLeafComponentProps<ZodAnyArray>) {
-  const [items, setItems] = React.useState<ZodAny[]>([]);
+  const [items, setItems] = React.useState<ZodFirstPartySchemaTypes[]>([]);
 
   return (
     <div>
@@ -147,18 +175,27 @@ function ZodArrayComponent({
         Add
       </button>
 
-      <ComponentErrors name={name} />
+      <ComponentErrorsOrDescription
+        name={name}
+        description={schema.description}
+      />
     </div>
   );
 }
 
-function ZodNumberComponent({ name }: IZodLeafComponentProps<zod.ZodNumber>) {
+function ZodNumberComponent({
+  name,
+  schema,
+}: IZodLeafComponentProps<zod.ZodNumber>) {
   return (
     <label>
       {name}
       <input type="number" name={name} />
 
-      <ComponentErrors name={name} />
+      <ComponentErrorsOrDescription
+        name={name}
+        description={schema.description}
+      />
     </label>
   );
 }
