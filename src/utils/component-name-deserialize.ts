@@ -1,4 +1,15 @@
-export function componentNameDeserialize(name: string) {
+type Result = (string | number)[];
+
+/**
+ * Deserializes a component name into an array of strings and numbers.
+ *
+ * Examples:
+ *  - name => ["name"]
+ *  - a.b.c => ["a", "b", "c"]
+ *  - a[0].b[1].c => ["a", 0, "b", 1, "c"]
+ *  - a[0][1] => ["a", 0, 1]
+ * */
+export function componentNameDeserialize(name: string): Result {
   const hasObjectSeparator = name.includes(".");
   const hasArraySeparator = name.includes("[");
 
@@ -13,7 +24,7 @@ export function componentNameDeserialize(name: string) {
   return [name];
 
   function resolveObject(name: string) {
-    const result: (string | number)[] = [];
+    const result: Result = [];
     for (const part of name.split(".")) {
       const [key, index] = part.split("[");
       if (key) {
@@ -27,7 +38,7 @@ export function componentNameDeserialize(name: string) {
   }
 
   function resolveMatrix(name: string) {
-    const result: (string | number)[] = [];
+    const result: Result = [];
     for (const part of name.split("[")) {
       const [key] = part.split("]");
       const asNumber = parseInt(key!);
