@@ -269,26 +269,25 @@ function ZodAnyComponent({
   value?: unknown;
 }) {
   if (isZodObject(schema)) {
-    return (
-      <div>
-        {Object.entries(schema.shape).map(([thisName, thisSchema]) => {
-          const childName = name ? [name, thisName].join(".") : thisName;
-          const result = value
-            ? (thisSchema as ZodFirstPartySchemaTypes).safeParse(
-                value[thisName]
-              )
-            : undefined;
+    // Don't create a div as the first child of the form
+    return React.createElement(
+      name ? "div" : React.Fragment,
+      {},
+      Object.entries(schema.shape).map(([thisName, thisSchema]) => {
+        const childName = name ? [name, thisName].join(".") : thisName;
+        const result = value
+          ? (thisSchema as ZodFirstPartySchemaTypes).safeParse(value[thisName])
+          : undefined;
 
-          return (
-            <ZodAnyComponent
-              key={childName}
-              name={childName}
-              schema={thisSchema as ZodFirstPartySchemaTypes}
-              value={result?.success ? result.data : undefined}
-            />
-          );
-        })}
-      </div>
+        return (
+          <ZodAnyComponent
+            key={childName}
+            name={childName}
+            schema={thisSchema as ZodFirstPartySchemaTypes}
+            value={result?.success ? result.data : undefined}
+          />
+        );
+      })
     );
   }
 
