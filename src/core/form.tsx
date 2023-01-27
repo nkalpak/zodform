@@ -6,12 +6,16 @@ import { nn } from "../utils/invariant";
 import React from "react";
 import { createContext } from "../utils/create-context";
 import "../App.css";
+import { componentNameDeserialize } from "../utils/component-name-deserialize";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
+type ComponentPath = (string | number)[];
+type FormOnChange = (data: { value: string; path: ComponentPath }) => void;
 
-const [useFormErrors, FormErrorsProvider] = createContext<{
+const [useFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
+  onChange?: FormOnChange;
 }>();
 
 function getZodTypeNameFromSchema(schema: unknown): string | undefined {
@@ -91,7 +95,7 @@ function ComponentErrorsOrDescription({
   name: string;
   description?: string;
 }) {
-  const { errors } = useFormErrors();
+  const { errors } = useFormContext();
   const thisErrors = errors?.[name];
 
   if (thisErrors) {
@@ -119,10 +123,26 @@ interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString> {
   value?: string;
 }
 function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
+  const { onChange } = useFormContext();
+
   return (
     <label>
       {name}
-      <input type="text" name={name} value={value} />
+      <input
+        type="text"
+        name={name}
+        value={value}
+        onChange={
+          onChange
+            ? (event) => {
+                onChange({
+                  value: event.target.value,
+                  path: componentNameDeserialize(name),
+                });
+              }
+            : undefined
+        }
+      />
 
       <ComponentErrorsOrDescription
         name={name}
@@ -342,12 +362,14 @@ interface IFormProps<Schema extends AnyZodObject> {
   schema: Schema;
   onSubmit?: (value: zod.infer<Schema>) => void;
   value?: zod.input<Schema>;
+  onChange?: FormOnChange;
 }
 
 export function Form<Schema extends AnyZodObject>({
   schema,
   onSubmit,
   value,
+  onChange,
 }: IFormProps<Schema>) {
   const [errors, setErrors] = React.useState<ErrorsMap>();
 
@@ -374,9 +396,9 @@ export function Form<Schema extends AnyZodObject>({
         }
       }}
     >
-      <FormErrorsProvider value={{ errors }}>
+      <FormContextProvider value={{ errors, onChange }}>
         <ZodAnyComponent value={value} schema={schema} />
-      </FormErrorsProvider>
+      </FormContextProvider>
 
       <button type="submit">Submit</button>
     </form>

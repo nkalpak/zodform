@@ -20,22 +20,5 @@ export function Simple() {
     })
   );
 
-  return (
-    <Form
-      schema={schema}
-      onSubmit={console.log}
-      value={{
-        firstName: "John",
-        bio: "Hello",
-        age: 34,
-        lastName: "Doe",
-        password: "123456",
-        people: ["Thomas", "Jane"],
-        phoneNumber: "1234567890",
-        details: {
-          address: "123 Main St",
-        },
-      }}
-    />
-  );
+  return <Form schema={schema} onSubmit={console.log} onChange={console.log} />;
 }
