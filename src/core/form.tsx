@@ -218,7 +218,7 @@ function ZodAnyComponent({
             <ZodAnyComponent
               key={uniqueName}
               name={uniqueName}
-              schema={value}
+              schema={value as ZodFirstPartySchemaTypes}
             />
           );
         })}
