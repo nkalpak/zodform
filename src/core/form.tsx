@@ -157,25 +157,50 @@ interface IZodArrayComponentProps extends IZodLeafComponentProps<ZodAnyArray> {
   minLength?: number;
   maxLength?: number;
   exactLength?: number;
+  value?: any[];
 }
 function ZodArrayComponent({
   schema,
   name,
   exactLength,
   minLength,
+  value,
 }: IZodArrayComponentProps) {
   const [items, setItems] = React.useState<ZodFirstPartySchemaTypes[]>(() => {
     return R.range(0, exactLength ?? minLength ?? 0).map(() => schema.element);
   });
 
-  return (
-    <div>
-      {items.map((item, index) => {
+  function renderElements() {
+    if (value) {
+      return value.map((item, index) => {
         const uniqueName = `${name}[${index}]`;
         return (
-          <ZodAnyComponent key={uniqueName} name={uniqueName} schema={item} />
+          <ZodAnyComponent
+            key={uniqueName}
+            name={uniqueName}
+            schema={schema.element}
+            value={item}
+          />
         );
-      })}
+      });
+    }
+
+    return items.map((item, index) => {
+      const uniqueName = `${name}[${index}]`;
+      return (
+        <ZodAnyComponent
+          key={uniqueName}
+          name={uniqueName}
+          schema={item}
+          value={value?.[index]}
+        />
+      );
+    });
+  }
+
+  return (
+    <div>
+      {renderElements()}
 
       <button
         type="button"
@@ -269,6 +294,8 @@ function ZodAnyComponent({
 
   if (isZodArray(schema)) {
     const { minLength, maxLength, exactLength, description } = schema._def;
+    const result = value ? schema.safeParse(value) : undefined;
+
     return (
       <ZodArrayComponent
         schema={schema}
@@ -278,6 +305,7 @@ function ZodAnyComponent({
         maxLength={maxLength?.value}
         minLength={minLength?.value}
         description={description}
+        value={result?.success ? result.data : undefined}
       />
     );
   }
