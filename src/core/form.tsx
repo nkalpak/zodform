@@ -1,4 +1,4 @@
-import type { AnyZodObject, ZodString } from "zod";
+import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString } from "zod";
 import * as zod from "zod";
 import * as R from "remeda";
 import { ZodAny } from "zod";
@@ -6,6 +6,7 @@ import { parseObjectFromFlattenedEntries } from "../utils/parse-object-from-flat
 import { nn } from "../utils/invariant";
 import React from "react";
 import { createContext } from "../utils/create-context";
+import "../App.css";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -49,6 +50,14 @@ function isZodArray(schema: unknown): schema is ZodAnyArray {
   return typeName === "ZodArray";
 }
 
+type ZodAnyOptional = zod.ZodOptional<any>;
+function isZodOptional(schema: unknown): schema is ZodAnyOptional {
+  const typeName = getZodTypeNameFromSchema(schema);
+  nn(typeName, "Invalid schema");
+
+  return typeName === "ZodOptional";
+}
+
 function ComponentErrors({ name }: { name: string }) {
   const { errors } = useFormErrors();
   const thisErrors = errors?.[name];
@@ -66,31 +75,36 @@ function ComponentErrors({ name }: { name: string }) {
   );
 }
 
-function ZodStringComponent({
-  schema,
-  name,
-}: {
-  schema: ZodString;
-  name: string;
-}) {
+interface IZodAnyComponentProps<Schema extends ZodFirstPartySchemaTypes> {
+  schema: Schema;
+  name?: string;
+  isRequired?: boolean;
+}
+
+interface IZodLeafComponentProps<Schema extends ZodFirstPartySchemaTypes>
+  extends Pick<
+    Required<IZodAnyComponentProps<Schema>>,
+    "name" | "schema" | "isRequired"
+  > {}
+
+function ZodStringComponent({ name }: IZodLeafComponentProps<ZodString>) {
   return (
-    <div>
+    <label>
+      {name}
       <input type="text" name={name} />
 
       <ComponentErrors name={name} />
-    </div>
+    </label>
   );
 }
 
 function ZodEnumComponent({
   schema,
   name,
-}: {
-  schema: ZodAnyEnum;
-  name: string;
-}) {
+}: IZodLeafComponentProps<ZodAnyEnum>) {
   return (
-    <div>
+    <label>
+      {name}
       <select name={name}>
         {schema.options.map((value) => (
           <option key={value}>{value}</option>
@@ -98,17 +112,14 @@ function ZodEnumComponent({
       </select>
 
       <ComponentErrors name={name} />
-    </div>
+    </label>
   );
 }
 
 function ZodArrayComponent({
   schema,
   name,
-}: {
-  schema: ZodAnyArray;
-  name: string;
-}) {
+}: IZodLeafComponentProps<ZodAnyArray>) {
   const [items, setItems] = React.useState<ZodAny[]>([]);
 
   return (
@@ -134,7 +145,15 @@ function ZodArrayComponent({
   );
 }
 
-function ZodAnyComponent({ schema, name }: { schema: ZodAny; name?: string }) {
+function ZodAnyComponent({
+  schema,
+  name,
+  isRequired = true,
+}: {
+  schema: ZodFirstPartySchemaTypes;
+  name?: string;
+  isRequired?: boolean;
+}) {
   if (isZodObject(schema)) {
     return (
       <div>
@@ -157,15 +176,31 @@ function ZodAnyComponent({ schema, name }: { schema: ZodAny; name?: string }) {
   }
 
   if (isZodString(schema)) {
-    return <ZodStringComponent schema={schema} name={name} />;
+    return (
+      <ZodStringComponent schema={schema} name={name} isRequired={isRequired} />
+    );
   }
 
   if (isZodEnum(schema)) {
-    return <ZodEnumComponent schema={schema} name={name} />;
+    return (
+      <ZodEnumComponent schema={schema} name={name} isRequired={isRequired} />
+    );
   }
 
   if (isZodArray(schema)) {
-    return <ZodArrayComponent schema={schema} name={name} />;
+    return (
+      <ZodArrayComponent schema={schema} name={name} isRequired={isRequired} />
+    );
+  }
+
+  if (isZodOptional(schema)) {
+    return (
+      <ZodAnyComponent
+        schema={schema._def.innerType}
+        name={name}
+        isRequired={false}
+      />
+    );
   }
 
   return null;
