@@ -115,14 +115,14 @@ interface IZodLeafComponentProps<Schema extends ZodFirstPartySchemaTypes>
     >,
     Pick<IZodAnyComponentProps<Schema>, "description"> {}
 
-function ZodStringComponent({
-  name,
-  schema,
-}: IZodLeafComponentProps<ZodString>) {
+interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString> {
+  value?: string;
+}
+function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
   return (
     <label>
       {name}
-      <input type="text" name={name} />
+      <input type="text" name={name} value={value} />
 
       <ComponentErrorsOrDescription
         name={name}
@@ -194,14 +194,15 @@ function ZodArrayComponent({
   );
 }
 
-function ZodNumberComponent({
-  name,
-  schema,
-}: IZodLeafComponentProps<zod.ZodNumber>) {
+interface IZodNumberComponentProps
+  extends IZodLeafComponentProps<zod.ZodNumber> {
+  value?: number;
+}
+function ZodNumberComponent({ name, schema, value }: IZodNumberComponentProps) {
   return (
     <label>
       {name}
-      <input type="number" name={name} />
+      <input type="number" name={name} value={value} />
 
       <ComponentErrorsOrDescription
         name={name}
@@ -215,21 +216,28 @@ function ZodAnyComponent({
   schema,
   name,
   isRequired = true,
+  value,
 }: {
   schema: ZodFirstPartySchemaTypes;
   name?: string;
   isRequired?: boolean;
+  value?: unknown;
 }) {
   if (isZodObject(schema)) {
     return (
       <div>
-        {Object.entries(schema.shape).map(([key, value]) => {
-          const uniqueName = name ? [name, key].join(".") : key;
+        {Object.entries(schema.shape).map(([thisName, thisSchema]) => {
+          const uniqueName = name ? [name, thisName].join(".") : thisName;
+          const result = value
+            ? schema.safeParse(name ? value[name ?? ""] : value)
+            : undefined;
+
           return (
             <ZodAnyComponent
               key={uniqueName}
               name={uniqueName}
-              schema={value as ZodFirstPartySchemaTypes}
+              schema={thisSchema as ZodFirstPartySchemaTypes}
+              value={result?.success ? result.data[thisName] : undefined}
             />
           );
         })}
@@ -242,8 +250,14 @@ function ZodAnyComponent({
   }
 
   if (isZodString(schema)) {
+    const result = value ? schema.safeParse(value) : undefined;
     return (
-      <ZodStringComponent schema={schema} name={name} isRequired={isRequired} />
+      <ZodStringComponent
+        schema={schema}
+        name={name}
+        isRequired={isRequired}
+        value={result?.success ? result.data : undefined}
+      />
     );
   }
 
@@ -269,8 +283,14 @@ function ZodAnyComponent({
   }
 
   if (isZodNumber(schema)) {
+    const result = value ? schema.safeParse(value) : undefined;
     return (
-      <ZodNumberComponent schema={schema} name={name} isRequired={isRequired} />
+      <ZodNumberComponent
+        schema={schema}
+        name={name}
+        isRequired={isRequired}
+        value={result?.success ? result.data : undefined}
+      />
     );
   }
 
@@ -280,6 +300,7 @@ function ZodAnyComponent({
         schema={schema._def.innerType}
         name={name}
         isRequired={false}
+        value={value}
       />
     );
   }
@@ -289,12 +310,14 @@ function ZodAnyComponent({
 
 interface IFormProps<Schema extends AnyZodObject> {
   schema: Schema;
-  onSubmit?: (values: zod.infer<Schema>) => void;
+  onSubmit?: (value: zod.infer<Schema>) => void;
+  value?: zod.input<Schema>;
 }
 
 export function Form<Schema extends AnyZodObject>({
   schema,
   onSubmit,
+  value,
 }: IFormProps<Schema>) {
   const [errors, setErrors] = React.useState<ErrorsMap>();
 
@@ -322,7 +345,7 @@ export function Form<Schema extends AnyZodObject>({
       }}
     >
       <FormErrorsProvider value={{ errors }}>
-        <ZodAnyComponent schema={schema} />
+        <ZodAnyComponent value={value} schema={schema} />
       </FormErrorsProvider>
 
       <button type="submit">Submit</button>
