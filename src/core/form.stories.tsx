@@ -29,8 +29,24 @@ export function Simple() {
         age: {
           ui_label: "Age",
         },
+        firstName: {
+          ui_label: "First name",
+          ui_component: ({ name, value, onChange }) => {
+            return (
+              <input
+                name={name}
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+                placeholder="First name"
+              />
+            );
+          },
+        },
         details: {
           ui_label: "Details",
+          address: {
+            ui_label: "Address",
+          },
         },
       }}
     />

@@ -7,6 +7,7 @@ import React from "react";
 import { createContext } from "../utils/create-context";
 import "../App.css";
 import { componentNameDeserialize } from "../utils/component-name-deserialize";
+import { get } from "../utils/get";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -19,6 +20,7 @@ type FormOnChange = (data: {
 const [useFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
   onChange?: FormOnChange;
+  uiSchema?: UiSchema<any>;
 }>();
 
 function getZodTypeNameFromSchema(schema: unknown): string | undefined {
@@ -126,21 +128,48 @@ interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString> {
   value?: string;
 }
 function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
-  const { onChange } = useFormContext();
+  const { onChange, uiSchema } = useFormContext();
 
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(value: string) {
     if (onChange) {
       onChange({
-        value: event.target.value,
+        value,
         path: componentNameDeserialize(name),
       });
     }
   }
 
+  const thisUiSchema: UiProperties<string> = uiSchema
+    ? get(uiSchema, name)
+    : undefined;
+
+  function renderLabel() {
+    return thisUiSchema?.ui_label ?? name;
+  }
+
+  function renderComponent() {
+    if (thisUiSchema?.ui_component) {
+      return thisUiSchema.ui_component({
+        name,
+        value,
+        onChange: handleChange,
+      });
+    }
+
+    return (
+      <input
+        type="text"
+        name={name}
+        value={value}
+        onChange={(event) => handleChange(event.target.value)}
+      />
+    );
+  }
+
   return (
     <label>
-      {name}
-      <input type="text" name={name} value={value} onChange={handleChange} />
+      {renderLabel()}
+      {renderComponent()}
 
       <ComponentErrorsOrDescription
         name={name}
@@ -377,16 +406,23 @@ function ZodAnyComponent({
   return null;
 }
 
-type UiProperties = {
-  ui_label: React.ReactNode;
+interface ICustomComponentProps<Value> {
+  value?: Value;
+  name: string;
+  onChange: (value: Value) => void;
+}
+
+type UiProperties<Value> = {
+  ui_label?: React.ReactNode;
+  ui_component?: (props: ICustomComponentProps<Value>) => React.ReactNode;
 };
 
 type UiSchema<Schema extends object> = {
   [K in keyof Partial<Schema>]: Schema[K] extends object
     ? Schema[K] extends Array<any>
-      ? UiProperties
-      : UiProperties & UiSchema<Schema[K]>
-    : UiProperties;
+      ? UiProperties<Schema[K]>
+      : UiProperties<Schema[K]> & UiSchema<Schema[K]>
+    : UiProperties<Schema[K]>;
 };
 
 interface IFormProps<Schema extends AnyZodObject> {
@@ -431,7 +467,7 @@ export function Form<Schema extends AnyZodObject>({
         }
       }}
     >
-      <FormContextProvider value={{ errors, onChange }}>
+      <FormContextProvider value={{ errors, onChange, uiSchema }}>
         <ZodAnyComponent value={value} schema={schema} />
       </FormContextProvider>
 
