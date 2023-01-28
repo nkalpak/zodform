@@ -20,5 +20,19 @@ export function Simple() {
     })
   );
 
-  return <Form schema={schema} onSubmit={console.log} onChange={console.log} />;
+  return (
+    <Form
+      schema={schema}
+      onSubmit={console.log}
+      onChange={console.log}
+      uiSchema={{
+        age: {
+          ui_label: "Age",
+        },
+        details: {
+          ui_label: "Details",
+        },
+      }}
+    />
+  );
 }

@@ -377,8 +377,21 @@ function ZodAnyComponent({
   return null;
 }
 
+type UiProperties = {
+  ui_label: React.ReactNode;
+};
+
+type UiSchema<Schema extends object> = {
+  [K in keyof Partial<Schema>]: Schema[K] extends object
+    ? Schema[K] extends Array<any>
+      ? UiProperties
+      : UiProperties & UiSchema<Schema[K]>
+    : UiProperties;
+};
+
 interface IFormProps<Schema extends AnyZodObject> {
   schema: Schema;
+  uiSchema?: UiSchema<zod.infer<Schema>>;
   onSubmit?: (value: zod.infer<Schema>) => void;
   value?: zod.input<Schema>;
   onChange?: FormOnChange;
@@ -386,6 +399,8 @@ interface IFormProps<Schema extends AnyZodObject> {
 
 export function Form<Schema extends AnyZodObject>({
   schema,
+  uiSchema,
+
   onSubmit,
   value,
   onChange,
@@ -410,6 +425,7 @@ export function Form<Schema extends AnyZodObject>({
           onSubmit?.(parsed.data);
         } else {
           setErrors(() =>
+            // TODO: Serialize correctly for arrays
             R.groupBy(parsed.error.errors, (item) => item.path.join("."))
           );
         }
