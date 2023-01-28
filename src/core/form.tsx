@@ -11,7 +11,10 @@ import { componentNameDeserialize } from "../utils/component-name-deserialize";
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
 type ComponentPath = (string | number)[];
-type FormOnChange = (data: { value: string; path: ComponentPath }) => void;
+type FormOnChange = (data: {
+  value: string | number;
+  path: ComponentPath;
+}) => void;
 
 const [useFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
@@ -125,24 +128,19 @@ interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString> {
 function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
   const { onChange } = useFormContext();
 
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    if (onChange) {
+      onChange({
+        value: event.target.value,
+        path: componentNameDeserialize(name),
+      });
+    }
+  }
+
   return (
     <label>
       {name}
-      <input
-        type="text"
-        name={name}
-        value={value}
-        onChange={
-          onChange
-            ? (event) => {
-                onChange({
-                  value: event.target.value,
-                  path: componentNameDeserialize(name),
-                });
-              }
-            : undefined
-        }
-      />
+      <input type="text" name={name} value={value} onChange={handleChange} />
 
       <ComponentErrorsOrDescription
         name={name}
@@ -156,10 +154,21 @@ function ZodEnumComponent({
   schema,
   name,
 }: IZodLeafComponentProps<ZodAnyEnum>) {
+  const { onChange } = useFormContext();
+
+  function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    if (onChange) {
+      onChange({
+        value: event.target.value,
+        path: componentNameDeserialize(name),
+      });
+    }
+  }
+
   return (
     <label>
       {name}
-      <select name={name}>
+      <select name={name} onChange={handleChange}>
         {schema.options.map((value) => (
           <option key={value}>{value}</option>
         ))}
@@ -244,10 +253,21 @@ interface IZodNumberComponentProps
   value?: number;
 }
 function ZodNumberComponent({ name, schema, value }: IZodNumberComponentProps) {
+  const { onChange } = useFormContext();
+
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    if (onChange) {
+      onChange({
+        value: event.target.valueAsNumber,
+        path: componentNameDeserialize(name),
+      });
+    }
+  }
+
   return (
     <label>
       {name}
-      <input type="number" name={name} value={value} />
+      <input type="number" name={name} value={value} onChange={handleChange} />
 
       <ComponentErrorsOrDescription
         name={name}
