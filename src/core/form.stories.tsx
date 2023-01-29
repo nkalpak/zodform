@@ -1,7 +1,7 @@
 import React from "react";
 import { Form } from "./form";
 import { z } from "zod";
-import { MantineString } from "../components/mantine/mantine-string";
+import { StringMantine } from "../components/mantine/string-mantine";
 
 export function Simple() {
   const [schema] = React.useState(() =>
@@ -18,13 +18,14 @@ export function Simple() {
       phoneNumber: z.string(),
 
       people: z.array(z.string()).min(1, "Must have at least one person"),
+      fruits: z.enum(["apple", "banana", "orange"] as const),
     })
   );
 
   return (
     <Form
       leafs={{
-        string: MantineString,
+        string: StringMantine,
       }}
       schema={schema}
       onSubmit={console.log}

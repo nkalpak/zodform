@@ -1,4 +1,5 @@
 import React from "react";
+import { ErrorOrDescription } from "./error-or-description";
 
 export interface IStringDefaultProps {
   value?: string;
@@ -17,16 +18,6 @@ export function StringDefault({
   description,
   errorMessage,
 }: IStringDefaultProps) {
-  function renderBelow() {
-    if (errorMessage) {
-      return <span style={{ color: "red" }}>{errorMessage}</span>;
-    }
-
-    if (description) {
-      return <span style={{ color: "#333" }}>{description}</span>;
-    }
-  }
-
   return (
     <label>
       {label}
@@ -38,7 +29,7 @@ export function StringDefault({
         onChange={(event) => onChange(event.target.value)}
       />
 
-      {renderBelow()}
+      <ErrorOrDescription error={errorMessage} description={description} />
     </label>
   );
 }

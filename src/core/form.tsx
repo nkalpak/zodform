@@ -8,7 +8,11 @@ import { createContext } from "../utils/create-context";
 import "../App.css";
 import { componentNameDeserialize } from "../utils/component-name-deserialize";
 import { get } from "../utils/get";
-import { IStringDefaultProps, StringDefault } from "./components-default";
+import {
+  IStringDefaultProps,
+  StringDefault,
+} from "../components/default/string-default";
+import { EnumDefault } from "../components/default/enum-default";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -161,35 +165,37 @@ function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
   );
 }
 
-function ZodEnumComponent({
-  schema,
-  name,
-}: IZodLeafComponentProps<ZodAnyEnum>) {
-  const { onChange } = useFormContext();
+interface IZodEnumComponentProps extends IZodLeafComponentProps<ZodAnyEnum> {
+  value?: string;
+}
+function ZodEnumComponent({ schema, name, value }: IZodEnumComponentProps) {
+  const { onChange, uiSchema, leafs, errors } = useFormContext();
 
-  function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
+  function handleChange(value: string) {
     if (onChange) {
       onChange({
-        value: event.target.value,
+        value,
         path: componentNameDeserialize(name),
       });
     }
   }
 
-  return (
-    <label>
-      {name}
-      <select name={name} onChange={handleChange}>
-        {schema.options.map((value) => (
-          <option key={value}>{value}</option>
-        ))}
-      </select>
+  const thisUiSchema: UiProperties<string> = uiSchema
+    ? get(uiSchema, name)
+    : undefined;
+  const thisErrors = errors?.[name] ?? [];
 
-      <ComponentErrorsOrDescription
-        name={name}
-        description={schema.description}
-      />
-    </label>
+  const Component = thisUiSchema?.ui_component ?? leafs?.enum ?? EnumDefault;
+  return (
+    <Component
+      options={schema.options}
+      errorMessage={R.first(thisErrors)?.message}
+      label={thisUiSchema?.ui_label ?? name}
+      name={name}
+      description={schema.description}
+      onChange={handleChange}
+      value={value}
+    />
   );
 }
 
@@ -339,8 +345,14 @@ function ZodAnyComponent({
   }
 
   if (isZodEnum(schema)) {
+    const result = value ? schema.safeParse(value) : undefined;
     return (
-      <ZodEnumComponent schema={schema} name={name} isRequired={isRequired} />
+      <ZodEnumComponent
+        value={result?.success ? result.data : undefined}
+        schema={schema}
+        name={name}
+        isRequired={isRequired}
+      />
     );
   }
 

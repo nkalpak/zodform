@@ -1,7 +1,7 @@
-import { IStringDefaultProps } from "../../core/components-default";
 import { TextInput } from "@mantine/core";
+import { IStringDefaultProps } from "../default/string-default";
 
-export function MantineString({
+export function StringMantine({
   name,
   value,
   onChange,
