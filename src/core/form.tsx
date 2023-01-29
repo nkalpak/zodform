@@ -92,7 +92,7 @@ interface IZodStringComponentProps
 function ZodStringComponent({
   name,
   schema,
-  value,
+  value = "",
   isRequired,
   defaultValue,
 }: IZodStringComponentProps) {
