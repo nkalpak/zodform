@@ -116,6 +116,18 @@ function ComponentErrorsOrDescription({
   return <ComponentDescription description={description} />;
 }
 
+function useComponent(name: string) {
+  const { errors, uiSchema } = useFormContext();
+
+  return React.useMemo(
+    () => ({
+      errors: errors?.[name] ?? [],
+      uiSchema: uiSchema ? get(uiSchema, name) : undefined,
+    }),
+    [errors, uiSchema]
+  );
+}
+
 interface IZodAnyComponentProps<Schema extends ZodFirstPartySchemaTypes> {
   schema: Schema;
   name?: string;
@@ -134,7 +146,8 @@ interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString> {
   value?: string;
 }
 function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
-  const { onChange, uiSchema, leafs, errors } = useFormContext();
+  const { onChange, leafs } = useFormContext();
+  const { errors, uiSchema } = useComponent(name);
 
   function handleChange(value: string) {
     if (onChange) {
@@ -145,22 +158,16 @@ function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
     }
   }
 
-  const thisUiSchema: UiProperties<string> = uiSchema
-    ? get(uiSchema, name)
-    : undefined;
-
-  const thisErrors = errors?.[name] ?? [];
-  const Component =
-    thisUiSchema?.ui_component ?? leafs?.string ?? StringDefault;
+  const Component = uiSchema?.ui_component ?? leafs?.string ?? StringDefault;
 
   return (
     <Component
       value={value}
       onChange={handleChange}
       name={name}
-      label={thisUiSchema?.ui_label ?? name}
+      label={uiSchema?.ui_label ?? name}
       description={schema.description}
-      errorMessage={R.first(thisErrors)?.message}
+      errorMessage={R.first(errors)?.message}
     />
   );
 }
@@ -169,7 +176,8 @@ interface IZodEnumComponentProps extends IZodLeafComponentProps<ZodAnyEnum> {
   value?: string;
 }
 function ZodEnumComponent({ schema, name, value }: IZodEnumComponentProps) {
-  const { onChange, uiSchema, leafs, errors } = useFormContext();
+  const { onChange, leafs } = useFormContext();
+  const { errors, uiSchema } = useComponent(name);
 
   function handleChange(value: string) {
     if (onChange) {
@@ -180,17 +188,12 @@ function ZodEnumComponent({ schema, name, value }: IZodEnumComponentProps) {
     }
   }
 
-  const thisUiSchema: UiProperties<string> = uiSchema
-    ? get(uiSchema, name)
-    : undefined;
-  const thisErrors = errors?.[name] ?? [];
-
-  const Component = thisUiSchema?.ui_component ?? leafs?.enum ?? EnumDefault;
+  const Component = uiSchema?.ui_component ?? leafs?.enum ?? EnumDefault;
   return (
     <Component
       options={schema.options}
-      errorMessage={R.first(thisErrors)?.message}
-      label={thisUiSchema?.ui_label ?? name}
+      errorMessage={R.first(errors)?.message}
+      label={uiSchema?.ui_label ?? name}
       name={name}
       description={schema.description}
       onChange={handleChange}
