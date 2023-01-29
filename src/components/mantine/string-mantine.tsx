@@ -8,9 +8,14 @@ export function StringMantine({
   label,
   description,
   errorMessage,
-}: IStringDefaultProps) {
+
+  ...props
+}: IStringDefaultProps & {
+  type?: "text" | "password";
+}) {
   return (
     <TextInput
+      {...props}
       name={name}
       value={value}
       onChange={(event) => onChange(event.target.value)}
@@ -19,4 +24,8 @@ export function StringMantine({
       error={errorMessage}
     />
   );
+}
+
+export function PasswordMantine(props: IStringDefaultProps) {
+  return <StringMantine {...props} type="password" />;
 }

@@ -20,6 +20,7 @@ import {
   INumberDefaultProps,
   NumberDefault,
 } from "../components/default/number-default";
+import { IComponentProps } from "../components/types";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -123,7 +124,10 @@ function ComponentErrorsOrDescription({
   return <ComponentDescription description={description} />;
 }
 
-function useComponent(name: string) {
+function useComponent<UiProperties>(name: string): {
+  errors: zod.ZodIssue[];
+  uiSchema?: UiProperties;
+} {
   const { errors, uiSchema } = useFormContext();
 
   return React.useMemo(
@@ -154,7 +158,7 @@ interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString> {
 }
 function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
   const { onChange, leafs } = useFormContext();
-  const { errors, uiSchema } = useComponent(name);
+  const { errors, uiSchema } = useComponent<UiProperties<string>>(name);
 
   function handleChange(value: string) {
     if (onChange) {
@@ -184,9 +188,9 @@ interface IZodEnumComponentProps extends IZodLeafComponentProps<ZodAnyEnum> {
 }
 function ZodEnumComponent({ schema, name, value }: IZodEnumComponentProps) {
   const { onChange, leafs } = useFormContext();
-  const { errors, uiSchema } = useComponent(name);
+  const { errors, uiSchema } = useComponent<UiProperties<string>>(name);
 
-  function handleChange(value: string) {
+  function handleChange(value?: string) {
     if (onChange) {
       onChange({
         value,
@@ -281,7 +285,7 @@ interface IZodNumberComponentProps
 }
 function ZodNumberComponent({ name, schema, value }: IZodNumberComponentProps) {
   const { onChange, leafs } = useFormContext();
-  const { errors, uiSchema } = useComponent(name);
+  const { errors, uiSchema } = useComponent<UiProperties<number>>(name);
 
   function handleChange(value: number | undefined) {
     if (onChange) {
@@ -292,8 +296,7 @@ function ZodNumberComponent({ name, schema, value }: IZodNumberComponentProps) {
     }
   }
 
-  // TODO: Add custom component
-  const Component = leafs?.number ?? NumberDefault;
+  const Component = uiSchema?.ui_component ?? leafs?.number ?? NumberDefault;
   return (
     <Component
       value={value}
@@ -412,15 +415,9 @@ function ZodAnyComponent({
   return null;
 }
 
-interface ICustomComponentProps<Value> {
-  value?: Value;
-  name: string;
-  onChange: (value: Value) => void;
-}
-
 type UiProperties<Value> = {
   ui_label?: React.ReactNode;
-  ui_component?: (props: ICustomComponentProps<Value>) => JSX.Element;
+  ui_component?: (props: IComponentProps<Value>) => JSX.Element;
 };
 
 type UiSchema<Schema extends object> = {

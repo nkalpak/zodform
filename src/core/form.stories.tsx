@@ -1,7 +1,10 @@
 import React from "react";
 import { Form } from "./form";
 import { z } from "zod";
-import { StringMantine } from "../components/mantine/string-mantine";
+import {
+  PasswordMantine,
+  StringMantine,
+} from "../components/mantine/string-mantine";
 import { EnumMantine } from "../components/mantine/enum-mantine";
 import { NumberMantine } from "../components/mantine/number-mantine";
 
@@ -35,6 +38,9 @@ export function Simple() {
       onSubmit={console.log}
       onChange={console.log}
       uiSchema={{
+        password: {
+          ui_component: PasswordMantine,
+        },
         age: {
           ui_label: "Age",
         },
