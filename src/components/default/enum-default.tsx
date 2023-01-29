@@ -1,13 +1,8 @@
 import React from "react";
 import { ErrorOrDescription } from "./error-or-description";
+import { IComponentProps } from "../types";
 
-interface IEnumDefaultProps {
-  value?: string;
-  onChange: (value: string) => void;
-  name: string;
-  description?: React.ReactNode;
-  label: React.ReactNode;
-  errorMessage?: string;
+interface IEnumDefaultProps extends IComponentProps<string> {
   options: string[];
 }
 

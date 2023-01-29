@@ -13,6 +13,10 @@ import {
   StringDefault,
 } from "../components/default/string-default";
 import { EnumDefault } from "../components/default/enum-default";
+import {
+  INumberDefaultProps,
+  NumberDefault,
+} from "../components/default/number-default";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -273,27 +277,29 @@ interface IZodNumberComponentProps
   value?: number;
 }
 function ZodNumberComponent({ name, schema, value }: IZodNumberComponentProps) {
-  const { onChange } = useFormContext();
+  const { onChange, leafs } = useFormContext();
+  const { errors, uiSchema } = useComponent(name);
 
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(value: number) {
     if (onChange) {
       onChange({
-        value: event.target.valueAsNumber,
+        value,
         path: componentNameDeserialize(name),
       });
     }
   }
 
+  // TODO: Add custom component
+  const Component = leafs?.number ?? NumberDefault;
   return (
-    <label>
-      {name}
-      <input type="number" name={name} value={value} onChange={handleChange} />
-
-      <ComponentErrorsOrDescription
-        name={name}
-        description={schema.description}
-      />
-    </label>
+    <Component
+      value={value}
+      onChange={handleChange}
+      name={name}
+      label={uiSchema?.ui_label ?? name}
+      description={schema.description}
+      errorMessage={R.first(errors)?.message}
+    />
   );
 }
 
@@ -430,7 +436,7 @@ interface IFormProps<Schema extends AnyZodObject> {
   onChange?: FormOnChange;
   leafs?: {
     string?: (props: IStringDefaultProps) => JSX.Element;
-    number?: (props: ICustomComponentProps<number>) => JSX.Element;
+    number?: (props: INumberDefaultProps) => JSX.Element;
     enum?: (props: ICustomComponentProps<string>) => JSX.Element;
   };
 }

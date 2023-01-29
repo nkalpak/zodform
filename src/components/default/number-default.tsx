@@ -1,26 +1,26 @@
+import { IComponentProps } from "../types";
 import React from "react";
 import { ErrorOrDescription } from "./error-or-description";
-import { IComponentProps } from "../types";
 
-export interface IStringDefaultProps extends IComponentProps<string> {}
+export interface INumberDefaultProps extends IComponentProps<number> {}
 
-export function StringDefault({
-  name,
+export function NumberDefault({
   value,
   onChange,
   label,
   description,
   errorMessage,
-}: IStringDefaultProps) {
+  name,
+}: INumberDefaultProps) {
   return (
     <label>
       {label}
 
       <input
-        type="text"
+        type="number"
         name={name}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => onChange(event.target.valueAsNumber)}
       />
 
       <ErrorOrDescription error={errorMessage} description={description} />
