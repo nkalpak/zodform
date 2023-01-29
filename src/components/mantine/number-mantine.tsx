@@ -9,9 +9,13 @@ export function NumberMantine({
   errorMessage,
   label,
   isRequired,
+  autoFocus,
+  defaultValue,
 }: INumberDefaultProps) {
   return (
     <NumberInput
+      defaultValue={defaultValue}
+      autoFocus={autoFocus}
       required={isRequired}
       name={name}
       value={value}

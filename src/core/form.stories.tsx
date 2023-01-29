@@ -46,6 +46,7 @@ export function Simple() {
         age: {
           ui: {
             label: "Age",
+            autoFocus: true,
           },
         },
         firstName: {

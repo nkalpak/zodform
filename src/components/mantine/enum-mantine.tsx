@@ -11,9 +11,11 @@ export function EnumMantine({
   options,
   isRequired,
   defaultValue,
+  autoFocus,
 }: IEnumDefaultProps) {
   return (
     <Select
+      autoFocus={autoFocus}
       defaultValue={defaultValue}
       required={isRequired}
       value={value}

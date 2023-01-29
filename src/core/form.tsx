@@ -180,6 +180,7 @@ function ZodStringComponent({
   }
 
   const Component = uiSchema?.component ?? leafs?.string ?? StringDefault;
+  const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
 
   return (
     <Component
@@ -191,6 +192,7 @@ function ZodStringComponent({
       errorMessage={R.first(errors)?.message}
       isRequired={isRequired}
       defaultValue={defaultValue}
+      {...uiProps}
     />
   );
 }
@@ -217,6 +219,8 @@ function ZodEnumComponent({
   }
 
   const Component = uiSchema?.component ?? leafs?.enum ?? EnumDefault;
+  const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
+
   return (
     <Component
       options={schema.options}
@@ -228,6 +232,7 @@ function ZodEnumComponent({
       value={value}
       isRequired={isRequired}
       defaultValue={defaultValue}
+      {...uiProps}
     />
   );
 }
@@ -320,6 +325,8 @@ function ZodNumberComponent({
   }
 
   const Component = uiSchema?.component ?? leafs?.number ?? NumberDefault;
+  const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
+
   return (
     <Component
       value={value}
@@ -330,6 +337,7 @@ function ZodNumberComponent({
       errorMessage={R.first(errors)?.message}
       isRequired={isRequired}
       defaultValue={defaultValue}
+      {...uiProps}
     />
   );
 }
@@ -456,6 +464,7 @@ function ZodAnyComponent({
 type UiProperties<Value> = {
   label?: React.ReactNode;
   component?: (props: IComponentProps<Value>) => JSX.Element;
+  autoFocus?: boolean;
 };
 
 type UiPropertiesSchema<Value> = {

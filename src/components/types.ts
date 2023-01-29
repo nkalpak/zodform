@@ -9,4 +9,5 @@ export interface IComponentProps<Value> {
   label: React.ReactNode;
   errorMessage?: string;
   isRequired?: boolean;
+  autoFocus?: boolean;
 }
