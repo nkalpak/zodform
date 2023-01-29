@@ -3,6 +3,7 @@ import { Form } from "./form";
 import { z } from "zod";
 import { StringMantine } from "../components/mantine/string-mantine";
 import { EnumMantine } from "../components/mantine/enum-mantine";
+import { NumberMantine } from "../components/mantine/number-mantine";
 
 export function Simple() {
   const [schema] = React.useState(() =>
@@ -28,6 +29,7 @@ export function Simple() {
       leafs={{
         string: StringMantine,
         enum: EnumMantine,
+        number: NumberMantine,
       }}
       schema={schema}
       onSubmit={console.log}

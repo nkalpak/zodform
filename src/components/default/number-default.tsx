@@ -2,7 +2,8 @@ import { IComponentProps } from "../types";
 import React from "react";
 import { ErrorOrDescription } from "./error-or-description";
 
-export interface INumberDefaultProps extends IComponentProps<number> {}
+export interface INumberDefaultProps
+  extends IComponentProps<number | undefined> {}
 
 export function NumberDefault({
   value,
