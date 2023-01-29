@@ -12,7 +12,10 @@ import {
   IStringDefaultProps,
   StringDefault,
 } from "../components/default/string-default";
-import { EnumDefault } from "../components/default/enum-default";
+import {
+  EnumDefault,
+  IEnumDefaultProps,
+} from "../components/default/enum-default";
 import {
   INumberDefaultProps,
   NumberDefault,
@@ -437,7 +440,7 @@ interface IFormProps<Schema extends AnyZodObject> {
   leafs?: {
     string?: (props: IStringDefaultProps) => JSX.Element;
     number?: (props: INumberDefaultProps) => JSX.Element;
-    enum?: (props: ICustomComponentProps<string>) => JSX.Element;
+    enum?: (props: IEnumDefaultProps) => JSX.Element;
   };
 }
 

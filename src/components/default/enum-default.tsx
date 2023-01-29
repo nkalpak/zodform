@@ -2,7 +2,7 @@ import React from "react";
 import { ErrorOrDescription } from "./error-or-description";
 import { IComponentProps } from "../types";
 
-interface IEnumDefaultProps extends IComponentProps<string> {
+export interface IEnumDefaultProps extends IComponentProps<string | undefined> {
   options: string[];
 }
 
