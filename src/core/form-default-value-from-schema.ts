@@ -45,6 +45,9 @@ export function formDefaultValueFromSchema(
       const obj: Record<string, any> = {};
       for (const [key, value] of Object.entries(schema.shape)) {
         obj[key] = iterator(value);
+        if (obj[key] === undefined) {
+          delete obj[key];
+        }
       }
       return obj;
     }

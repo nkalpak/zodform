@@ -119,6 +119,7 @@ export function Nested() {
           })
         )
         .describe("A list of tasks"),
+      stuff: z.array(z.string()).optional(),
     })
   );
 

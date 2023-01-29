@@ -44,6 +44,7 @@ import {
   ZodAnyArray,
   ZodAnyEnum,
 } from "./schema-type-resolvers";
+import { formDefaultValueFromSchema } from "./form-default-value-from-schema";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -497,7 +498,9 @@ export function Form<Schema extends AnyZodObject>({
   title,
 }: IFormProps<Schema>) {
   const [errors, setErrors] = React.useState<ErrorsMap>();
-  const [formData, setFormData] = React.useState(defaultValue ?? {});
+  const [formData, setFormData] = React.useState(
+    defaultValue ?? formDefaultValueFromSchema(schema)
+  );
   const [firstValue] = React.useState(value);
 
   if (R.isNil(firstValue) && R.isDefined(value)) {
