@@ -1,7 +1,6 @@
 import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString } from "zod";
 import * as zod from "zod";
 import * as R from "remeda";
-import { nn } from "../utils/invariant";
 import React from "react";
 import { createContext } from "../utils/create-context";
 import "../App.css";
@@ -33,6 +32,18 @@ import {
 } from "../components/default/boolean-default";
 import set from "lodash.set";
 import produce from "immer";
+import {
+  isZodArray,
+  isZodBoolean,
+  isZodDefault,
+  isZodEnum,
+  isZodNumber,
+  isZodObject,
+  isZodOptional,
+  isZodString,
+  ZodAnyArray,
+  ZodAnyEnum,
+} from "./schema-type-resolvers";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -48,70 +59,6 @@ const [useFormContext, FormContextProvider] = createContext<{
   uiSchema?: UiSchema<any>;
   leafs?: Required<IFormProps<any>>["leafs"];
 }>();
-
-function getZodTypeNameFromSchema(schema: unknown): string | undefined {
-  // @ts-expect-error
-  return schema?._def?.typeName;
-}
-
-function isZodString(schema: unknown): schema is ZodString {
-  const typeName = getZodTypeNameFromSchema(schema);
-  nn(typeName, "Invalid schema");
-
-  return typeName === "ZodString";
-}
-
-function isZodObject(schema: unknown): schema is AnyZodObject {
-  const typeName = getZodTypeNameFromSchema(schema);
-  nn(typeName, "Invalid schema");
-
-  return typeName === "ZodObject";
-}
-
-type ZodAnyEnum = zod.ZodEnum<[any]>;
-function isZodEnum(schema: unknown): schema is ZodAnyEnum {
-  const typeName = getZodTypeNameFromSchema(schema);
-  nn(typeName, "Invalid schema");
-
-  return typeName === "ZodEnum";
-}
-
-type ZodAnyArray = zod.ZodArray<any>;
-function isZodArray(schema: unknown): schema is ZodAnyArray {
-  const typeName = getZodTypeNameFromSchema(schema);
-  nn(typeName, "Invalid schema");
-
-  return typeName === "ZodArray";
-}
-
-type ZodAnyOptional = zod.ZodOptional<any>;
-function isZodOptional(schema: unknown): schema is ZodAnyOptional {
-  const typeName = getZodTypeNameFromSchema(schema);
-  nn(typeName, "Invalid schema");
-
-  return typeName === "ZodOptional";
-}
-
-function isZodNumber(schema: unknown): schema is zod.ZodNumber {
-  const typeName = getZodTypeNameFromSchema(schema);
-  nn(typeName, "Invalid schema");
-
-  return typeName === "ZodNumber";
-}
-
-function isZodDefault(schema: unknown): schema is zod.ZodDefault<any> {
-  const typeName = getZodTypeNameFromSchema(schema);
-  nn(typeName, "Invalid schema");
-
-  return typeName === "ZodDefault";
-}
-
-function isZodBoolean(schema: unknown): schema is zod.ZodBoolean {
-  const typeName = getZodTypeNameFromSchema(schema);
-  nn(typeName, "Invalid schema");
-
-  return typeName === "ZodBoolean";
-}
 
 function useComponent<UiProperties>(name: string): {
   errors: zod.ZodIssue[];
@@ -567,6 +514,8 @@ export function Form<Schema extends AnyZodObject>({
     onChange?.({ value, path });
   }, []);
 
+  console.log(formData);
+
   return (
     <form
       style={{
@@ -595,7 +544,7 @@ export function Form<Schema extends AnyZodObject>({
       <FormContextProvider
         value={{ errors, onChange: handleChange, uiSchema, leafs }}
       >
-        <ZodAnyComponent value={value} schema={schema} />
+        <ZodAnyComponent value={value ?? formData} schema={schema} />
       </FormContextProvider>
 
       <button type="submit">Submit</button>

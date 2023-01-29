@@ -59,9 +59,6 @@ export function Simple() {
           },
         },
         details: {
-          ui: {
-            label: "Details",
-          },
           address: {
             ui: {
               label: "Address",

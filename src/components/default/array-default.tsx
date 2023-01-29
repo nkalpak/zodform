@@ -20,11 +20,15 @@ export function ArrayDefault({
       {children.map((child, index) => (
         <div key={index}>
           {child}
-          <button onClick={() => onRemove(index)}>-</button>
+          <button type="button" onClick={() => onRemove(index)}>
+            -
+          </button>
         </div>
       ))}
 
-      <button onClick={onAdd}>+</button>
+      <button type="button" onClick={onAdd}>
+        +
+      </button>
     </React.Fragment>
   );
 }
