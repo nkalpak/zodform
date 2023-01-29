@@ -8,6 +8,7 @@ export function StringMantine({
   label,
   description,
   errorMessage,
+  isRequired,
 
   ...props
 }: IStringDefaultProps & {
@@ -16,6 +17,7 @@ export function StringMantine({
   return (
     <TextInput
       {...props}
+      required={isRequired}
       name={name}
       value={value}
       onChange={(event) => onChange(event.target.value)}

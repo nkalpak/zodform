@@ -8,9 +8,11 @@ export function NumberMantine({
   description,
   errorMessage,
   label,
+  isRequired,
 }: INumberDefaultProps) {
   return (
     <NumberInput
+      required={isRequired}
       name={name}
       value={value}
       onChange={(value) => onChange(value)}

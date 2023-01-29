@@ -7,4 +7,5 @@ export interface IComponentProps<Value> {
   description?: React.ReactNode;
   label: React.ReactNode;
   errorMessage?: string;
+  isRequired?: boolean;
 }

@@ -156,7 +156,12 @@ interface IZodLeafComponentProps<Schema extends ZodFirstPartySchemaTypes>
 interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString> {
   value?: string;
 }
-function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
+function ZodStringComponent({
+  name,
+  schema,
+  value,
+  isRequired,
+}: IZodStringComponentProps) {
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent<UiProperties<string>>(name);
 
@@ -179,6 +184,7 @@ function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
       label={uiSchema?.ui_label ?? name}
       description={schema.description}
       errorMessage={R.first(errors)?.message}
+      isRequired={isRequired}
     />
   );
 }
@@ -186,7 +192,12 @@ function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
 interface IZodEnumComponentProps extends IZodLeafComponentProps<ZodAnyEnum> {
   value?: string;
 }
-function ZodEnumComponent({ schema, name, value }: IZodEnumComponentProps) {
+function ZodEnumComponent({
+  schema,
+  name,
+  value,
+  isRequired,
+}: IZodEnumComponentProps) {
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent<UiProperties<string>>(name);
 
@@ -209,6 +220,7 @@ function ZodEnumComponent({ schema, name, value }: IZodEnumComponentProps) {
       description={schema.description}
       onChange={handleChange}
       value={value}
+      isRequired={isRequired}
     />
   );
 }
@@ -283,7 +295,12 @@ interface IZodNumberComponentProps
   extends IZodLeafComponentProps<zod.ZodNumber> {
   value?: number;
 }
-function ZodNumberComponent({ name, schema, value }: IZodNumberComponentProps) {
+function ZodNumberComponent({
+  name,
+  schema,
+  value,
+  isRequired,
+}: IZodNumberComponentProps) {
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent<UiProperties<number>>(name);
 
@@ -305,6 +322,7 @@ function ZodNumberComponent({ name, schema, value }: IZodNumberComponentProps) {
       label={uiSchema?.ui_label ?? name}
       description={schema.description}
       errorMessage={R.first(errors)?.message}
+      isRequired={isRequired}
     />
   );
 }

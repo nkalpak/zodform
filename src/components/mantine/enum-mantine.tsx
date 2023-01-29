@@ -9,9 +9,11 @@ export function EnumMantine({
   errorMessage,
   name,
   options,
+  isRequired,
 }: IEnumDefaultProps) {
   return (
     <Select
+      required={isRequired}
       value={value}
       onChange={(value) => onChange(value ?? undefined)}
       label={label}
