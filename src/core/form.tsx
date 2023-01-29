@@ -25,7 +25,7 @@ type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
 type ComponentPath = (string | number)[];
 type FormOnChange = (data: {
-  value: string | number;
+  value?: string | number;
   path: ComponentPath;
 }) => void;
 
@@ -283,7 +283,7 @@ function ZodNumberComponent({ name, schema, value }: IZodNumberComponentProps) {
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent(name);
 
-  function handleChange(value: number) {
+  function handleChange(value: number | undefined) {
     if (onChange) {
       onChange({
         value,
