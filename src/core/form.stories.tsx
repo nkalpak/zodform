@@ -125,5 +125,19 @@ export function Nested() {
     })
   );
 
-  return <Form onSubmit={console.log} schema={schema} leafs={leafs} />;
+  return (
+    <Form
+      title={<h1>A list of tasks</h1>}
+      onSubmit={console.log}
+      schema={schema}
+      leafs={leafs}
+      uiSchema={{
+        title: {
+          ui: {
+            label: "Task list title",
+          },
+        },
+      }}
+    />
+  );
 }

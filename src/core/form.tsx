@@ -514,6 +514,7 @@ interface IFormProps<Schema extends AnyZodObject> {
     enum?: (props: IEnumDefaultProps) => JSX.Element;
     boolean?: (props: IBooleanDefaultProps) => JSX.Element;
   };
+  title?: React.ReactNode;
 }
 
 export function Form<Schema extends AnyZodObject>({
@@ -526,6 +527,7 @@ export function Form<Schema extends AnyZodObject>({
   onChange,
 
   leafs,
+  title,
 }: IFormProps<Schema>) {
   const [errors, setErrors] = React.useState<ErrorsMap>();
   const [formData, setFormData] = React.useState(defaultValue ?? {});
@@ -568,6 +570,8 @@ export function Form<Schema extends AnyZodObject>({
         }
       }}
     >
+      {title}
+
       <FormContextProvider
         value={{ errors, onChange: handleChange, uiSchema, leafs }}
       >
