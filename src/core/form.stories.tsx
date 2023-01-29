@@ -68,3 +68,42 @@ export function Simple() {
     />
   );
 }
+
+export function UiOptions() {
+  const [schema] = React.useState(() =>
+    z.object({
+      firstName: z.string().min(1, "Required"),
+      lastName: z.string().min(1, "Required"),
+      telephone: z.string().optional(),
+    })
+  );
+
+  return (
+    <Form
+      schema={schema}
+      leafs={{
+        string: StringMantine,
+        enum: EnumMantine,
+        number: NumberMantine,
+      }}
+      uiSchema={{
+        firstName: {
+          ui: {
+            autoFocus: true,
+            label: "First name",
+          },
+        },
+        lastName: {
+          ui: {
+            label: "Last name",
+          },
+        },
+        telephone: {
+          ui: {
+            label: "Telephone",
+          },
+        },
+      }}
+    />
+  );
+}
