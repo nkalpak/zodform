@@ -525,9 +525,9 @@ export function Form<Schema extends AnyZodObject>({
 }: IFormProps<Schema>) {
   const [errors, setErrors] = React.useState<ErrorsMap>();
   const [formData, setFormData] = React.useState(defaultValue ?? {});
-  const [val] = React.useState(value);
+  const [firstValue] = React.useState(value);
 
-  if (R.isNil(val) && R.isDefined(value)) {
+  if (R.isNil(firstValue) && R.isDefined(value)) {
     console.warn("Component changed from controlled to uncontrolled");
   }
 
