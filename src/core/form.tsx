@@ -23,7 +23,10 @@ import {
   NumberDefault,
 } from "../components/default/number-default";
 import { IComponentProps } from "../components/types";
-import { ArrayDefault } from "../components/default/array-default";
+import {
+  ArrayDefault,
+  IArrayDefaultProps,
+} from "../components/default/array-default";
 import {
   BooleanDefault,
   IBooleanDefaultProps,
@@ -147,7 +150,7 @@ function ZodStringComponent({
   defaultValue,
 }: IZodStringComponentProps) {
   const { onChange, leafs } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiProperties<string>>(name);
+  const { errors, uiSchema } = useComponent<UiPropertiesLeaf<string>>(name);
 
   function handleChange(value: string) {
     if (onChange) {
@@ -186,7 +189,7 @@ function ZodEnumComponent({
   defaultValue,
 }: IZodEnumComponentProps) {
   const { onChange, leafs } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiProperties<string>>(name);
+  const { errors, uiSchema } = useComponent<UiPropertiesLeaf<string>>(name);
 
   function handleChange(value?: string) {
     if (onChange) {
@@ -226,7 +229,7 @@ function ZodNumberComponent({
   defaultValue,
 }: IZodNumberComponentProps) {
   const { onChange, leafs } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiProperties<number>>(name);
+  const { errors, uiSchema } = useComponent<UiPropertiesLeaf<number>>(name);
 
   function handleChange(value: number | undefined) {
     if (onChange) {
@@ -264,7 +267,7 @@ function ZodBooleanComponent({
   name,
 }: IZodBooleanComponentProps) {
   const { onChange, leafs } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiProperties<boolean>>(name);
+  const { errors, uiSchema } = useComponent<UiPropertiesLeaf<boolean>>(name);
 
   function handleChange(value: boolean) {
     if (onChange) {
@@ -306,6 +309,7 @@ function ZodArrayComponent({
   minLength,
   value,
 }: IZodArrayComponentProps) {
+  const { uiSchema } = useComponent<UiPropertiesArray["ui"]>(name);
   const [items, setItems] = React.useState<ZodFirstPartySchemaTypes[]>(() => {
     return R.range(0, exactLength ?? minLength ?? 0).map(() => schema.element);
   });
@@ -338,8 +342,11 @@ function ZodArrayComponent({
     });
   }
 
+  const Component = uiSchema?.component ?? ArrayDefault;
+
   return (
-    <ArrayDefault
+    <Component
+      title={uiSchema?.title}
       onRemove={(index) => {
         setItems((items) => items.filter((item, i) => index !== i));
       }}
@@ -348,7 +355,7 @@ function ZodArrayComponent({
       }}
     >
       {renderElements()}
-    </ArrayDefault>
+    </Component>
   );
 }
 
@@ -483,21 +490,34 @@ function ZodAnyComponent({
   return null;
 }
 
-type UiProperties<Value> = {
+type UiPropertiesLeaf<Value> = {
   label?: React.ReactNode;
   component?: (props: IComponentProps<Value>) => JSX.Element;
   autoFocus?: boolean;
 };
 
 type UiPropertiesSchema<Value> = {
-  ui?: UiProperties<Value>;
+  ui?: UiPropertiesLeaf<Value>;
+};
+
+type UiPropertiesArray = {
+  ui?: {
+    title?: React.ReactNode;
+    component?: (props: IArrayDefaultProps) => JSX.Element;
+  };
+};
+
+type UiPropertiesObject = {
+  ui?: {
+    title?: React.ReactNode;
+  };
 };
 
 type UiSchema<Schema extends object> = {
   [K in keyof Partial<Schema>]: Schema[K] extends object
     ? Schema[K] extends Array<any>
-      ? UiPropertiesSchema<Schema[K]>
-      : UiPropertiesSchema<Schema[K]> & UiSchema<Schema[K]>
+      ? UiPropertiesArray
+      : UiPropertiesObject & UiSchema<Schema[K]>
     : UiPropertiesSchema<Schema[K]>;
 };
 

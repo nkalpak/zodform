@@ -1,16 +1,22 @@
 import React from "react";
 
+export interface IArrayDefaultProps {
+  children: React.ReactNode[];
+  onAdd: () => void;
+  onRemove: (index: number) => void;
+  title?: React.ReactNode;
+}
+
 export function ArrayDefault({
   children,
   onAdd,
   onRemove,
-}: {
-  children: React.ReactNode[];
-  onAdd: () => void;
-  onRemove: (index: number) => void;
-}) {
+  title,
+}: IArrayDefaultProps) {
   return (
     <React.Fragment>
+      {title}
+
       {children.map((child, index) => (
         <div key={index}>
           {child}

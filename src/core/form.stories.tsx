@@ -137,6 +137,11 @@ export function Nested() {
             label: "Task list title",
           },
         },
+        tasks: {
+          ui: {
+            title: <h2 style={{ marginBottom: 4 }}>Tasks</h2>,
+          },
+        },
       }}
     />
   );
