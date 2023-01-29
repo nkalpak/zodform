@@ -87,6 +87,13 @@ function isZodNumber(schema: unknown): schema is zod.ZodNumber {
   return typeName === "ZodNumber";
 }
 
+function isZodDefault(schema: unknown): schema is zod.ZodDefault<any> {
+  const typeName = getZodTypeNameFromSchema(schema);
+  nn(typeName, "Invalid schema");
+
+  return typeName === "ZodDefault";
+}
+
 function ComponentErrors({ errors }: { errors: zod.ZodIssue[] }) {
   return (
     <React.Fragment>
@@ -139,28 +146,26 @@ function useComponent<UiProperties>(name: string): {
   );
 }
 
-interface IZodAnyComponentProps<Schema extends ZodFirstPartySchemaTypes> {
+interface IZodLeafComponentProps<
+  Schema extends ZodFirstPartySchemaTypes,
+  Value
+> {
   schema: Schema;
-  name?: string;
+  name: string;
   description?: string;
-  isRequired?: boolean;
+  isRequired: boolean;
+  value?: Value;
+  defaultValue?: Value;
 }
 
-interface IZodLeafComponentProps<Schema extends ZodFirstPartySchemaTypes>
-  extends Pick<
-      Required<IZodAnyComponentProps<Schema>>,
-      "name" | "schema" | "isRequired"
-    >,
-    Pick<IZodAnyComponentProps<Schema>, "description"> {}
-
-interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString> {
-  value?: string;
-}
+interface IZodStringComponentProps
+  extends IZodLeafComponentProps<ZodString, string> {}
 function ZodStringComponent({
   name,
   schema,
   value,
   isRequired,
+  defaultValue,
 }: IZodStringComponentProps) {
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent<UiProperties<string>>(name);
@@ -185,18 +190,19 @@ function ZodStringComponent({
       description={schema.description}
       errorMessage={R.first(errors)?.message}
       isRequired={isRequired}
+      defaultValue={defaultValue}
     />
   );
 }
 
-interface IZodEnumComponentProps extends IZodLeafComponentProps<ZodAnyEnum> {
-  value?: string;
-}
+interface IZodEnumComponentProps
+  extends IZodLeafComponentProps<ZodAnyEnum, string> {}
 function ZodEnumComponent({
   schema,
   name,
   value,
   isRequired,
+  defaultValue,
 }: IZodEnumComponentProps) {
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent<UiProperties<string>>(name);
@@ -221,15 +227,16 @@ function ZodEnumComponent({
       onChange={handleChange}
       value={value}
       isRequired={isRequired}
+      defaultValue={defaultValue}
     />
   );
 }
 
-interface IZodArrayComponentProps extends IZodLeafComponentProps<ZodAnyArray> {
+interface IZodArrayComponentProps
+  extends IZodLeafComponentProps<ZodAnyArray, any[]> {
   minLength?: number;
   maxLength?: number;
   exactLength?: number;
-  value?: any[];
 }
 function ZodArrayComponent({
   schema,
@@ -292,14 +299,13 @@ function ZodArrayComponent({
 }
 
 interface IZodNumberComponentProps
-  extends IZodLeafComponentProps<zod.ZodNumber> {
-  value?: number;
-}
+  extends IZodLeafComponentProps<zod.ZodNumber, number> {}
 function ZodNumberComponent({
   name,
   schema,
   value,
   isRequired,
+  defaultValue,
 }: IZodNumberComponentProps) {
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent<UiProperties<number>>(name);
@@ -323,6 +329,7 @@ function ZodNumberComponent({
       description={schema.description}
       errorMessage={R.first(errors)?.message}
       isRequired={isRequired}
+      defaultValue={defaultValue}
     />
   );
 }
@@ -332,11 +339,13 @@ function ZodAnyComponent({
   name,
   isRequired = true,
   value,
+  defaultValue,
 }: {
   schema: ZodFirstPartySchemaTypes;
   name?: string;
   isRequired?: boolean;
-  value?: unknown;
+  value?: any;
+  defaultValue?: any;
 }) {
   if (isZodObject(schema)) {
     // Don't create a div as the first child of the form
@@ -345,16 +354,14 @@ function ZodAnyComponent({
       {},
       Object.entries(schema.shape).map(([thisName, thisSchema]) => {
         const childName = name ? [name, thisName].join(".") : thisName;
-        const result = value
-          ? (thisSchema as ZodFirstPartySchemaTypes).safeParse(value[thisName])
-          : undefined;
 
         return (
           <ZodAnyComponent
             key={childName}
             name={childName}
             schema={thisSchema as ZodFirstPartySchemaTypes}
-            value={result?.success ? result.data : undefined}
+            value={value ? value?.[thisName] : undefined}
+            defaultValue={defaultValue}
           />
         );
       })
@@ -366,22 +373,22 @@ function ZodAnyComponent({
   }
 
   if (isZodString(schema)) {
-    const result = value ? schema.safeParse(value) : undefined;
     return (
       <ZodStringComponent
         schema={schema}
         name={name}
         isRequired={isRequired}
-        value={result?.success ? result.data : undefined}
+        value={value}
+        defaultValue={defaultValue}
       />
     );
   }
 
   if (isZodEnum(schema)) {
-    const result = value ? schema.safeParse(value) : undefined;
     return (
       <ZodEnumComponent
-        value={result?.success ? result.data : undefined}
+        value={value}
+        defaultValue={defaultValue}
         schema={schema}
         name={name}
         isRequired={isRequired}
@@ -391,7 +398,6 @@ function ZodAnyComponent({
 
   if (isZodArray(schema)) {
     const { minLength, maxLength, exactLength, description } = schema._def;
-    const result = value ? schema.safeParse(value) : undefined;
 
     return (
       <ZodArrayComponent
@@ -402,19 +408,20 @@ function ZodAnyComponent({
         maxLength={maxLength?.value}
         minLength={minLength?.value}
         description={description}
-        value={result?.success ? result.data : undefined}
+        value={value}
+        defaultValue={defaultValue}
       />
     );
   }
 
   if (isZodNumber(schema)) {
-    const result = value ? schema.safeParse(value) : undefined;
     return (
       <ZodNumberComponent
         schema={schema}
         name={name}
         isRequired={isRequired}
-        value={result?.success ? result.data : undefined}
+        value={value}
+        defaultValue={defaultValue}
       />
     );
   }
@@ -425,6 +432,19 @@ function ZodAnyComponent({
         schema={schema._def.innerType}
         name={name}
         isRequired={false}
+        value={value}
+        defaultValue={defaultValue}
+      />
+    );
+  }
+
+  if (isZodDefault(schema)) {
+    return (
+      <ZodAnyComponent
+        schema={schema._def.innerType}
+        name={name}
+        isRequired={isRequired}
+        defaultValue={schema._def.defaultValue()}
         value={value}
       />
     );

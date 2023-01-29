@@ -23,7 +23,7 @@ export function Simple() {
       phoneNumber: z.string(),
 
       people: z.array(z.string()).min(1, "Must have at least one person"),
-      fruits: z.enum(["apple", "banana", "orange"] as const),
+      fruits: z.enum(["apple", "banana", "orange"] as const).default("banana"),
     })
   );
 
