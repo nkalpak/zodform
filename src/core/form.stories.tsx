@@ -39,18 +39,28 @@ export function Simple() {
       onChange={console.log}
       uiSchema={{
         password: {
-          ui_component: PasswordMantine,
+          ui: {
+            component: PasswordMantine,
+          },
         },
         age: {
-          ui_label: "Age",
+          ui: {
+            label: "Age",
+          },
         },
         firstName: {
-          ui_label: "First name",
+          ui: {
+            label: "First name",
+          },
         },
         details: {
-          ui_label: "Details",
+          ui: {
+            label: "Details",
+          },
           address: {
-            ui_label: "Address",
+            ui: {
+              label: "Address",
+            },
           },
         },
       }}

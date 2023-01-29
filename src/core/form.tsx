@@ -140,7 +140,7 @@ function useComponent<UiProperties>(name: string): {
   return React.useMemo(
     () => ({
       errors: errors?.[name] ?? [],
-      uiSchema: uiSchema ? get(uiSchema, name) : undefined,
+      uiSchema: uiSchema ? get(uiSchema, name)?.ui : undefined,
     }),
     [errors, uiSchema]
   );
@@ -179,14 +179,14 @@ function ZodStringComponent({
     }
   }
 
-  const Component = uiSchema?.ui_component ?? leafs?.string ?? StringDefault;
+  const Component = uiSchema?.component ?? leafs?.string ?? StringDefault;
 
   return (
     <Component
       value={value}
       onChange={handleChange}
       name={name}
-      label={uiSchema?.ui_label ?? name}
+      label={uiSchema?.label ?? name}
       description={schema.description}
       errorMessage={R.first(errors)?.message}
       isRequired={isRequired}
@@ -216,12 +216,12 @@ function ZodEnumComponent({
     }
   }
 
-  const Component = uiSchema?.ui_component ?? leafs?.enum ?? EnumDefault;
+  const Component = uiSchema?.component ?? leafs?.enum ?? EnumDefault;
   return (
     <Component
       options={schema.options}
       errorMessage={R.first(errors)?.message}
-      label={uiSchema?.ui_label ?? name}
+      label={uiSchema?.label ?? name}
       name={name}
       description={schema.description}
       onChange={handleChange}
@@ -319,13 +319,13 @@ function ZodNumberComponent({
     }
   }
 
-  const Component = uiSchema?.ui_component ?? leafs?.number ?? NumberDefault;
+  const Component = uiSchema?.component ?? leafs?.number ?? NumberDefault;
   return (
     <Component
       value={value}
       onChange={handleChange}
       name={name}
-      label={uiSchema?.ui_label ?? name}
+      label={uiSchema?.label ?? name}
       description={schema.description}
       errorMessage={R.first(errors)?.message}
       isRequired={isRequired}
@@ -454,16 +454,20 @@ function ZodAnyComponent({
 }
 
 type UiProperties<Value> = {
-  ui_label?: React.ReactNode;
-  ui_component?: (props: IComponentProps<Value>) => JSX.Element;
+  label?: React.ReactNode;
+  component?: (props: IComponentProps<Value>) => JSX.Element;
+};
+
+type UiPropertiesSchema<Value> = {
+  ui?: UiProperties<Value>;
 };
 
 type UiSchema<Schema extends object> = {
   [K in keyof Partial<Schema>]: Schema[K] extends object
     ? Schema[K] extends Array<any>
-      ? UiProperties<Schema[K]>
-      : UiProperties<Schema[K]> & UiSchema<Schema[K]>
-    : UiProperties<Schema[K]>;
+      ? UiPropertiesSchema<Schema[K]>
+      : UiPropertiesSchema<Schema[K]> & UiSchema<Schema[K]>
+    : UiPropertiesSchema<Schema[K]>;
 };
 
 interface IFormProps<Schema extends AnyZodObject> {
