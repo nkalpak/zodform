@@ -44,4 +44,20 @@ describe("parseObjectFromFlattenedEntries", function () {
       ],
     });
   });
+
+  test("should work with nested arrays and objects", function () {
+    const actual = parseObjectFromFlattenedEntries([
+      ["tasks[0].title", "Task 1"],
+      ["tasks[0].details", "Some details"],
+    ]);
+
+    expect(actual).toEqual({
+      tasks: [
+        {
+          title: "Task 1",
+          details: "Some details",
+        },
+      ],
+    });
+  });
 });

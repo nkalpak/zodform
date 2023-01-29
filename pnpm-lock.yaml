@@ -7,11 +7,13 @@ specifiers:
   '@mantine/hooks': ^5.10.2
   '@testing-library/jest-dom': ^5.16.5
   '@testing-library/react': ^13.4.0
+  '@types/lodash.set': ^4.3.7
   '@types/react': ^18.0.26
   '@types/react-dom': ^18.0.9
   '@vitejs/plugin-react': ^3.0.1
   '@vitejs/plugin-react-swc': ^3.0.0
   jsdom: ^21.1.0
+  lodash.set: ^4.3.2
   prettier: ^2.8.3
   react: ^18.2.0
   react-dom: ^18.2.0
@@ -26,6 +28,7 @@ dependencies:
   '@ladle/react': 2.5.1_772420cd684480dc188c05889fdf43f2
   '@mantine/core': 5.10.2_09865c6e07b19074bc7f3a5c8af3ec29
   '@mantine/hooks': 5.10.2_react@18.2.0
+  lodash.set: 4.3.2
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   remeda: 1.6.0
@@ -34,6 +37,7 @@ dependencies:
 devDependencies:
   '@testing-library/jest-dom': 5.16.5
   '@testing-library/react': 13.4.0_react-dom@18.2.0+react@18.2.0
+  '@types/lodash.set': 4.3.7
   '@types/react': 18.0.27
   '@types/react-dom': 18.0.10
   '@vitejs/plugin-react': 3.0.1_vite@4.0.4
@@ -2118,6 +2122,16 @@ packages:
       pretty-format: 29.4.0
     dev: true
 
+  /@types/lodash.set/4.3.7:
+    resolution: {integrity: sha512-bS5Wkg/nrT82YUfkNYPSccFrNZRL+irl7Yt4iM6OTSQ0VZJED2oUIVm15NkNtUAQ8SRhCe+axqERUV6MJgkeEg==}
+    dependencies:
+      '@types/lodash': 4.14.191
+    dev: true
+
+  /@types/lodash/4.14.191:
+    resolution: {integrity: sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ==}
+    dev: true
+
   /@types/node/18.11.18:
     resolution: {integrity: sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==}
     dev: true
@@ -3662,6 +3676,10 @@ packages:
 
   /lodash.merge/4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
+    dev: false
+
+  /lodash.set/4.3.2:
+    resolution: {integrity: sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==}
     dev: false
 
   /lodash/4.17.21:

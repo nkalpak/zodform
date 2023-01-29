@@ -521,6 +521,8 @@ export function Form<Schema extends AnyZodObject>({
           setErrors(undefined);
           onSubmit?.(parsed.data);
         } else {
+          console.error(parsed.error);
+          console.log("Data", tmp);
           setErrors(() =>
             // TODO: Serialize correctly for arrays
             R.groupBy(parsed.error.errors, (item) => item.path.join("."))

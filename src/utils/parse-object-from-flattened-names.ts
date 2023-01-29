@@ -1,4 +1,4 @@
-import * as R from "remeda";
+import set from "lodash.set";
 import { componentNameDeserialize } from "./component-name-deserialize";
 
 function splitKey(key: string) {
@@ -14,15 +14,8 @@ export function parseObjectFromFlattenedEntries(entries: [string, unknown][]) {
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of entries) {
-    const { type, key: keyParts } = splitKey(key);
-    let current = result;
-    for (const key of keyParts.slice(0, -1)) {
-      if (!current[key]) {
-        current[key] = type === "array" ? [] : {};
-      }
-      current = current[key];
-    }
-    current[R.last(keyParts)!] = value;
+    set(result, key, value);
   }
+
   return result;
 }
