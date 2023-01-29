@@ -7,6 +7,14 @@ import {
 } from "../components/mantine/string-mantine";
 import { EnumMantine } from "../components/mantine/enum-mantine";
 import { NumberMantine } from "../components/mantine/number-mantine";
+import { BooleanMantine } from "../components/mantine/boolean-mantine";
+
+const leafs = {
+  string: StringMantine,
+  enum: EnumMantine,
+  number: NumberMantine,
+  boolean: BooleanMantine,
+} as const;
 
 export function Simple() {
   const [schema] = React.useState(() =>
@@ -29,11 +37,7 @@ export function Simple() {
 
   return (
     <Form
-      leafs={{
-        string: StringMantine,
-        enum: EnumMantine,
-        number: NumberMantine,
-      }}
+      leafs={leafs}
       schema={schema}
       onSubmit={console.log}
       onChange={console.log}
@@ -82,11 +86,7 @@ export function UiOptions() {
     <Form
       onSubmit={console.log}
       schema={schema}
-      leafs={{
-        string: StringMantine,
-        enum: EnumMantine,
-        number: NumberMantine,
-      }}
+      leafs={leafs}
       uiSchema={{
         firstName: {
           ui: {
@@ -118,22 +118,12 @@ export function Nested() {
           z.object({
             title: z.string().describe("A sample title"),
             details: z.string().optional().describe("Enter the task details"),
-            done: z.boolean().default(false),
+            done: z.boolean().optional().default(false),
           })
         )
         .describe("A list of tasks"),
     })
   );
 
-  return (
-    <Form
-      onSubmit={console.log}
-      schema={schema}
-      leafs={{
-        string: StringMantine,
-        enum: EnumMantine,
-        number: NumberMantine,
-      }}
-    />
-  );
+  return <Form onSubmit={console.log} schema={schema} leafs={leafs} />;
 }

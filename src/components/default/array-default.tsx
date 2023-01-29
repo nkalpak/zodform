@@ -10,7 +10,7 @@ export function ArrayDefault({
   onRemove: (index: number) => void;
 }) {
   return (
-    <div>
+    <React.Fragment>
       {children.map((child, index) => (
         <div key={index}>
           {child}
@@ -19,6 +19,6 @@ export function ArrayDefault({
       ))}
 
       <button onClick={onAdd}>+</button>
-    </div>
+    </React.Fragment>
   );
 }

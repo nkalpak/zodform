@@ -547,6 +547,10 @@ export function Form<Schema extends AnyZodObject>({
 
   return (
     <form
+      style={{
+        display: "grid",
+        gap: 32,
+      }}
       onSubmit={(event) => {
         event.preventDefault();
 
