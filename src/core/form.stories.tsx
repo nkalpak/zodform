@@ -80,6 +80,7 @@ export function UiOptions() {
 
   return (
     <Form
+      onSubmit={console.log}
       schema={schema}
       leafs={{
         string: StringMantine,

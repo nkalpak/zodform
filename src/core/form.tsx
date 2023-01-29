@@ -24,7 +24,10 @@ import {
 } from "../components/default/number-default";
 import { IComponentProps } from "../components/types";
 import { ArrayDefault } from "../components/default/array-default";
-import { BooleanDefault } from "../components/default/boolean-default";
+import {
+  BooleanDefault,
+  IBooleanDefaultProps,
+} from "../components/default/boolean-default";
 import set from "lodash.set";
 import produce from "immer";
 
@@ -260,8 +263,8 @@ function ZodBooleanComponent({
   schema,
   name,
 }: IZodBooleanComponentProps) {
-  const { onChange } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiProperties<number>>(name);
+  const { onChange, leafs } = useFormContext();
+  const { errors, uiSchema } = useComponent<UiProperties<boolean>>(name);
 
   function handleChange(value: boolean) {
     if (onChange) {
@@ -272,7 +275,7 @@ function ZodBooleanComponent({
     }
   }
 
-  const Component = BooleanDefault;
+  const Component = uiSchema?.component ?? leafs?.boolean ?? BooleanDefault;
   const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
 
   return (
@@ -509,6 +512,7 @@ interface IFormProps<Schema extends AnyZodObject> {
     string?: (props: IStringDefaultProps) => JSX.Element;
     number?: (props: INumberDefaultProps) => JSX.Element;
     enum?: (props: IEnumDefaultProps) => JSX.Element;
+    boolean?: (props: IBooleanDefaultProps) => JSX.Element;
   };
 }
 
