@@ -112,13 +112,15 @@ export function Nested() {
   const [schema] = React.useState(() =>
     z.object({
       title: z.string(),
-      tasks: z.array(
-        z.object({
-          title: z.string().describe("A sample title"),
-          details: z.string().optional().describe("Enter the task details"),
-          done: z.boolean().default(false),
-        })
-      ),
+      tasks: z
+        .array(
+          z.object({
+            title: z.string().describe("A sample title"),
+            details: z.string().optional().describe("Enter the task details"),
+            done: z.boolean().default(false),
+          })
+        )
+        .describe("A list of tasks"),
     })
   );
 

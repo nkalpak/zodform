@@ -21,6 +21,7 @@ import {
   NumberDefault,
 } from "../components/default/number-default";
 import { IComponentProps } from "../components/types";
+import { ArrayDefault } from "../components/default/array-default";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -92,43 +93,6 @@ function isZodDefault(schema: unknown): schema is zod.ZodDefault<any> {
   nn(typeName, "Invalid schema");
 
   return typeName === "ZodDefault";
-}
-
-function ComponentErrors({ errors }: { errors: zod.ZodIssue[] }) {
-  return (
-    <React.Fragment>
-      {errors.map((error) => (
-        <div style={{ color: "red" }} key={error.code}>
-          {error.message}
-        </div>
-      ))}
-    </React.Fragment>
-  );
-}
-
-function ComponentDescription({ description }: { description?: string }) {
-  if (!description) {
-    return null;
-  }
-
-  return <span style={{ color: "#7a7a7a" }}>{description}</span>;
-}
-
-function ComponentErrorsOrDescription({
-  name,
-  description,
-}: {
-  name: string;
-  description?: string;
-}) {
-  const { errors } = useFormContext();
-  const thisErrors = errors?.[name];
-
-  if (thisErrors) {
-    return <ComponentErrors errors={thisErrors} />;
-  }
-
-  return <ComponentDescription description={description} />;
 }
 
 function useComponent<UiProperties>(name: string): {
@@ -237,6 +201,45 @@ function ZodEnumComponent({
   );
 }
 
+interface IZodNumberComponentProps
+  extends IZodLeafComponentProps<zod.ZodNumber, number> {}
+function ZodNumberComponent({
+  name,
+  schema,
+  value,
+  isRequired,
+  defaultValue,
+}: IZodNumberComponentProps) {
+  const { onChange, leafs } = useFormContext();
+  const { errors, uiSchema } = useComponent<UiProperties<number>>(name);
+
+  function handleChange(value: number | undefined) {
+    if (onChange) {
+      onChange({
+        value,
+        path: componentNameDeserialize(name),
+      });
+    }
+  }
+
+  const Component = uiSchema?.component ?? leafs?.number ?? NumberDefault;
+  const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
+
+  return (
+    <Component
+      value={value}
+      onChange={handleChange}
+      name={name}
+      label={uiSchema?.label ?? name}
+      description={schema.description}
+      errorMessage={R.first(errors)?.message}
+      isRequired={isRequired}
+      defaultValue={defaultValue}
+      {...uiProps}
+    />
+  );
+}
+
 interface IZodArrayComponentProps
   extends IZodLeafComponentProps<ZodAnyArray, any[]> {
   minLength?: number;
@@ -283,62 +286,16 @@ function ZodArrayComponent({
   }
 
   return (
-    <div>
+    <ArrayDefault
+      onRemove={(index) =>
+        setItems((items) => items.filter((item, i) => index !== i))
+      }
+      onAdd={() => {
+        setItems([...items, schema.element]);
+      }}
+    >
       {renderElements()}
-
-      <button
-        type="button"
-        onClick={() => {
-          setItems([...items, schema.element]);
-        }}
-      >
-        Add
-      </button>
-
-      <ComponentErrorsOrDescription
-        name={name}
-        description={schema.description}
-      />
-    </div>
-  );
-}
-
-interface IZodNumberComponentProps
-  extends IZodLeafComponentProps<zod.ZodNumber, number> {}
-function ZodNumberComponent({
-  name,
-  schema,
-  value,
-  isRequired,
-  defaultValue,
-}: IZodNumberComponentProps) {
-  const { onChange, leafs } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiProperties<number>>(name);
-
-  function handleChange(value: number | undefined) {
-    if (onChange) {
-      onChange({
-        value,
-        path: componentNameDeserialize(name),
-      });
-    }
-  }
-
-  const Component = uiSchema?.component ?? leafs?.number ?? NumberDefault;
-  const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
-
-  return (
-    <Component
-      value={value}
-      onChange={handleChange}
-      name={name}
-      label={uiSchema?.label ?? name}
-      description={schema.description}
-      errorMessage={R.first(errors)?.message}
-      isRequired={isRequired}
-      defaultValue={defaultValue}
-      {...uiProps}
-    />
+    </ArrayDefault>
   );
 }
 
