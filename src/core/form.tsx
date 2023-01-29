@@ -8,6 +8,7 @@ import { createContext } from "../utils/create-context";
 import "../App.css";
 import { componentNameDeserialize } from "../utils/component-name-deserialize";
 import { get } from "../utils/get";
+import { IStringDefaultProps, StringDefault } from "./components-default";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -21,6 +22,7 @@ const [useFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
   onChange?: FormOnChange;
   uiSchema?: UiSchema<any>;
+  leafs?: Required<IFormProps<any>>["leafs"];
 }>();
 
 function getZodTypeNameFromSchema(schema: unknown): string | undefined {
@@ -128,7 +130,7 @@ interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString> {
   value?: string;
 }
 function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
-  const { onChange, uiSchema } = useFormContext();
+  const { onChange, uiSchema, leafs, errors } = useFormContext();
 
   function handleChange(value: string) {
     if (onChange) {
@@ -143,39 +145,19 @@ function ZodStringComponent({ name, schema, value }: IZodStringComponentProps) {
     ? get(uiSchema, name)
     : undefined;
 
-  function renderLabel() {
-    return thisUiSchema?.ui_label ?? name;
-  }
-
-  function renderComponent() {
-    if (thisUiSchema?.ui_component) {
-      return thisUiSchema.ui_component({
-        name,
-        value,
-        onChange: handleChange,
-      });
-    }
-
-    return (
-      <input
-        type="text"
-        name={name}
-        value={value}
-        onChange={(event) => handleChange(event.target.value)}
-      />
-    );
-  }
+  const thisErrors = errors?.[name] ?? [];
+  const Component =
+    thisUiSchema?.ui_component ?? leafs?.string ?? StringDefault;
 
   return (
-    <label>
-      {renderLabel()}
-      {renderComponent()}
-
-      <ComponentErrorsOrDescription
-        name={name}
-        description={schema.description}
-      />
-    </label>
+    <Component
+      value={value}
+      onChange={handleChange}
+      name={name}
+      label={thisUiSchema?.ui_label ?? name}
+      description={schema.description}
+      errorMessage={R.first(thisErrors)?.message}
+    />
   );
 }
 
@@ -414,7 +396,7 @@ interface ICustomComponentProps<Value> {
 
 type UiProperties<Value> = {
   ui_label?: React.ReactNode;
-  ui_component?: (props: ICustomComponentProps<Value>) => React.ReactNode;
+  ui_component?: (props: ICustomComponentProps<Value>) => JSX.Element;
 };
 
 type UiSchema<Schema extends object> = {
@@ -431,6 +413,11 @@ interface IFormProps<Schema extends AnyZodObject> {
   onSubmit?: (value: zod.infer<Schema>) => void;
   value?: zod.input<Schema>;
   onChange?: FormOnChange;
+  leafs?: {
+    string?: (props: IStringDefaultProps) => JSX.Element;
+    number?: (props: ICustomComponentProps<number>) => JSX.Element;
+    enum?: (props: ICustomComponentProps<string>) => JSX.Element;
+  };
 }
 
 export function Form<Schema extends AnyZodObject>({
@@ -440,6 +427,8 @@ export function Form<Schema extends AnyZodObject>({
   onSubmit,
   value,
   onChange,
+
+  leafs,
 }: IFormProps<Schema>) {
   const [errors, setErrors] = React.useState<ErrorsMap>();
 
@@ -467,7 +456,7 @@ export function Form<Schema extends AnyZodObject>({
         }
       }}
     >
-      <FormContextProvider value={{ errors, onChange, uiSchema }}>
+      <FormContextProvider value={{ errors, onChange, uiSchema, leafs }}>
         <ZodAnyComponent value={value} schema={schema} />
       </FormContextProvider>
 

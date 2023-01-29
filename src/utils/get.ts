@@ -1,3 +1,4 @@
+// TODO: Fix for arrays
 export function get(obj: any, path: string, defaultValue?: any): any {
   const keys = path.split(".");
   let result = obj;

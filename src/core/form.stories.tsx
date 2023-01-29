@@ -1,6 +1,7 @@
 import React from "react";
 import { Form } from "./form";
 import { z } from "zod";
+import { TextInput } from "@mantine/core";
 
 export function Simple() {
   const [schema] = React.useState(() =>
@@ -22,6 +23,9 @@ export function Simple() {
 
   return (
     <Form
+      leafs={{
+        string: TextInput,
+      }}
       schema={schema}
       onSubmit={console.log}
       onChange={console.log}
@@ -33,7 +37,7 @@ export function Simple() {
           ui_label: "First name",
           ui_component: ({ name, value, onChange }) => {
             return (
-              <input
+              <TextInput
                 name={name}
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
