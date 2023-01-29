@@ -12,6 +12,7 @@ specifiers:
   '@types/react-dom': ^18.0.9
   '@vitejs/plugin-react': ^3.0.1
   '@vitejs/plugin-react-swc': ^3.0.0
+  immer: ^9.0.19
   jsdom: ^21.1.0
   lodash.set: ^4.3.2
   prettier: ^2.8.3
@@ -28,6 +29,7 @@ dependencies:
   '@ladle/react': 2.5.1_772420cd684480dc188c05889fdf43f2
   '@mantine/core': 5.10.2_09865c6e07b19074bc7f3a5c8af3ec29
   '@mantine/hooks': 5.10.2_react@18.2.0
+  immer: 9.0.19
   lodash.set: 4.3.2
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
@@ -3322,6 +3324,10 @@ packages:
   /ignore/5.2.4:
     resolution: {integrity: sha512-MAb38BcSbH0eHNBxn7ql2NH/kX33OkB3lZ1BNdh7ENeRChHTYsTvWrMubiIAMNS2llXEEgZ1MUOBtXChP3kaFQ==}
     engines: {node: '>= 4'}
+    dev: false
+
+  /immer/9.0.19:
+    resolution: {integrity: sha512-eY+Y0qcsB4TZKwgQzLaE/lqYMlKhv5J9dyd2RhhtGhNo2njPXDqU9XPfcNfa3MIDsdtZt5KlkIsirlo4dHsWdQ==}
     dev: false
 
   /import-fresh/3.3.0:

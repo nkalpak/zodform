@@ -1,12 +1,14 @@
 import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString } from "zod";
 import * as zod from "zod";
 import * as R from "remeda";
-import { parseObjectFromFlattenedEntries } from "../utils/parse-object-from-flattened-names";
 import { nn } from "../utils/invariant";
 import React from "react";
 import { createContext } from "../utils/create-context";
 import "../App.css";
-import { componentNameDeserialize } from "../utils/component-name-deserialize";
+import {
+  componentNameDeserialize,
+  componentNameSerialize,
+} from "../utils/component-name-deserialize";
 import { get } from "../utils/get";
 import {
   IStringDefaultProps,
@@ -22,12 +24,15 @@ import {
 } from "../components/default/number-default";
 import { IComponentProps } from "../components/types";
 import { ArrayDefault } from "../components/default/array-default";
+import { BooleanDefault } from "../components/default/boolean-default";
+import set from "lodash.set";
+import produce from "immer";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
 type ComponentPath = (string | number)[];
 type FormOnChange = (data: {
-  value?: string | number;
+  value?: string | number | boolean;
   path: ComponentPath;
 }) => void;
 
@@ -93,6 +98,13 @@ function isZodDefault(schema: unknown): schema is zod.ZodDefault<any> {
   nn(typeName, "Invalid schema");
 
   return typeName === "ZodDefault";
+}
+
+function isZodBoolean(schema: unknown): schema is zod.ZodBoolean {
+  const typeName = getZodTypeNameFromSchema(schema);
+  nn(typeName, "Invalid schema");
+
+  return typeName === "ZodBoolean";
 }
 
 function useComponent<UiProperties>(name: string): {
@@ -239,6 +251,44 @@ function ZodNumberComponent({
     />
   );
 }
+interface IZodBooleanComponentProps
+  extends IZodLeafComponentProps<zod.ZodBoolean, boolean> {}
+function ZodBooleanComponent({
+  defaultValue,
+  value,
+  isRequired,
+  schema,
+  name,
+}: IZodBooleanComponentProps) {
+  const { onChange } = useFormContext();
+  const { errors, uiSchema } = useComponent<UiProperties<number>>(name);
+
+  function handleChange(value: boolean) {
+    if (onChange) {
+      onChange({
+        value,
+        path: componentNameDeserialize(name),
+      });
+    }
+  }
+
+  const Component = BooleanDefault;
+  const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
+
+  return (
+    <Component
+      value={value}
+      onChange={handleChange}
+      name={name}
+      label={uiSchema?.label ?? name}
+      description={schema.description}
+      errorMessage={R.first(errors)?.message}
+      isRequired={isRequired}
+      defaultValue={defaultValue}
+      {...uiProps}
+    />
+  );
+}
 
 interface IZodArrayComponentProps
   extends IZodLeafComponentProps<ZodAnyArray, any[]> {
@@ -287,9 +337,9 @@ function ZodArrayComponent({
 
   return (
     <ArrayDefault
-      onRemove={(index) =>
-        setItems((items) => items.filter((item, i) => index !== i))
-      }
+      onRemove={(index) => {
+        setItems((items) => items.filter((item, i) => index !== i));
+      }}
       onAdd={() => {
         setItems([...items, schema.element]);
       }}
@@ -357,6 +407,18 @@ function ZodAnyComponent({
         schema={schema}
         name={name}
         isRequired={isRequired}
+      />
+    );
+  }
+
+  if (isZodBoolean(schema)) {
+    return (
+      <ZodBooleanComponent
+        schema={schema}
+        name={name}
+        isRequired={isRequired}
+        value={value}
+        defaultValue={defaultValue}
       />
     );
   }
@@ -440,7 +502,8 @@ interface IFormProps<Schema extends AnyZodObject> {
   schema: Schema;
   uiSchema?: UiSchema<zod.infer<Schema>>;
   onSubmit?: (value: zod.infer<Schema>) => void;
-  value?: zod.input<Schema>;
+  value?: zod.infer<Schema>;
+  defaultValue?: zod.infer<Schema>;
   onChange?: FormOnChange;
   leafs?: {
     string?: (props: IStringDefaultProps) => JSX.Element;
@@ -455,31 +518,41 @@ export function Form<Schema extends AnyZodObject>({
 
   onSubmit,
   value,
+  defaultValue,
   onChange,
 
   leafs,
 }: IFormProps<Schema>) {
   const [errors, setErrors] = React.useState<ErrorsMap>();
+  const [formData, setFormData] = React.useState(defaultValue ?? {});
+  const [val] = React.useState(value);
+
+  if (R.isNil(val) && R.isDefined(value)) {
+    console.warn("Component changed from controlled to uncontrolled");
+  }
+
+  const handleChange: FormOnChange = React.useCallback(({ value, path }) => {
+    setFormData((prev) =>
+      produce(prev, (draft) => {
+        set(draft, componentNameSerialize(path), value);
+      })
+    );
+
+    onChange?.({ value, path });
+  }, []);
 
   return (
     <form
       onSubmit={(event) => {
         event.preventDefault();
 
-        const entries = Array.from(
-          new FormData(event.target as HTMLFormElement).entries()
-        );
-
-        const tmp = parseObjectFromFlattenedEntries(entries);
-
-        const parsed = schema.safeParse(tmp);
+        const parsed = schema.safeParse(formData);
 
         if (parsed.success) {
           setErrors(undefined);
           onSubmit?.(parsed.data);
         } else {
           console.error(parsed.error);
-          console.log("Data", tmp);
           setErrors(() =>
             // TODO: Serialize correctly for arrays
             R.groupBy(parsed.error.errors, (item) => item.path.join("."))
@@ -487,7 +560,9 @@ export function Form<Schema extends AnyZodObject>({
         }
       }}
     >
-      <FormContextProvider value={{ errors, onChange, uiSchema, leafs }}>
+      <FormContextProvider
+        value={{ errors, onChange: handleChange, uiSchema, leafs }}
+      >
         <ZodAnyComponent value={value} schema={schema} />
       </FormContextProvider>
 

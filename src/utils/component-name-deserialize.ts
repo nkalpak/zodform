@@ -1,4 +1,4 @@
-type Result = (string | number)[];
+type Path = (string | number)[];
 
 /**
  * Deserializes a component name into an array of strings and numbers.
@@ -9,7 +9,7 @@ type Result = (string | number)[];
  *  - a[0].b[1].c => ["a", 0, "b", 1, "c"]
  *  - a[0][1] => ["a", 0, 1]
  * */
-export function componentNameDeserialize(name: string): Result {
+export function componentNameDeserialize(name: string): Path {
   const hasObjectSeparator = name.includes(".");
   const hasArraySeparator = name.includes("[");
 
@@ -24,7 +24,7 @@ export function componentNameDeserialize(name: string): Result {
   return [name];
 
   function resolveObject(name: string) {
-    const result: Result = [];
+    const result: Path = [];
     for (const part of name.split(".")) {
       const [key, index] = part.split("[");
       if (key) {
@@ -38,7 +38,7 @@ export function componentNameDeserialize(name: string): Result {
   }
 
   function resolveMatrix(name: string) {
-    const result: Result = [];
+    const result: Path = [];
     for (const part of name.split("[")) {
       const [key] = part.split("]");
       const asNumber = parseInt(key!);
@@ -50,4 +50,10 @@ export function componentNameDeserialize(name: string): Result {
     }
     return result;
   }
+}
+
+export function componentNameSerialize(name: Path) {
+  return name
+    .map((part) => (typeof part === "number" ? `[${part}]` : part))
+    .join(".");
 }

@@ -12,9 +12,9 @@ export function ArrayDefault({
   return (
     <div>
       {children.map((child, index) => (
-        <div onClick={() => onRemove(index)} key={index}>
+        <div key={index}>
           {child}
-          <button>-</button>
+          <button onClick={() => onRemove(index)}>-</button>
         </div>
       ))}
 
