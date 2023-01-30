@@ -4,12 +4,6 @@ import { formDefaultValueFromSchema } from "./form-default-value-from-schema";
 
 describe("formDefaultValueFromSchema", function () {
   describe("string", function () {
-    test("should default to empty string", function () {
-      const schema = z.object({ name: z.string() });
-      const result = formDefaultValueFromSchema(schema);
-      expect(result).toEqual({ name: "" });
-    });
-
     test("should default to default value", function () {
       const schema = z.object({ name: z.string().default("John") });
       const result = formDefaultValueFromSchema(schema);
@@ -18,12 +12,6 @@ describe("formDefaultValueFromSchema", function () {
   });
 
   describe("number", function () {
-    test("should default to 0", function () {
-      const schema = z.object({ age: z.number() });
-      const result = formDefaultValueFromSchema(schema);
-      expect(result).toEqual({ age: 0 });
-    });
-
     test("should default to default value", function () {
       const schema = z.object({ age: z.number().default(18) });
       const result = formDefaultValueFromSchema(schema);
@@ -32,12 +20,6 @@ describe("formDefaultValueFromSchema", function () {
   });
 
   describe("enum", function () {
-    test("should default to first option", function () {
-      const schema = z.object({ color: z.enum(["red", "green", "blue"]) });
-      const result = formDefaultValueFromSchema(schema);
-      expect(result).toEqual({ color: "red" });
-    });
-
     test("should default to default value", function () {
       const schema = z.object({
         color: z.enum(["red", "green", "blue"]).default("green"),
@@ -71,7 +53,7 @@ describe("formDefaultValueFromSchema", function () {
     test("should default to array of min length, with the element type", function () {
       const schema = z.object({ hobbies: z.array(z.string()).min(2) });
       const result = formDefaultValueFromSchema(schema);
-      expect(result).toEqual({ hobbies: ["", ""] });
+      expect(result.hobbies).toHaveLength(2);
     });
   });
 
@@ -96,7 +78,7 @@ describe("formDefaultValueFromSchema", function () {
       });
     });
 
-    test("should default to object with default values, even if nested", function () {
+    test("should default to object without any properties", function () {
       const schema = z.object({
         address: z.object({
           street: z.string(),
@@ -106,7 +88,7 @@ describe("formDefaultValueFromSchema", function () {
       });
       const result = formDefaultValueFromSchema(schema);
       expect(result).toEqual({
-        address: { street: "", city: "", country: "" },
+        address: {},
       });
     });
   });

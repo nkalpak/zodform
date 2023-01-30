@@ -19,4 +19,16 @@ describe("unset", function () {
     unset(obj, ["a", "b", 1], { arrayBehavior: "setToUndefined" });
     expect(obj).toEqual({ a: { b: [1, undefined, 3] } });
   });
+
+  test("should do nothing when the property doesn't exist", function () {
+    const obj = { a: { b: { c: 1 } } };
+    unset(obj, ["a", "b", "d"]);
+    expect(obj).toEqual({ a: { b: { c: 1 } } });
+  });
+
+  test("should do nothing when the path is empty", function () {
+    const obj = { a: { b: { c: 1 } } };
+    unset(obj, []);
+    expect(obj).toEqual({ a: { b: { c: 1 } } });
+  });
 });
