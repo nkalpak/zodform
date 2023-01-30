@@ -18,7 +18,9 @@ export function ObjectMantine({ children, title }: IObjectDefaultProps) {
 export function ObjectMantineRows(props: IObjectDefaultProps) {
   return (
     <ObjectMantine {...props}>
-      <Box sx={{ display: "flex", gap: 8 }}>{props.children}</Box>
+      <Box sx={{ display: "flex", gap: 8, "& > *": { flex: 1 } }}>
+        {props.children}
+      </Box>
     </ObjectMantine>
   );
 }

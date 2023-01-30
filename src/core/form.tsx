@@ -53,6 +53,7 @@ import {
   IObjectDefaultProps,
   ObjectDefault,
 } from "../components/default/object-default";
+import { IsUnion } from "../utils/type-utils";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -475,11 +476,19 @@ type UiPropertiesObject = {
   };
 };
 
+// TODO: Implement this kind of type for all the other types (replace leaf stuff)
+type UiPropertiesEnum = {
+  component?: (props: IEnumDefaultProps) => JSX.Element;
+  label?: React.ReactNode;
+};
+
 type UiSchemaInner<Schema extends object> = {
   [K in keyof Partial<Schema>]: Schema[K] extends object
     ? Schema[K] extends Array<any>
       ? UiPropertiesArray
       : UiPropertiesObject & UiSchemaInner<Schema[K]>
+    : IsUnion<Schema[K]> extends true
+    ? UiPropertiesEnum
     : UiPropertiesLeaf<Schema[K]>;
 };
 

@@ -1,5 +1,5 @@
 import { IEnumDefaultProps } from "../default/enum-default";
-import { Select } from "@mantine/core";
+import { Radio, Select } from "@mantine/core";
 
 export function EnumMantine({
   value,
@@ -29,5 +29,34 @@ export function EnumMantine({
         label: option,
       }))}
     />
+  );
+}
+
+export function EnumMantineRadio({
+  value,
+  isRequired,
+  defaultValue,
+  description,
+  errorMessage,
+  name,
+  options,
+  label,
+  onChange,
+}: IEnumDefaultProps) {
+  return (
+    <Radio.Group
+      value={value}
+      required={isRequired}
+      name={name}
+      defaultValue={defaultValue}
+      description={description}
+      error={errorMessage}
+      label={label}
+      onChange={onChange}
+    >
+      {options.map((option) => (
+        <Radio value={option} label={option} />
+      ))}
+    </Radio.Group>
   );
 }

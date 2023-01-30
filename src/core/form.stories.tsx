@@ -6,7 +6,10 @@ import {
   PasswordMantine,
   StringMantine,
 } from "../components/mantine/string-mantine";
-import { EnumMantine } from "../components/mantine/enum-mantine";
+import {
+  EnumMantine,
+  EnumMantineRadio,
+} from "../components/mantine/enum-mantine";
 import { NumberMantine } from "../components/mantine/number-mantine";
 import { BooleanMantine } from "../components/mantine/boolean-mantine";
 import {
@@ -306,6 +309,89 @@ export function StudentRegistration() {
             </React.Fragment>
           );
         }}
+      </Form>
+    </div>
+  );
+}
+
+export function DonationForm() {
+  const [schema] = React.useState(() =>
+    z.object({
+      fullName: z.object({
+        firstName: z.string().min(1, "First name is required"),
+        lastName: z.string().min(1, "Last name is required"),
+      }),
+      email: z.string().email().describe("myname@example.com"),
+      phoneNumber: z
+        .string()
+        .min(1, "Phone number is required")
+        .describe('e.g. "+1 555 555 5555"'),
+      donationType: z.enum(["One time", "Monthly"] as const, {
+        required_error: "Please select a donation type",
+      }),
+      comments: z.string().optional(),
+      donationAmount: z
+        .number()
+        .min(0.01, "Donation should be larger than zero"),
+      paymentMethod: z.enum(["Credit card", "PayPal"] as const, {
+        required_error: "Please select a payment method",
+      }),
+    })
+  );
+
+  return (
+    <div
+      style={{
+        maxWidth: 500,
+        margin: "auto",
+      }}
+    >
+      <Form
+        components={components}
+        title={<h1>Donation form</h1>}
+        schema={schema}
+        uiSchema={{
+          fullName: {
+            firstName: {
+              label: "First name",
+            },
+            lastName: {
+              label: "Last name",
+            },
+            ui: {
+              title: "Full name",
+              component: ObjectMantineRows,
+            },
+          },
+
+          email: {
+            label: "Email",
+          },
+
+          phoneNumber: {
+            label: "Phone number",
+          },
+
+          donationType: {
+            component: EnumMantineRadio,
+            label: "Donation type",
+          },
+
+          comments: {
+            label: "Comments",
+          },
+
+          donationAmount: {
+            label: "Donation amount",
+          },
+
+          paymentMethod: {
+            component: EnumMantineRadio,
+            label: "Payment method",
+          },
+        }}
+      >
+        {() => <Button type="submit">Submit</Button>}
       </Form>
     </div>
   );

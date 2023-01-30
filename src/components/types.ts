@@ -1,6 +1,6 @@
 import React from "react";
 
-export interface IComponentProps<Value> {
+export type IComponentProps<Value> = {
   value?: Value;
   defaultValue?: Value;
   onChange: (value: Value) => void;
@@ -10,4 +10,4 @@ export interface IComponentProps<Value> {
   errorMessage?: string;
   isRequired?: boolean;
   autoFocus?: boolean;
-}
+};
