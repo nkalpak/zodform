@@ -477,6 +477,12 @@ interface IFormProps<Schema extends SchemaType> {
   title?: React.ReactNode;
 }
 
+/**
+ * Zod may wrap the schema in an effects
+ * object (when using refine, for example)
+ * so we need to resolve the schema to the actual
+ * object schema from which we can generate the form
+ * */
 function resolveObjectSchema(schema: SchemaType): AnyZodObject {
   if (isZodObject(schema)) {
     return schema;
