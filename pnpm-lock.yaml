@@ -7,6 +7,7 @@ specifiers:
   '@mantine/hooks': ^5.10.2
   '@testing-library/jest-dom': ^5.16.5
   '@testing-library/react': ^13.4.0
+  '@testing-library/user-event': ^14.4.3
   '@types/lodash.get': ^4.4.7
   '@types/lodash.set': ^4.3.7
   '@types/react': ^18.0.26
@@ -31,6 +32,7 @@ dependencies:
   '@ladle/react': 2.5.1_772420cd684480dc188c05889fdf43f2
   '@mantine/core': 5.10.2_09865c6e07b19074bc7f3a5c8af3ec29
   '@mantine/hooks': 5.10.2_react@18.2.0
+  '@testing-library/user-event': 14.4.3
   immer: 9.0.19
   lodash.get: 4.4.2
   lodash.set: 4.3.2
@@ -2085,6 +2087,13 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     dev: true
+
+  /@testing-library/user-event/14.4.3:
+    resolution: {integrity: sha512-kCUc5MEwaEMakkO5x7aoD+DLi02ehmEM2QCGWvNqAS1dV/fAvORWEjnjsEIvml59M7Y5kCkWN6fCCyPOe8OL6Q==}
+    engines: {node: '>=12', npm: '>=6'}
+    peerDependencies:
+      '@testing-library/dom': '>=7.21.4'
+    dev: false
 
   /@tootallnate/once/2.0.0:
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
