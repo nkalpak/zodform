@@ -1,18 +1,32 @@
 import { ComponentPath } from "../core/form";
 import * as R from "remeda";
 
-export function unset(obj: Record<string, any>, path: ComponentPath): void {
+interface IUnsetOptions {
+  // What to do when the path points to an array element?
+  arrayBehavior?: "delete" | "setToUndefined";
+}
+
+export function unset(
+  obj: Record<string, any>,
+  path: ComponentPath,
+  options: IUnsetOptions = {
+    arrayBehavior: "delete",
+  }
+): void {
   let current = obj;
   for (const key of path.slice(0, -1)) {
     current = current[key];
-  }
-
-  if (R.isNil(current)) {
-    return;
+    if (R.isNil(current)) {
+      return;
+    }
   }
 
   if (Array.isArray(current)) {
-    current.splice(path[path.length - 1], 1);
+    if (options.arrayBehavior === "delete") {
+      current.splice(path[path.length - 1], 1);
+    } else {
+      current[path[path.length - 1]] = undefined;
+    }
     return;
   }
 

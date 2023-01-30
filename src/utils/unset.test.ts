@@ -13,4 +13,10 @@ describe("unset", function () {
     unset(obj, ["a", "b", 1]);
     expect(obj).toEqual({ a: { b: [1, 3] } });
   });
+
+  test("should unset a nested array property with arrayBehavior set to 'setToUndefined'", function () {
+    const obj = { a: { b: [1, 2, 3] } };
+    unset(obj, ["a", "b", 1], { arrayBehavior: "setToUndefined" });
+    expect(obj).toEqual({ a: { b: [1, undefined, 3] } });
+  });
 });

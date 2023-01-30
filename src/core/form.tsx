@@ -68,9 +68,11 @@ type OnChange = (
 
 const [useFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
-  onChange: OnChange;
   uiSchema?: UiSchema<any>;
   leafs?: Required<IFormProps<any>>["leafs"];
+
+  onChange: OnChange;
+  onArrayRemove: (path: ComponentPath) => void;
 }>();
 
 function useComponent<UiProperties>(name: string): {
@@ -277,7 +279,7 @@ function ZodArrayComponent({
   name,
   value = [],
 }: IZodArrayComponentProps) {
-  const { onChange } = useFormContext();
+  const { onChange, onArrayRemove } = useFormContext();
   const { uiSchema } = useComponent<UiPropertiesArray>(name);
 
   const Component = uiSchema?.component ?? ArrayDefault;
@@ -286,10 +288,7 @@ function ZodArrayComponent({
     <Component
       title={uiSchema?.title}
       onRemove={(index) => {
-        onChange({
-          op: "remove",
-          path: componentNameDeserialize(`${name}[${index}]`),
-        });
+        onArrayRemove(componentNameDeserialize(`${name}[${index}]`));
       }}
       onAdd={() => {
         onChange({
@@ -499,8 +498,20 @@ export function Form<Schema extends AnyZodObject>({
         if (event.op === "update") {
           set(draft, event.path, event.value);
         } else {
-          unset(draft, event.path);
+          unset(draft, event.path, {
+            arrayBehavior: "setToUndefined",
+          });
         }
+      })
+    );
+  }, []);
+
+  const onArrayRemove = React.useCallback((path: ComponentPath) => {
+    setFormData((prev) =>
+      produce(prev, (draft) => {
+        unset(draft, path, {
+          arrayBehavior: "delete",
+        });
       })
     );
   }, []);
@@ -534,7 +545,13 @@ export function Form<Schema extends AnyZodObject>({
       {title}
 
       <FormContextProvider
-        value={{ errors, onChange: handleChange, uiSchema, leafs }}
+        value={{
+          errors,
+          onChange: handleChange,
+          uiSchema,
+          leafs,
+          onArrayRemove,
+        }}
       >
         <ZodAnyComponent value={value ?? formData} schema={schema} />
       </FormContextProvider>
