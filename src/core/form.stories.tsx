@@ -9,12 +9,19 @@ import {
 import { EnumMantine } from "../components/mantine/enum-mantine";
 import { NumberMantine } from "../components/mantine/number-mantine";
 import { BooleanMantine } from "../components/mantine/boolean-mantine";
+import {
+  ObjectMantine,
+  ObjectMantineRows,
+} from "../components/mantine/object-mantine";
+import { Alert, Box, Button, List } from "@mantine/core";
+import { IObjectDefaultProps } from "../components/default/object-default";
 
 const leafs = {
   string: StringMantine,
   enum: EnumMantine,
   number: NumberMantine,
   boolean: BooleanMantine,
+  object: ObjectMantine,
 } as const;
 
 export function Simple() {
@@ -244,11 +251,19 @@ export function StudentRegistration() {
         lastName: z.string().min(1, "Last name is required"),
       }),
       birthDate: z.object({
-        month: z.enum(monthOptions),
-        day: z.enum(dayOptions),
-        year: z.enum(yearOptions),
+        month: z.enum(monthOptions, {
+          required_error: "Please select a birth month",
+        }),
+        day: z.enum(dayOptions, {
+          required_error: "Please select a birth day",
+        }),
+        year: z.enum(yearOptions, {
+          required_error: "Please select a birth year",
+        }),
       }),
-      gender: z.enum(["Male", "Female", "Other"] as const),
+      gender: z.enum(["Male", "Female", "Other"] as const, {
+        required_error: "Please select a gender",
+      }),
       address: z.object({
         street: z.string().min(1, "Street is required"),
         city: z.string().min(1, "City is required"),
@@ -257,9 +272,32 @@ export function StudentRegistration() {
       }),
       email: z.string().email(),
       phone: z.string().min(1, "Phone is required"),
-      courses: z.enum(["Math", "Science", "English", "History"] as const),
+      courses: z.enum(["Math", "Science", "English", "History"] as const, {
+        required_error: "Please select a course",
+      }),
       additionalComments: z.string().optional(),
     })
+  );
+
+  const addressComponent = React.useCallback(
+    (props: IObjectDefaultProps) => (
+      <ObjectMantine {...props}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            columnGap: 8,
+
+            "& :first-child, & :last-child": {
+              gridColumn: "span 2",
+            },
+          }}
+        >
+          {props.children}
+        </Box>
+      </ObjectMantine>
+    ),
+    []
   );
 
   return (
@@ -286,10 +324,86 @@ export function StudentRegistration() {
             },
             ui: {
               title: "Student name",
+              component: ObjectMantineRows,
             },
           },
+
+          birthDate: {
+            month: {
+              label: "Month",
+            },
+            day: {
+              label: "Day",
+            },
+            year: {
+              label: "Year",
+            },
+            ui: {
+              title: "Birth date",
+              component: ObjectMantineRows,
+            },
+          },
+
+          gender: {
+            label: "Gender",
+          },
+
+          address: {
+            ui: {
+              title: "Address",
+              component: addressComponent,
+            },
+            state: {
+              label: "State",
+            },
+            city: {
+              label: "City",
+            },
+            zip: {
+              label: "Zip",
+            },
+            street: {
+              label: "Street",
+            },
+          },
+
+          email: {
+            label: "Email",
+          },
+
+          additionalComments: {
+            label: "Additional comments",
+          },
+
+          courses: {
+            label: "Courses",
+          },
+
+          phone: {
+            label: "Phone",
+          },
         }}
-      />
+      >
+        {({ errors }) => {
+          return (
+            <React.Fragment>
+              {errors.length > 0 && (
+                <Alert title="Please resolve the errors" color="red">
+                  <List>
+                    {errors.map(([, errors]) =>
+                      errors.map((error) => (
+                        <List.Item c="red">{error.message}</List.Item>
+                      ))
+                    )}
+                  </List>
+                </Alert>
+              )}
+
+              <Button type="submit">Submit</Button>
+            </React.Fragment>
+          );
+        }}
+      </Form>
     </div>
   );
 }

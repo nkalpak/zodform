@@ -1,7 +1,7 @@
 import React from "react";
 
 export interface IObjectDefaultProps {
-  children: React.ReactNode[];
+  children: React.ReactNode[] | React.ReactNode;
   title?: React.ReactNode;
 }
 

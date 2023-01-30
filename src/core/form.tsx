@@ -49,7 +49,10 @@ import { useUncontrolledToControlledWarning } from "../utils/use-uncontrolled-to
 import get from "lodash.get";
 import { unset } from "../utils/unset";
 import { ZodEffects } from "zod";
-import { ObjectDefault } from "../components/default/object-default";
+import {
+  IObjectDefaultProps,
+  ObjectDefault,
+} from "../components/default/object-default";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -321,14 +324,17 @@ function ZodObjectComponent({
   schema: AnyZodObject;
   name?: string;
 }) {
+  const { leafs } = useFormContext();
   const { uiSchema } = useComponent<UiPropertiesObject>(name ?? "");
   const uiProps = name ? uiSchema?.ui ?? {} : {};
 
   // Don't create a div as the first child of the form
-  const Component = name ? ObjectDefault : React.Fragment;
+  const Component = name
+    ? uiProps?.component ?? leafs?.object ?? ObjectDefault
+    : React.Fragment;
 
   return (
-    <Component {...uiProps}>
+    <Component {...R.omit(uiProps, ["component"])}>
       {Object.entries(schema.shape).map(([thisName, thisSchema]) => {
         const childName = name ? [name, thisName].join(".") : thisName;
 
@@ -464,6 +470,7 @@ type UiPropertiesArray = {
 type UiPropertiesObject = {
   ui?: {
     title?: React.ReactNode;
+    component?: (props: IObjectDefaultProps) => JSX.Element;
   };
 };
 
@@ -476,6 +483,10 @@ type UiSchema<Schema extends object> = {
 };
 
 type SchemaType = AnyZodObject | ZodEffects<any>;
+type FormChildren = (props: {
+  errors: [keyof ErrorsMap, ErrorsMap[keyof ErrorsMap]][];
+}) => JSX.Element;
+
 interface IFormProps<Schema extends SchemaType> {
   schema: Schema;
   uiSchema?: UiSchema<zod.infer<Schema>>;
@@ -487,8 +498,10 @@ interface IFormProps<Schema extends SchemaType> {
     number?: (props: INumberDefaultProps) => JSX.Element;
     enum?: (props: IEnumDefaultProps) => JSX.Element;
     boolean?: (props: IBooleanDefaultProps) => JSX.Element;
+    object?: (props: IObjectDefaultProps) => JSX.Element;
   };
   title?: React.ReactNode;
+  children?: FormChildren;
 }
 
 /**
@@ -519,6 +532,8 @@ export function Form<Schema extends SchemaType>({
 
   leafs,
   title,
+
+  children,
 }: IFormProps<Schema>) {
   const objectSchema = React.useMemo(
     () => resolveObjectSchema(schema),
@@ -595,7 +610,11 @@ export function Form<Schema extends SchemaType>({
         <ZodAnyComponent value={value ?? formData} schema={objectSchema} />
       </FormContextProvider>
 
-      <button type="submit">Submit</button>
+      {children ? (
+        children({ errors: Object.entries(errors ?? {}) })
+      ) : (
+        <button type="submit">Submit</button>
+      )}
     </form>
   );
 }
