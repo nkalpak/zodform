@@ -74,7 +74,7 @@ type OnChange = (
 
 const [useFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
-  uiSchema?: UiSchema<any>;
+  uiSchema?: UiSchemaInner<any>;
   leafs?: Required<IFormProps<any>>["leafs"];
 
   onChange: OnChange;
@@ -474,13 +474,17 @@ type UiPropertiesObject = {
   };
 };
 
-type UiSchema<Schema extends object> = {
+type UiSchemaInner<Schema extends object> = {
   [K in keyof Partial<Schema>]: Schema[K] extends object
     ? Schema[K] extends Array<any>
       ? UiPropertiesArray
-      : UiPropertiesObject & UiSchema<Schema[K]>
+      : UiPropertiesObject & UiSchemaInner<Schema[K]>
     : UiPropertiesLeaf<Schema[K]>;
 };
+
+export type UiSchema<Schema extends SchemaType> = UiSchemaInner<
+  zod.infer<Schema>
+>;
 
 type SchemaType = AnyZodObject | ZodEffects<any>;
 type FormChildren = (props: {
@@ -489,7 +493,7 @@ type FormChildren = (props: {
 
 interface IFormProps<Schema extends SchemaType> {
   schema: Schema;
-  uiSchema?: UiSchema<zod.infer<Schema>>;
+  uiSchema?: UiSchema<Schema>;
   onSubmit?: (value: zod.infer<Schema>) => void;
   value?: zod.infer<Schema>;
   defaultValue?: zod.infer<Schema>;

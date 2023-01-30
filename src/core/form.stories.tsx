@@ -1,6 +1,6 @@
 import React from "react";
 import * as R from "remeda";
-import { Form } from "./form";
+import { Form, UiSchema } from "./form";
 import { z } from "zod";
 import {
   PasswordMantine,
@@ -300,6 +300,79 @@ export function StudentRegistration() {
     []
   );
 
+  const [uiSchema] = React.useState<UiSchema<typeof schema>>(() => ({
+    studentName: {
+      firstName: {
+        label: "First name",
+      },
+      lastName: {
+        label: "Last name",
+      },
+      middleName: {
+        label: "Middle name",
+      },
+      ui: {
+        title: "Student name",
+        component: ObjectMantineRows,
+      },
+    },
+
+    birthDate: {
+      month: {
+        label: "Month",
+      },
+      day: {
+        label: "Day",
+      },
+      year: {
+        label: "Year",
+      },
+      ui: {
+        title: "Birth date",
+        component: ObjectMantineRows,
+      },
+    },
+
+    gender: {
+      label: "Gender",
+    },
+
+    address: {
+      ui: {
+        title: "Address",
+        component: addressComponent,
+      },
+      state: {
+        label: "State",
+      },
+      city: {
+        label: "City",
+      },
+      zip: {
+        label: "Zip",
+      },
+      street: {
+        label: "Street",
+      },
+    },
+
+    email: {
+      label: "Email",
+    },
+
+    additionalComments: {
+      label: "Additional comments",
+    },
+
+    courses: {
+      label: "Courses",
+    },
+
+    phone: {
+      label: "Phone",
+    },
+  }));
+
   return (
     <div
       style={{
@@ -311,78 +384,7 @@ export function StudentRegistration() {
         title={<h1>Registration form</h1>}
         schema={schema}
         leafs={leafs}
-        uiSchema={{
-          studentName: {
-            firstName: {
-              label: "First name",
-            },
-            lastName: {
-              label: "Last name",
-            },
-            middleName: {
-              label: "Middle name",
-            },
-            ui: {
-              title: "Student name",
-              component: ObjectMantineRows,
-            },
-          },
-
-          birthDate: {
-            month: {
-              label: "Month",
-            },
-            day: {
-              label: "Day",
-            },
-            year: {
-              label: "Year",
-            },
-            ui: {
-              title: "Birth date",
-              component: ObjectMantineRows,
-            },
-          },
-
-          gender: {
-            label: "Gender",
-          },
-
-          address: {
-            ui: {
-              title: "Address",
-              component: addressComponent,
-            },
-            state: {
-              label: "State",
-            },
-            city: {
-              label: "City",
-            },
-            zip: {
-              label: "Zip",
-            },
-            street: {
-              label: "Street",
-            },
-          },
-
-          email: {
-            label: "Email",
-          },
-
-          additionalComments: {
-            label: "Additional comments",
-          },
-
-          courses: {
-            label: "Courses",
-          },
-
-          phone: {
-            label: "Phone",
-          },
-        }}
+        uiSchema={uiSchema}
       >
         {({ errors }) => {
           return (
