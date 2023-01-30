@@ -126,3 +126,42 @@ export function Nested() {
     />
   );
 }
+
+export function Login() {
+  const [schema] = React.useState(() =>
+    z.object({
+      email: z.string().email(),
+      password: z
+        .string()
+        .describe("Make sure that your password is strong")
+        .regex(
+          /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
+          "Password not strong enough"
+        ),
+    })
+  );
+
+  return (
+    <div
+      style={{
+        maxWidth: 500,
+        margin: "auto",
+      }}
+    >
+      <Form
+        title={<h1>Login</h1>}
+        schema={schema}
+        leafs={leafs}
+        uiSchema={{
+          email: {
+            label: "Email",
+          },
+          password: {
+            label: "Password",
+            component: PasswordMantine,
+          },
+        }}
+      />
+    </div>
+  );
+}
