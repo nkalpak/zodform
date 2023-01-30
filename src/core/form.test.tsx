@@ -41,29 +41,44 @@ describe("Form", function () {
   test("number input submits when valid", async function () {
     const user = userEvent.setup();
     const schema = z.object({
-      age: z.coerce.number().min(18).optional(),
+      age: z.number(),
     });
     const onSubmit = vi.fn();
 
     const AGE = 18;
-    const LABEL = "Age";
 
-    const screen = render(
-      <Form
-        onSubmit={onSubmit}
-        schema={schema}
-        uiSchema={{
-          age: {
-            ui: {
-              label: LABEL,
-            },
-          },
-        }}
-      />
-    );
-    await user.type(screen.getByLabelText(LABEL), AGE.toString());
+    const screen = render(<Form onSubmit={onSubmit} schema={schema} />);
+    await user.type(screen.getByLabelText("age"), AGE.toString());
     await user.click(screen.getByRole("button", { name: "Submit" }));
 
-    expect(onSubmit).toBeCalledWith({ age: 18 });
+    expect(onSubmit).toBeCalledWith({ age: AGE });
+  });
+
+  test("empty number input is submittable when optional", async function () {
+    const user = userEvent.setup();
+    const schema = z.object({
+      age: z.number().optional(),
+    });
+    const onSubmit = vi.fn();
+
+    const screen = render(<Form onSubmit={onSubmit} schema={schema} />);
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    expect(onSubmit).toBeCalledWith({});
+  });
+
+  test("empty, optional number input is submittable after type & clear", async function () {
+    const user = userEvent.setup();
+    const schema = z.object({
+      age: z.number().optional(),
+    });
+    const onSubmit = vi.fn();
+
+    const screen = render(<Form onSubmit={onSubmit} schema={schema} />);
+    await user.type(screen.getByLabelText("age"), "18");
+    await user.clear(screen.getByLabelText("age"));
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    expect(onSubmit).toBeCalledWith({});
   });
 });

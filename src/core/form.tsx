@@ -189,7 +189,14 @@ function ZodNumberComponent({
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<number>>(name);
 
-  function handleChange(value: number | undefined) {
+  function handleChange(value?: number) {
+    if (R.isNil(value) || Number.isNaN(value)) {
+      return onChange({
+        op: "remove",
+        path: componentNameDeserialize(name),
+      });
+    }
+
     onChange({
       op: "update",
       value,
