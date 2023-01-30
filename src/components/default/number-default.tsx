@@ -21,7 +21,13 @@ export function NumberDefault({
         type="number"
         name={name}
         value={value ?? ""}
-        onChange={(event) => onChange(event.target.valueAsNumber)}
+        onChange={(event) =>
+          onChange(
+            Number.isNaN(event.target.valueAsNumber)
+              ? undefined
+              : event.target.valueAsNumber
+          )
+        }
       />
 
       <ErrorOrDescription error={errorMessage} description={description} />

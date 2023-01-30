@@ -94,6 +94,7 @@ interface IZodLeafComponentProps<
   description?: string;
   isRequired: boolean;
   value?: Value;
+  defaultValue?: Value;
 }
 
 interface IZodStringComponentProps
@@ -101,13 +102,13 @@ interface IZodStringComponentProps
 function ZodStringComponent({
   name,
   schema,
-  value = "",
+  value,
   isRequired,
 }: IZodStringComponentProps) {
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<string>>(name);
 
-  function handleChange(value: string) {
+  function handleChange(value: string = "") {
     const isEmpty = value === "";
 
     if (isEmpty && !isRequired) {
@@ -117,7 +118,7 @@ function ZodStringComponent({
       });
     }
 
-    onChange({
+    return onChange({
       op: "update",
       value,
       path: componentNameDeserialize(name),
@@ -190,14 +191,16 @@ function ZodNumberComponent({
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<number>>(name);
 
   function handleChange(value?: number) {
-    if (R.isNil(value) || Number.isNaN(value)) {
+    const isEmpty = R.isNil(value) || Number.isNaN(value);
+
+    if (isEmpty && !isRequired) {
       return onChange({
         op: "remove",
         path: componentNameDeserialize(name),
       });
     }
 
-    onChange({
+    return onChange({
       op: "update",
       value,
       path: componentNameDeserialize(name),
@@ -421,6 +424,7 @@ function ZodAnyComponent({
         name={name}
         isRequired={isRequired}
         value={value}
+        defaultValue={schema._def.defaultValue}
       />
     );
   }
@@ -503,6 +507,8 @@ export function Form<Schema extends AnyZodObject>({
       })
     );
   }, []);
+
+  console.log(formData);
 
   return (
     <form

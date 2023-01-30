@@ -75,6 +75,7 @@ export function UiOptions() {
       firstName: z.string().min(1, "Required"),
       lastName: z.string().min(1, "Required"),
       telephone: z.string().min(5).optional(),
+      age: z.number({}),
     })
   );
 
@@ -82,7 +83,7 @@ export function UiOptions() {
     <Form
       onSubmit={console.log}
       schema={schema}
-      leafs={leafs}
+      // leafs={leafs}
       uiSchema={{
         firstName: {
           ui: {

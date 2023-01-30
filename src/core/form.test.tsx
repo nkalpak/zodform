@@ -54,7 +54,7 @@ describe("Form", function () {
     expect(onSubmit).toBeCalledWith({ age: AGE });
   });
 
-  test("empty number input is submittable when optional", async function () {
+  test("submit empty number field when optional", async function () {
     const user = userEvent.setup();
     const schema = z.object({
       age: z.number().optional(),

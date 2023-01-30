@@ -19,7 +19,7 @@ export function StringMantine({
       {...props}
       required={isRequired}
       name={name}
-      value={value}
+      value={value ?? ""}
       onChange={(event) => onChange(event.target.value)}
       label={label}
       description={description}

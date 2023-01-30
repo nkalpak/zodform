@@ -19,7 +19,7 @@ export function StringDefault({
       <input
         type="text"
         name={name}
-        value={value}
+        value={value ?? ""}
         onChange={(event) => onChange(event.target.value)}
       />
 
