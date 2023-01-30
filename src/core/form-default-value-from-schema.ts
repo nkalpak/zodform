@@ -44,7 +44,7 @@ export function formDefaultValueFromSchema(
     if (isZodObject(schema)) {
       const obj: Record<string, any> = {};
       for (const [key, value] of Object.entries(schema.shape)) {
-        obj[key] = iterator(value);
+        obj[key] = iterator(value as ZodFirstPartySchemaTypes);
         if (obj[key] === undefined) {
           delete obj[key];
         }
