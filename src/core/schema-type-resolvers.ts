@@ -68,3 +68,10 @@ export function isZodBoolean(schema: unknown): schema is zod.ZodBoolean {
 
   return typeName === "ZodBoolean";
 }
+
+export function isZodEffects(schema: unknown): schema is zod.ZodEffects<any> {
+  const typeName = getZodTypeNameFromSchema(schema);
+  nn(typeName, "Invalid schema");
+
+  return typeName === "ZodEffects";
+}

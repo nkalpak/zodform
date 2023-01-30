@@ -35,6 +35,7 @@ import {
   isZodArray,
   isZodBoolean,
   isZodDefault,
+  isZodEffects,
   isZodEnum,
   isZodNumber,
   isZodObject,
@@ -47,6 +48,7 @@ import { formDefaultValueFromSchema } from "./form-default-value-from-schema";
 import { useUncontrolledToControlledWarning } from "../utils/use-uncontrolled-to-controlled-warning";
 import get from "lodash.get";
 import { unset } from "../utils/unset";
+import { ZodEffects } from "zod";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -459,7 +461,8 @@ type UiSchema<Schema extends object> = {
     : UiPropertiesLeaf<Schema[K]>;
 };
 
-interface IFormProps<Schema extends AnyZodObject> {
+type SchemaType = AnyZodObject | ZodEffects<any>;
+interface IFormProps<Schema extends SchemaType> {
   schema: Schema;
   uiSchema?: UiSchema<zod.infer<Schema>>;
   onSubmit?: (value: zod.infer<Schema>) => void;
@@ -474,7 +477,19 @@ interface IFormProps<Schema extends AnyZodObject> {
   title?: React.ReactNode;
 }
 
-export function Form<Schema extends AnyZodObject>({
+function resolveObjectSchema(schema: SchemaType): AnyZodObject {
+  if (isZodObject(schema)) {
+    return schema;
+  }
+
+  if (isZodEffects(schema)) {
+    return resolveObjectSchema(schema._def.schema);
+  }
+
+  throw new Error(`Schema must be an object, got ${schema}`);
+}
+
+export function Form<Schema extends SchemaType>({
   schema,
   uiSchema,
 
@@ -485,9 +500,13 @@ export function Form<Schema extends AnyZodObject>({
   leafs,
   title,
 }: IFormProps<Schema>) {
+  const objectSchema = React.useMemo(
+    () => resolveObjectSchema(schema),
+    [schema]
+  );
   const [errors, setErrors] = React.useState<ErrorsMap>();
   const [formData, setFormData] = React.useState(
-    defaultValue ?? formDefaultValueFromSchema(schema)
+    defaultValue ?? formDefaultValueFromSchema(objectSchema)
   );
 
   useUncontrolledToControlledWarning(value);
@@ -553,7 +572,7 @@ export function Form<Schema extends AnyZodObject>({
           onArrayRemove,
         }}
       >
-        <ZodAnyComponent value={value ?? formData} schema={schema} />
+        <ZodAnyComponent value={value ?? formData} schema={objectSchema} />
       </FormContextProvider>
 
       <button type="submit">Submit</button>

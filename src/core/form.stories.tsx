@@ -165,3 +165,46 @@ export function Login() {
     </div>
   );
 }
+
+export function Register() {
+  const [schema] = React.useState(() =>
+    z
+      .object({
+        email: z.string().email(),
+        password: z.string(),
+        confirmPassword: z.string(),
+      })
+      .refine((data) => data.confirmPassword === data.password, {
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
+      })
+  );
+
+  return (
+    <div
+      style={{
+        maxWidth: 500,
+        margin: "auto",
+      }}
+    >
+      <Form
+        title={<h1>Register</h1>}
+        schema={schema}
+        leafs={leafs}
+        uiSchema={{
+          email: {
+            label: "Email",
+          },
+          password: {
+            label: "Password",
+            component: PasswordMantine,
+          },
+          confirmPassword: {
+            label: "Confirm password",
+            component: PasswordMantine,
+          },
+        }}
+      />
+    </div>
+  );
+}
