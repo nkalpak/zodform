@@ -75,7 +75,7 @@ type OnChange = (
 const [useFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
   uiSchema?: UiSchemaInner<any>;
-  leafs?: Required<IFormProps<any>>["leafs"];
+  components?: Required<IFormProps<any>>["components"];
 
   onChange: OnChange;
   onArrayRemove: (path: ComponentPath) => void;
@@ -116,7 +116,7 @@ function ZodStringComponent({
   value,
   isRequired,
 }: IZodStringComponentProps) {
-  const { onChange, leafs } = useFormContext();
+  const { onChange, components } = useFormContext();
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<string>>(name);
 
   function handleChange(value = "") {
@@ -136,7 +136,7 @@ function ZodStringComponent({
     });
   }
 
-  const Component = uiSchema?.component ?? leafs?.string ?? StringDefault;
+  const Component = uiSchema?.component ?? components?.string ?? StringDefault;
   const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
 
   return (
@@ -161,7 +161,7 @@ function ZodEnumComponent({
   value = "",
   isRequired,
 }: IZodEnumComponentProps) {
-  const { onChange, leafs } = useFormContext();
+  const { onChange, components } = useFormContext();
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<string>>(name);
 
   function handleChange(value?: string) {
@@ -172,7 +172,7 @@ function ZodEnumComponent({
     });
   }
 
-  const Component = uiSchema?.component ?? leafs?.enum ?? EnumDefault;
+  const Component = uiSchema?.component ?? components?.enum ?? EnumDefault;
   const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
 
   return (
@@ -198,7 +198,7 @@ function ZodNumberComponent({
   value,
   isRequired,
 }: IZodNumberComponentProps) {
-  const { onChange, leafs } = useFormContext();
+  const { onChange, components } = useFormContext();
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<number>>(name);
 
   function handleChange(value?: number) {
@@ -218,7 +218,7 @@ function ZodNumberComponent({
     });
   }
 
-  const Component = uiSchema?.component ?? leafs?.number ?? NumberDefault;
+  const Component = uiSchema?.component ?? components?.number ?? NumberDefault;
   const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
 
   return (
@@ -242,7 +242,7 @@ function ZodBooleanComponent({
   schema,
   name,
 }: IZodBooleanComponentProps) {
-  const { onChange, leafs } = useFormContext();
+  const { onChange, components } = useFormContext();
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<boolean>>(name);
 
   function handleChange(value: boolean) {
@@ -253,7 +253,8 @@ function ZodBooleanComponent({
     });
   }
 
-  const Component = uiSchema?.component ?? leafs?.boolean ?? BooleanDefault;
+  const Component =
+    uiSchema?.component ?? components?.boolean ?? BooleanDefault;
   const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
 
   return (
@@ -324,13 +325,13 @@ function ZodObjectComponent({
   schema: AnyZodObject;
   name?: string;
 }) {
-  const { leafs } = useFormContext();
+  const { components } = useFormContext();
   const { uiSchema } = useComponent<UiPropertiesObject>(name ?? "");
   const uiProps = name ? uiSchema?.ui ?? {} : {};
 
   // Don't create a div as the first child of the form
   const Component = name
-    ? uiProps?.component ?? leafs?.object ?? ObjectDefault
+    ? uiProps?.component ?? components?.object ?? ObjectDefault
     : React.Fragment;
 
   return (
@@ -497,7 +498,7 @@ interface IFormProps<Schema extends SchemaType> {
   onSubmit?: (value: zod.infer<Schema>) => void;
   value?: zod.infer<Schema>;
   defaultValue?: zod.infer<Schema>;
-  leafs?: {
+  components?: {
     string?: (props: IStringDefaultProps) => JSX.Element;
     number?: (props: INumberDefaultProps) => JSX.Element;
     enum?: (props: IEnumDefaultProps) => JSX.Element;
@@ -534,7 +535,7 @@ export function Form<Schema extends SchemaType>({
   value,
   defaultValue,
 
-  leafs,
+  components,
   title,
 
   children,
@@ -614,7 +615,7 @@ export function Form<Schema extends SchemaType>({
           errors,
           onChange: handleChange,
           uiSchema,
-          leafs,
+          components,
           onArrayRemove,
         }}
       >

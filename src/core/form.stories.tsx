@@ -16,7 +16,7 @@ import {
 import { Alert, Box, Button, List } from "@mantine/core";
 import { IObjectDefaultProps } from "../components/default/object-default";
 
-const leafs = {
+const components = {
   string: StringMantine,
   enum: EnumMantine,
   number: NumberMantine,
@@ -48,7 +48,7 @@ export function Login() {
       <Form
         title={<h1>Login</h1>}
         schema={schema}
-        leafs={leafs}
+        components={components}
         uiSchema={{
           email: {
             label: "Email",
@@ -93,7 +93,7 @@ export function Register() {
       <Form
         title={<h1>Register</h1>}
         schema={schema}
-        leafs={leafs}
+        components={components}
         uiSchema={{
           email: {
             label: "Email",
@@ -284,7 +284,7 @@ export function StudentRegistration() {
       <Form
         title={<h1>Registration form</h1>}
         schema={schema}
-        leafs={leafs}
+        components={components}
         uiSchema={uiSchema}
       >
         {({ errors }) => {
