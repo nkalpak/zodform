@@ -49,6 +49,7 @@ import { useUncontrolledToControlledWarning } from "../utils/use-uncontrolled-to
 import get from "lodash.get";
 import { unset } from "../utils/unset";
 import { ZodEffects } from "zod";
+import { ObjectDefault } from "../components/default/object-default";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -88,11 +89,7 @@ function useComponent<UiProperties>(name: string): {
 
     return {
       errors: errors?.[name] ?? [],
-      uiSchema: thisUiSchema
-        ? (("ui" in thisUiSchema
-            ? thisUiSchema.ui
-            : thisUiSchema) as UiProperties)
-        : undefined,
+      uiSchema: thisUiSchema as UiProperties | undefined,
     };
   }, [errors, uiSchema]);
 }
@@ -315,6 +312,39 @@ function ZodArrayComponent({
   );
 }
 
+function ZodObjectComponent({
+  value,
+  schema,
+  name,
+}: {
+  value: any;
+  schema: AnyZodObject;
+  name?: string;
+}) {
+  const { uiSchema } = useComponent<UiPropertiesObject>(name ?? "");
+  const uiProps = name ? uiSchema?.ui ?? {} : {};
+
+  // Don't create a div as the first child of the form
+  const Component = name ? ObjectDefault : React.Fragment;
+
+  return (
+    <Component {...uiProps}>
+      {Object.entries(schema.shape).map(([thisName, thisSchema]) => {
+        const childName = name ? [name, thisName].join(".") : thisName;
+
+        return (
+          <ZodAnyComponent
+            key={childName}
+            name={childName}
+            schema={thisSchema as ZodFirstPartySchemaTypes}
+            value={value ? value?.[thisName] : undefined}
+          />
+        );
+      })}
+    </Component>
+  );
+}
+
 function ZodAnyComponent({
   schema,
   name,
@@ -327,23 +357,7 @@ function ZodAnyComponent({
   value?: any;
 }) {
   if (isZodObject(schema)) {
-    // Don't create a div as the first child of the form
-    return React.createElement(
-      name ? "div" : React.Fragment,
-      {},
-      Object.entries(schema.shape).map(([thisName, thisSchema]) => {
-        const childName = name ? [name, thisName].join(".") : thisName;
-
-        return (
-          <ZodAnyComponent
-            key={childName}
-            name={childName}
-            schema={thisSchema as ZodFirstPartySchemaTypes}
-            value={value ? value?.[thisName] : undefined}
-          />
-        );
-      })
-    );
+    return <ZodObjectComponent value={value} schema={schema} name={name} />;
   }
 
   if (R.isNil(name)) {

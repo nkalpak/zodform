@@ -1,4 +1,5 @@
 import React from "react";
+import * as R from "remeda";
 import { Form } from "./form";
 import { z } from "zod";
 import {
@@ -202,6 +203,90 @@ export function Register() {
           confirmPassword: {
             label: "Confirm password",
             component: PasswordMantine,
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+const monthOptions: [string, ...string[]] = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const dayOptions = R.range(0, 32).map((n) => n.toString()) as [
+  string,
+  ...string[]
+];
+
+const yearOptions = R.range(1980, 2021).map((n) => n.toString()) as [
+  string,
+  ...string[]
+];
+
+export function StudentRegistration() {
+  const [schema] = React.useState(() =>
+    z.object({
+      studentName: z.object({
+        firstName: z.string().min(1, "First name is required"),
+        middleName: z.string().optional(),
+        lastName: z.string().min(1, "Last name is required"),
+      }),
+      birthDate: z.object({
+        month: z.enum(monthOptions),
+        day: z.enum(dayOptions),
+        year: z.enum(yearOptions),
+      }),
+      gender: z.enum(["Male", "Female", "Other"] as const),
+      address: z.object({
+        street: z.string().min(1, "Street is required"),
+        city: z.string().min(1, "City is required"),
+        state: z.string().optional(),
+        zip: z.string().min(1, "Zip is required"),
+      }),
+      email: z.string().email(),
+      phone: z.string().min(1, "Phone is required"),
+      courses: z.enum(["Math", "Science", "English", "History"] as const),
+      additionalComments: z.string().optional(),
+    })
+  );
+
+  return (
+    <div
+      style={{
+        maxWidth: 500,
+        margin: "auto",
+      }}
+    >
+      <Form
+        title={<h1>Registration form</h1>}
+        schema={schema}
+        leafs={leafs}
+        uiSchema={{
+          studentName: {
+            firstName: {
+              label: "First name",
+            },
+            lastName: {
+              label: "Last name",
+            },
+            middleName: {
+              label: "Middle name",
+            },
+            ui: {
+              title: "Student name",
+            },
           },
         }}
       />
