@@ -4,7 +4,10 @@ import * as R from "remeda";
 import React from "react";
 import { createContext } from "../utils/create-context";
 import "../App.css";
-import { componentNameDeserialize } from "../utils/component-name-deserialize";
+import {
+  componentNameDeserialize,
+  componentNameSerialize,
+} from "../utils/component-name-deserialize";
 import {
   IStringDefaultProps,
   StringDefault,
@@ -527,8 +530,9 @@ export function Form<Schema extends AnyZodObject>({
         } else {
           console.error(parsed.error);
           setErrors(() =>
-            // TODO: Serialize correctly for arrays
-            R.groupBy(parsed.error.errors, (item) => item.path.join("."))
+            R.groupBy(parsed.error.errors, (item) =>
+              componentNameSerialize(item.path)
+            )
           );
         }
       }}
