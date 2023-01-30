@@ -102,7 +102,6 @@ interface IZodLeafComponentProps<
   description?: string;
   isRequired: boolean;
   value?: Value;
-  defaultValue?: Value;
 }
 
 interface IZodStringComponentProps
@@ -119,7 +118,7 @@ function ZodStringComponent({
   function handleChange(value: string = "") {
     const isEmpty = value === "";
 
-    if (isEmpty && !isRequired) {
+    if (isEmpty) {
       return onChange({
         op: "remove",
         path: componentNameDeserialize(name),
@@ -201,7 +200,7 @@ function ZodNumberComponent({
   function handleChange(value?: number) {
     const isEmpty = R.isNil(value) || Number.isNaN(value);
 
-    if (isEmpty && !isRequired) {
+    if (isEmpty) {
       return onChange({
         op: "remove",
         path: componentNameDeserialize(name),
@@ -320,13 +319,11 @@ function ZodAnyComponent({
   name,
   isRequired = true,
   value,
-  defaultValue,
 }: {
   schema: ZodFirstPartySchemaTypes;
   name?: string;
   isRequired?: boolean;
   value?: any;
-  defaultValue?: any;
 }) {
   if (isZodObject(schema)) {
     // Don't create a div as the first child of the form
@@ -342,7 +339,6 @@ function ZodAnyComponent({
             name={childName}
             schema={thisSchema as ZodFirstPartySchemaTypes}
             value={value ? value?.[thisName] : undefined}
-            defaultValue={defaultValue}
           />
         );
       })
@@ -432,7 +428,6 @@ function ZodAnyComponent({
         name={name}
         isRequired={isRequired}
         value={value}
-        defaultValue={schema._def.defaultValue}
       />
     );
   }

@@ -18,25 +18,25 @@ export function formDefaultValueFromSchema(
 
   function iterator(schema: ZodFirstPartySchemaTypes): any {
     if (isZodString(schema)) {
-      return "";
+      return undefined;
     }
     if (isZodNumber(schema)) {
-      return 0;
+      return undefined;
     }
     if (isZodBoolean(schema)) {
       return false;
     }
     if (isZodEnum(schema)) {
-      return schema.options[0];
+      return undefined;
+    }
+    if (isZodOptional(schema)) {
+      return undefined;
     }
     if (isZodArray(schema)) {
       return R.range(
         0,
         schema._def.exactLength?.value ?? schema._def.minLength?.value ?? 0
       ).map(() => iterator(schema._def.type));
-    }
-    if (isZodOptional(schema)) {
-      return undefined;
     }
     if (isZodDefault(schema)) {
       return schema._def.defaultValue();
