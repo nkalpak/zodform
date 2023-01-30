@@ -7,14 +7,18 @@ specifiers:
   '@mantine/hooks': ^5.10.2
   '@testing-library/jest-dom': ^5.16.5
   '@testing-library/react': ^13.4.0
+  '@types/lodash.get': ^4.4.7
   '@types/lodash.set': ^4.3.7
+  '@types/lodash.unset': ^4.5.7
   '@types/react': ^18.0.26
   '@types/react-dom': ^18.0.9
   '@vitejs/plugin-react': ^3.0.1
   '@vitejs/plugin-react-swc': ^3.0.0
   immer: ^9.0.19
   jsdom: ^21.1.0
+  lodash.get: ^4.4.2
   lodash.set: ^4.3.2
+  lodash.unset: ^4.5.2
   prettier: ^2.8.3
   react: ^18.2.0
   react-dom: ^18.2.0
@@ -30,7 +34,9 @@ dependencies:
   '@mantine/core': 5.10.2_09865c6e07b19074bc7f3a5c8af3ec29
   '@mantine/hooks': 5.10.2_react@18.2.0
   immer: 9.0.19
+  lodash.get: 4.4.2
   lodash.set: 4.3.2
+  lodash.unset: 4.5.2
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   remeda: 1.6.0
@@ -39,7 +45,9 @@ dependencies:
 devDependencies:
   '@testing-library/jest-dom': 5.16.5
   '@testing-library/react': 13.4.0_react-dom@18.2.0+react@18.2.0
+  '@types/lodash.get': 4.4.7
   '@types/lodash.set': 4.3.7
+  '@types/lodash.unset': 4.5.7
   '@types/react': 18.0.27
   '@types/react-dom': 18.0.10
   '@vitejs/plugin-react': 3.0.1_vite@4.0.4
@@ -2124,8 +2132,20 @@ packages:
       pretty-format: 29.4.0
     dev: true
 
+  /@types/lodash.get/4.4.7:
+    resolution: {integrity: sha512-af34Mj+KdDeuzsJBxc/XeTtOx0SZHZNLd+hdrn+PcKGQs0EG2TJTzQAOTCZTgDJCArahlCzLWSy8c2w59JRz7Q==}
+    dependencies:
+      '@types/lodash': 4.14.191
+    dev: true
+
   /@types/lodash.set/4.3.7:
     resolution: {integrity: sha512-bS5Wkg/nrT82YUfkNYPSccFrNZRL+irl7Yt4iM6OTSQ0VZJED2oUIVm15NkNtUAQ8SRhCe+axqERUV6MJgkeEg==}
+    dependencies:
+      '@types/lodash': 4.14.191
+    dev: true
+
+  /@types/lodash.unset/4.5.7:
+    resolution: {integrity: sha512-/i371dATnLQ4tazwcX/n+rGk3M6RnMbA3lJKrKFjELicPExmZ1LcKtGfHBECuPS2TTl3yDuaFmWtmfACVuBBAQ==}
     dependencies:
       '@types/lodash': 4.14.191
     dev: true
@@ -3680,12 +3700,20 @@ packages:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
     dev: false
 
+  /lodash.get/4.4.2:
+    resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
+    dev: false
+
   /lodash.merge/4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
     dev: false
 
   /lodash.set/4.3.2:
     resolution: {integrity: sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==}
+    dev: false
+
+  /lodash.unset/4.5.2:
+    resolution: {integrity: sha512-bwKX88k2JhCV9D1vtE8+naDKlLiGrSmf8zi/Y9ivFHwbmRfA8RxS/aVJ+sIht2XOwqoNr4xUPUkGZpc1sHFEKg==}
     dev: false
 
   /lodash/4.17.21:

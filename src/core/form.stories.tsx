@@ -40,7 +40,6 @@ export function Simple() {
       leafs={leafs}
       schema={schema}
       onSubmit={console.log}
-      onChange={console.log}
       uiSchema={{
         password: {
           ui: {
