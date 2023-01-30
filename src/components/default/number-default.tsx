@@ -20,7 +20,7 @@ export function NumberDefault({
       <input
         type="number"
         name={name}
-        value={value}
+        value={value ?? ""}
         onChange={(event) => onChange(event.target.valueAsNumber)}
       />
 

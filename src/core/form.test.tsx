@@ -13,6 +13,9 @@ describe("Form", function () {
     });
     const onSubmit = vi.fn();
 
+    const NAME = "John doe";
+    const LABEL = "Name";
+
     const screen = render(
       <Form
         onSubmit={onSubmit}
@@ -20,16 +23,47 @@ describe("Form", function () {
         uiSchema={{
           name: {
             ui: {
-              label: "Name",
+              label: LABEL,
             },
           },
         }}
       />
     );
-    await user.type(screen.getByLabelText("Name"), "John doe");
-    await user.clear(screen.getByLabelText("Name"));
+    await user.type(screen.getByLabelText(LABEL), NAME);
+    expect(screen.getByLabelText(LABEL)).toHaveValue(NAME);
+
+    await user.clear(screen.getByLabelText(LABEL));
     await user.click(screen.getByRole("button", { name: "Submit" }));
 
     expect(onSubmit).toBeCalledWith({});
+  });
+
+  test("number input submits when valid", async function () {
+    const user = userEvent.setup();
+    const schema = z.object({
+      age: z.coerce.number().min(18).optional(),
+    });
+    const onSubmit = vi.fn();
+
+    const AGE = 18;
+    const LABEL = "Age";
+
+    const screen = render(
+      <Form
+        onSubmit={onSubmit}
+        schema={schema}
+        uiSchema={{
+          age: {
+            ui: {
+              label: LABEL,
+            },
+          },
+        }}
+      />
+    );
+    await user.type(screen.getByLabelText(LABEL), AGE.toString());
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    expect(onSubmit).toBeCalledWith({ age: 18 });
   });
 });
