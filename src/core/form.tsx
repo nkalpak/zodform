@@ -43,11 +43,11 @@ import {
 import { formDefaultValueFromSchema } from "./form-default-value-from-schema";
 import { useUncontrolledToControlledWarning } from "../utils/use-uncontrolled-to-controlled-warning";
 import get from "lodash.get";
-import unset from "lodash.unset";
+import { unset } from "../utils/unset";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
-type ComponentPath = (string | number)[];
+export type ComponentPath = (string | number)[];
 
 type ChangeOp = "update" | "remove";
 type OnChange = (
@@ -65,7 +65,7 @@ type OnChange = (
 
 const [useFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
-  onChange?: OnChange;
+  onChange: OnChange;
   uiSchema?: UiSchema<any>;
   leafs?: Required<IFormProps<any>>["leafs"];
 }>();
@@ -93,7 +93,7 @@ interface IZodLeafComponentProps<
   name: string;
   description?: string;
   isRequired: boolean;
-  value: Value;
+  value?: Value;
 }
 
 interface IZodStringComponentProps
@@ -108,13 +108,20 @@ function ZodStringComponent({
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<string>>(name);
 
   function handleChange(value: string) {
-    if (onChange) {
-      onChange({
-        op: "update",
-        value,
+    const isEmpty = value === "";
+
+    if (isEmpty && !isRequired) {
+      return onChange({
+        op: "remove",
         path: componentNameDeserialize(name),
       });
     }
+
+    onChange({
+      op: "update",
+      value,
+      path: componentNameDeserialize(name),
+    });
   }
 
   const Component = uiSchema?.component ?? leafs?.string ?? StringDefault;
@@ -139,20 +146,18 @@ interface IZodEnumComponentProps
 function ZodEnumComponent({
   schema,
   name,
-  value,
+  value = "",
   isRequired,
 }: IZodEnumComponentProps) {
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<string>>(name);
 
   function handleChange(value?: string) {
-    if (onChange) {
-      onChange({
-        op: "update",
-        value,
-        path: componentNameDeserialize(name),
-      });
-    }
+    onChange({
+      op: "update",
+      value,
+      path: componentNameDeserialize(name),
+    });
   }
 
   const Component = uiSchema?.component ?? leafs?.enum ?? EnumDefault;
@@ -185,13 +190,11 @@ function ZodNumberComponent({
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<number>>(name);
 
   function handleChange(value: number | undefined) {
-    if (onChange) {
-      onChange({
-        op: "update",
-        value,
-        path: componentNameDeserialize(name),
-      });
-    }
+    onChange({
+      op: "update",
+      value,
+      path: componentNameDeserialize(name),
+    });
   }
 
   const Component = uiSchema?.component ?? leafs?.number ?? NumberDefault;
@@ -222,13 +225,11 @@ function ZodBooleanComponent({
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<boolean>>(name);
 
   function handleChange(value: boolean) {
-    if (onChange) {
-      onChange({
-        op: "update",
-        value,
-        path: componentNameDeserialize(name),
-      });
-    }
+    onChange({
+      op: "update",
+      value,
+      path: componentNameDeserialize(name),
+    });
   }
 
   const Component = uiSchema?.component ?? leafs?.boolean ?? BooleanDefault;
@@ -254,7 +255,11 @@ interface IZodArrayComponentProps
   maxLength?: number;
   exactLength?: number;
 }
-function ZodArrayComponent({ schema, name, value }: IZodArrayComponentProps) {
+function ZodArrayComponent({
+  schema,
+  name,
+  value = [],
+}: IZodArrayComponentProps) {
   const { onChange } = useFormContext();
   const { uiSchema } = useComponent<UiPropertiesArray["ui"]>(name);
 
@@ -264,13 +269,13 @@ function ZodArrayComponent({ schema, name, value }: IZodArrayComponentProps) {
     <Component
       title={uiSchema?.title}
       onRemove={(index) => {
-        onChange?.({
+        onChange({
           op: "remove",
           path: componentNameDeserialize(`${name}[${index}]`),
         });
       }}
       onAdd={() => {
-        onChange?.({
+        onChange({
           op: "update",
           path: componentNameDeserialize(`${name}[${value.length}]`),
           value: formDefaultValueFromSchema(schema.element),
@@ -491,8 +496,6 @@ export function Form<Schema extends AnyZodObject>({
       })
     );
   }, []);
-
-  console.log(formData);
 
   return (
     <form

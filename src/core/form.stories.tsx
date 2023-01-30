@@ -74,7 +74,7 @@ export function UiOptions() {
     z.object({
       firstName: z.string().min(1, "Required"),
       lastName: z.string().min(1, "Required"),
-      telephone: z.string().optional(),
+      telephone: z.string().min(5).optional(),
     })
   );
 
