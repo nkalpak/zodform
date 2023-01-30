@@ -22,9 +22,7 @@ describe("Form", function () {
         schema={schema}
         uiSchema={{
           name: {
-            ui: {
-              label: LABEL,
-            },
+            label: LABEL,
           },
         }}
       />

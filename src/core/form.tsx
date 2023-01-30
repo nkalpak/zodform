@@ -79,13 +79,18 @@ function useComponent<UiProperties>(name: string): {
 } {
   const { errors, uiSchema } = useFormContext();
 
-  return React.useMemo(
-    () => ({
+  return React.useMemo(() => {
+    const thisUiSchema = uiSchema ? get(uiSchema, name) : undefined;
+
+    return {
       errors: errors?.[name] ?? [],
-      uiSchema: uiSchema ? (get(uiSchema, name)?.ui as any) : undefined,
-    }),
-    [errors, uiSchema]
-  );
+      uiSchema: thisUiSchema
+        ? (("ui" in thisUiSchema
+            ? thisUiSchema.ui
+            : thisUiSchema) as UiProperties)
+        : undefined,
+    };
+  }, [errors, uiSchema]);
 }
 
 interface IZodLeafComponentProps<
@@ -274,7 +279,7 @@ function ZodArrayComponent({
   value = [],
 }: IZodArrayComponentProps) {
   const { onChange } = useFormContext();
-  const { uiSchema } = useComponent<UiPropertiesArray["ui"]>(name);
+  const { uiSchema } = useComponent<UiPropertiesArray>(name);
 
   const Component = uiSchema?.component ?? ArrayDefault;
 
@@ -441,15 +446,9 @@ type UiPropertiesLeaf<Value> = {
   autoFocus?: boolean;
 };
 
-type UiPropertiesSchema<Value> = {
-  ui?: UiPropertiesLeaf<Value>;
-};
-
 type UiPropertiesArray = {
-  ui?: {
-    title?: React.ReactNode;
-    component?: (props: IArrayDefaultProps) => JSX.Element;
-  };
+  title?: React.ReactNode;
+  component?: (props: IArrayDefaultProps) => JSX.Element;
 };
 
 type UiPropertiesObject = {
@@ -463,7 +462,7 @@ type UiSchema<Schema extends object> = {
     ? Schema[K] extends Array<any>
       ? UiPropertiesArray
       : UiPropertiesObject & UiSchema<Schema[K]>
-    : UiPropertiesSchema<Schema[K]>;
+    : UiPropertiesLeaf<Schema[K]>;
 };
 
 interface IFormProps<Schema extends AnyZodObject> {

@@ -42,26 +42,18 @@ export function Simple() {
       onSubmit={console.log}
       uiSchema={{
         password: {
-          ui: {
-            component: PasswordMantine,
-          },
+          component: PasswordMantine,
         },
         age: {
-          ui: {
-            label: "Age",
-            autoFocus: true,
-          },
+          label: "Age",
+          autoFocus: true,
         },
         firstName: {
-          ui: {
-            label: "First name",
-          },
+          label: "First name",
         },
         details: {
           address: {
-            ui: {
-              label: "Address",
-            },
+            label: "Address",
           },
         },
       }}
@@ -86,20 +78,14 @@ export function UiOptions() {
       // leafs={leafs}
       uiSchema={{
         firstName: {
-          ui: {
-            autoFocus: true,
-            label: "First name",
-          },
+          autoFocus: true,
+          label: "First name",
         },
         lastName: {
-          ui: {
-            label: "Last name",
-          },
+          label: "Last name",
         },
         telephone: {
-          ui: {
-            label: "Telephone",
-          },
+          label: "Telephone",
         },
       }}
     />
@@ -131,14 +117,10 @@ export function Nested() {
       leafs={leafs}
       uiSchema={{
         title: {
-          ui: {
-            label: "Task list title",
-          },
+          label: "Task list title",
         },
         tasks: {
-          ui: {
-            title: <h2 style={{ marginBottom: 4 }}>Tasks</h2>,
-          },
+          title: <h2 style={{ marginBottom: 4 }}>Tasks</h2>,
         },
       }}
     />
