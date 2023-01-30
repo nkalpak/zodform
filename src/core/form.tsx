@@ -94,7 +94,7 @@ function useComponent<UiProperties>(name: string): {
       errors: errors?.[name] ?? [],
       uiSchema: thisUiSchema as UiProperties | undefined,
     };
-  }, [errors, uiSchema]);
+  }, [errors, name, uiSchema]);
 }
 
 interface IZodLeafComponentProps<
@@ -119,7 +119,7 @@ function ZodStringComponent({
   const { onChange, leafs } = useFormContext();
   const { errors, uiSchema } = useComponent<UiPropertiesLeaf<string>>(name);
 
-  function handleChange(value: string = "") {
+  function handleChange(value = "") {
     const isEmpty = value === "";
 
     if (isEmpty) {
@@ -546,9 +546,28 @@ export function Form<Schema extends SchemaType>({
 
   useUncontrolledToControlledWarning(value);
 
+  const validate = React.useCallback(
+    (value: typeof formData) => {
+      const parsed = schema.safeParse(value);
+
+      if (parsed.success) {
+        setErrors(undefined);
+        onSubmit?.(parsed.data);
+      } else {
+        console.error(parsed.error);
+        setErrors(() =>
+          R.groupBy(parsed.error.errors, (item) =>
+            componentNameSerialize(item.path)
+          )
+        );
+      }
+    },
+    [onSubmit, schema]
+  );
+
   const handleChange: OnChange = React.useCallback((event) => {
-    setFormData((prev) =>
-      produce(prev, (draft) => {
+    function nextState(prev: typeof formData) {
+      return produce(prev, (draft) => {
         if (event.op === "update") {
           set(draft, event.path, event.value);
         } else {
@@ -556,8 +575,9 @@ export function Form<Schema extends SchemaType>({
             arrayBehavior: "setToUndefined",
           });
         }
-      })
-    );
+      });
+    }
+    setFormData(nextState);
   }, []);
 
   const onArrayRemove = React.useCallback((path: ComponentPath) => {
@@ -580,20 +600,7 @@ export function Form<Schema extends SchemaType>({
       }}
       onSubmit={(event) => {
         event.preventDefault();
-
-        const parsed = schema.safeParse(formData);
-
-        if (parsed.success) {
-          setErrors(undefined);
-          onSubmit?.(parsed.data);
-        } else {
-          console.error(parsed.error);
-          setErrors(() =>
-            R.groupBy(parsed.error.errors, (item) =>
-              componentNameSerialize(item.path)
-            )
-          );
-        }
+        validate(formData);
       }}
     >
       {title}
