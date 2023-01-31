@@ -4,6 +4,57 @@ import { Form } from "./form";
 import { z } from "zod";
 import React from "react";
 import userEvent from "@testing-library/user-event";
+import { ObjectDefault } from "../components/default/object-default";
+import { NumberDefault } from "../components/default/number-default";
+
+function renderArray() {
+  const user = userEvent.setup();
+  const schema = z.object({
+    fruits: z.array(z.string()),
+  });
+  const addTestId = "add-test-id";
+  const removeTestId = "remove-test-id";
+
+  const screen = render(
+    <Form
+      schema={schema}
+      uiSchema={{
+        fruits: {
+          element: {
+            label: "fruits",
+          },
+          component: (props) => (
+            <div>
+              {props.children.map((child, index) => (
+                <div key={index}>
+                  {child}{" "}
+                  <button
+                    type="button"
+                    data-testid={removeTestId}
+                    onClick={() => {
+                      props.onRemove(index);
+                    }}
+                  >
+                    -
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                data-testid={addTestId}
+                onClick={props.onAdd}
+              >
+                +
+              </button>
+            </div>
+          ),
+        },
+      }}
+    />
+  );
+
+  return { screen, user, addTestId, removeTestId };
+}
 
 describe("Form", function () {
   test("should remove the property when the text field is cleared and the schema is optional", async function () {
@@ -138,5 +189,124 @@ describe("Form", function () {
     expect(screen.getByLabelText("City")).toBeInTheDocument();
     expect(screen.getByLabelText("Hobby")).toBeInTheDocument();
     expect(screen.getByLabelText("Accept")).toBeInTheDocument();
+  });
+
+  test("object ui properties", async function () {
+    const schema = z.object({
+      address: z.object({
+        street: z.string(),
+        city: z.string(),
+      }),
+    });
+
+    const testId = "test-id";
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          address: {
+            ui: {
+              title: "Address",
+              component: (props) => (
+                <ObjectDefault {...props}>
+                  {props.children} <span data-testid={testId}>h</span>
+                </ObjectDefault>
+              ),
+            },
+          },
+        }}
+      />
+    );
+
+    expect(screen.getByText("Address")).toBeInTheDocument();
+    expect(screen.getByTestId(testId)).toBeInTheDocument();
+  });
+
+  test("object as an array element", async function () {
+    const schema = z.object({
+      people: z
+        .array(
+          z.object({
+            age: z.number(),
+          })
+        )
+        .min(1),
+    });
+
+    const ageId = "age-id";
+    const personId = "person-id";
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          people: {
+            element: {
+              age: {
+                label: "Name",
+                component: (props) => (
+                  <React.Fragment>
+                    <NumberDefault {...props} />
+                    <span data-testid={ageId}>h</span>
+                  </React.Fragment>
+                ),
+              },
+              ui: {
+                title: "Person",
+                component: (props) => (
+                  <ObjectDefault {...props}>
+                    {props.children} <span data-testid={personId}>h</span>
+                  </ObjectDefault>
+                ),
+              },
+            },
+          },
+        }}
+      />
+    );
+
+    expect(screen.getByText("Person")).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(screen.getByTestId(ageId)).toBeInTheDocument();
+    expect(screen.getByTestId(personId)).toBeInTheDocument();
+  });
+
+  test("array with N elements schema generates N elements by default", async function () {
+    const schema = z.object({
+      fruits: z.array(z.string()).length(2),
+    });
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          fruits: {
+            element: {
+              label: "fruits",
+            },
+          },
+        }}
+      />
+    );
+
+    expect(screen.getAllByLabelText("fruits")).toHaveLength(2);
+  });
+
+  test("array add element", async function () {
+    const { user, addTestId, screen } = renderArray();
+
+    await user.click(screen.getByTestId(addTestId));
+
+    expect(screen.getAllByLabelText("fruits")).toHaveLength(1);
+  });
+
+  test("array remove element", async function () {
+    const { user, removeTestId, addTestId, screen } = renderArray();
+
+    await user.click(screen.getByTestId(addTestId));
+    await user.click(screen.getByTestId(removeTestId));
+
+    expect(screen.queryAllByLabelText("fruits")).toHaveLength(0);
   });
 });

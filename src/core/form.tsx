@@ -512,7 +512,7 @@ function ZodAnyComponent({
 
 type UiPropertiesLeaf<Value> = {
   label?: React.ReactNode;
-  component?: (props: IComponentProps<Value>) => JSX.Element;
+  component?: (props: IComponentProps<Value | undefined>) => JSX.Element;
   autoFocus?: boolean;
 };
 
