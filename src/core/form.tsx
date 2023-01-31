@@ -54,6 +54,10 @@ import {
   ObjectDefault,
 } from "../components/default/object-default";
 import { IsNonUndefinedUnion } from "../utils/type-utils";
+import {
+  IMultiChoiceDefaultProps,
+  MultiChoiceDefault,
+} from "../components/default/multi-choice-default";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -288,10 +292,40 @@ function ZodArrayComponent({
   name,
   value = [],
 }: IZodArrayComponentProps) {
-  const { onChange, onArrayRemove } = useFormContext();
-  const { uiSchema } = useComponent<UiPropertiesArray>(name);
+  const { onChange, onArrayRemove, components } = useFormContext();
+  const { uiSchema } = useComponent<
+    UiPropertiesArray | UiPropertiesMultiChoice<string>
+  >(name);
 
-  const Component = uiSchema?.component ?? ArrayDefault;
+  if (isZodEnum(schema.element)) {
+    const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<string>;
+    const Component =
+      uiProps.component ?? components?.multiChoice ?? MultiChoiceDefault;
+
+    return (
+      <Component
+        onRemove={(val) => {
+          const index = value.findIndex((v) => v === val);
+          if (index < 0) {
+            return;
+          }
+          onArrayRemove(componentNameDeserialize(`${name}[${index}]`));
+        }}
+        onAdd={(val) => {
+          onChange({
+            op: "update",
+            path: componentNameDeserialize(`${name}[${value.length}]`),
+            value: val,
+          });
+        }}
+        value={value}
+        options={schema.element.options}
+      />
+    );
+  }
+
+  const uiProps = (uiSchema ?? {}) as UiPropertiesArray;
+  const Component = uiProps.component ?? components?.array ?? ArrayDefault;
 
   return (
     <Component
@@ -474,6 +508,11 @@ type UiPropertiesArray = {
   component?: (props: IArrayDefaultProps) => JSX.Element;
 };
 
+type UiPropertiesMultiChoice<Schema extends string> = {
+  title?: React.ReactNode;
+  component?: (props: IMultiChoiceDefaultProps<Schema>) => JSX.Element;
+};
+
 type UiPropertiesObject = {
   ui?: {
     title?: React.ReactNode;
@@ -497,10 +536,18 @@ type ResolveUnion<Schema> = Schema extends string
   ? UiPropertiesEnumInner<Schema>
   : never;
 
+type ResolveArray<Schema extends Array<string>> = Schema extends Array<
+  infer Element extends string
+>
+  ? IsNonUndefinedUnion<Element> extends true
+    ? UiPropertiesMultiChoice<Element>
+    : UiPropertiesArray
+  : UiPropertiesArray;
+
 type UiSchemaInner<Schema extends object> = {
   [K in keyof Partial<Schema>]: Schema[K] extends object
     ? Schema[K] extends Array<any>
-      ? UiPropertiesArray
+      ? ResolveArray<Schema[K]>
       : UiPropertiesObject & UiSchemaInner<Schema[K]>
     : IsNonUndefinedUnion<Schema[K]> extends true
     ? ResolveUnion<Schema[K]>
@@ -528,6 +575,8 @@ interface IFormProps<Schema extends SchemaType> {
     enum?: (props: IEnumDefaultProps) => JSX.Element;
     boolean?: (props: IBooleanDefaultProps) => JSX.Element;
     object?: (props: IObjectDefaultProps) => JSX.Element;
+    array?: (props: IArrayDefaultProps) => JSX.Element;
+    multiChoice?: (props: IMultiChoiceDefaultProps) => JSX.Element;
   };
   title?: React.ReactNode;
   children?: FormChildren;

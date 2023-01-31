@@ -407,3 +407,47 @@ export function DonationForm() {
     </div>
   );
 }
+
+export function ConferenceRegistration() {
+  const [schema] = React.useState(() =>
+    z.object({
+      people: z
+        .array(
+          z.object({
+            fullName: z.object({
+              firstName: z.string().min(1, "First name is required"),
+              lastName: z.string().min(1, "Last name is required"),
+            }),
+            email: z.string().email().describe("myname@example.com"),
+            phoneNumber: z.string().describe('e.g. "+1 555 555 5555"'),
+          })
+        )
+        .min(1, "Please add at least one person"),
+
+      products: z.array(z.enum(["tShirt", "coffeeCup"] as const)),
+      paymentMethod: z.enum(["creditCard", "payPal"] as const),
+    })
+  );
+  const [uiSchema] = React.useState<UiSchema<typeof schema>>(() => ({
+    people: {},
+    products: {},
+  }));
+
+  return (
+    <div
+      style={{
+        maxWidth: 500,
+        margin: "auto",
+      }}
+    >
+      <Form
+        components={components}
+        title={<h1>Conference registration</h1>}
+        schema={schema}
+        uiSchema={uiSchema}
+      >
+        {() => <Button type="submit">Submit</Button>}
+      </Form>
+    </div>
+  );
+}
