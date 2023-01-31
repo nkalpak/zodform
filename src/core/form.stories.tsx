@@ -411,6 +411,21 @@ export function DonationForm() {
 }
 
 export function ConferenceRegistration() {
+  const PersonComponent = React.useCallback((props: IObjectDefaultProps) => {
+    return (
+      <ObjectMantine {...props}>
+        <Box
+          sx={{
+            display: "grid",
+            gap: 8,
+          }}
+        >
+          {props.children}
+        </Box>
+      </ObjectMantine>
+    );
+  }, []);
+
   const [schema] = React.useState(() =>
     z.object({
       people: z
@@ -430,11 +445,18 @@ export function ConferenceRegistration() {
       paymentMethod: z.enum(["creditCard", "payPal"] as const),
     })
   );
+
   const [uiSchema] = React.useState<UiSchema<typeof schema>>(() => ({
     people: {
-      title: "People",
       element: {
+        ui: {
+          title: "Attendee",
+          component: PersonComponent,
+        },
         fullName: {
+          ui: {
+            component: ObjectMantineRows,
+          },
           firstName: {
             label: "First name",
           },

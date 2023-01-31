@@ -57,7 +57,7 @@ export function EnumMantineRadio({
     >
       {options.map((option) => {
         const label = optionLabels?.[option];
-        return <Radio value={option} label={label ?? option} />;
+        return <Radio key={option} value={option} label={label ?? option} />;
       })}
     </Radio.Group>
   );

@@ -514,19 +514,16 @@ type UiPropertiesLeaf<Value> = {
   autoFocus?: boolean;
 };
 
-type UiPropertiesArray<Schema extends Array<any>> =
-  (Schema extends Array<string>
-    ? {
-        element?: UiPropertiesLeaf<string>;
-      }
-    : Schema extends Array<infer El extends object>
-    ? {
-        element?: Omit<ResolveObject<El>, "ui">;
-      }
-    : { element?: UiPropertiesLeaf<Schema[0]> }) & {
-    title?: React.ReactNode;
-    component?: (props: IArrayDefaultProps) => JSX.Element;
-  };
+type UiPropertiesArray<Schema extends Array<any>> = (Schema extends Array<
+  infer El extends object
+>
+  ? {
+      element?: ResolveObject<El>;
+    }
+  : { element?: UiPropertiesLeaf<Schema[0]> }) & {
+  title?: React.ReactNode;
+  component?: (props: IArrayDefaultProps) => JSX.Element;
+};
 
 type UiPropertiesMultiChoiceInner<Schema extends string> = Pick<
   UiPropertiesEnum<Schema>,
