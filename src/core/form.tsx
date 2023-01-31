@@ -539,18 +539,23 @@ type ResolveUnion<Schema> = Schema extends string
   : never;
 
 type ResolveArray<Schema extends Array<string>> = Schema extends Array<
-  infer Element extends string
+  infer El extends string
 >
-  ? IsNonUndefinedUnion<Element> extends true
-    ? UiPropertiesMultiChoiceInner<Element>
-    : UiPropertiesArray
-  : UiPropertiesArray;
+  ? IsNonUndefinedUnion<El> extends true
+    ? UiPropertiesMultiChoiceInner<El>
+    : UiPropertiesArray & { element?: UiPropertiesLeaf<string> }
+  : Schema extends Array<infer El extends object>
+  ? UiPropertiesArray & { element?: Omit<ResolveObject<El>, "ui"> }
+  : UiPropertiesArray & { element?: UiPropertiesLeaf<Schema[0]> };
+
+type ResolveObject<Schema extends object> = UiPropertiesObject &
+  UiSchemaInner<Schema>;
 
 type UiSchemaInner<Schema extends object> = {
   [K in keyof Partial<Schema>]: Schema[K] extends object
     ? Schema[K] extends Array<any>
       ? ResolveArray<Schema[K]>
-      : UiPropertiesObject & UiSchemaInner<Schema[K]>
+      : ResolveObject<Schema[K]>
     : IsNonUndefinedUnion<Schema[K]> extends true
     ? ResolveUnion<Schema[K]>
     : UiPropertiesLeaf<Schema[K]>;
