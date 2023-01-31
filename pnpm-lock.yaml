@@ -1,7 +1,9 @@
 lockfileVersion: 5.3
 
 specifiers:
+  '@anatine/zod-mock': ^3.8.3
   '@emotion/react': ^11.10.5
+  '@faker-js/faker': ^7.6.0
   '@ladle/react': ^2.5.1
   '@mantine/core': ^5.10.2
   '@mantine/hooks': ^5.10.2
@@ -48,6 +50,8 @@ dependencies:
   zod: 3.20.2
 
 devDependencies:
+  '@anatine/zod-mock': 3.8.3_@faker-js+faker@7.6.0
+  '@faker-js/faker': 7.6.0
   '@testing-library/jest-dom': 5.16.5
   '@testing-library/react': 13.4.0_react-dom@18.2.0+react@18.2.0
   '@types/lodash.get': 4.4.7
@@ -80,6 +84,15 @@ packages:
     dependencies:
       '@jridgewell/gen-mapping': 0.1.1
       '@jridgewell/trace-mapping': 0.3.17
+
+  /@anatine/zod-mock/3.8.3_@faker-js+faker@7.6.0:
+    resolution: {integrity: sha512-4PahKRxoyiz/xZulb0E/uzC2D6dD133l1XdIoW1B7HDFc++he+miOAIbEa+FRS2d3K7/S1ZI7KHaP4bTbIBozQ==}
+    peerDependencies:
+      '@faker-js/faker': ^7.0.0
+    dependencies:
+      '@faker-js/faker': 7.6.0
+      randexp: 0.5.3
+    dev: true
 
   /@babel/code-frame/7.18.6:
     resolution: {integrity: sha512-TDCmlK5eOvH+eH7cdAFlNXeVJqWIQ7gW9tY1GJIpUtFb6CmjVyq2VM3u71bOyR8CRihcCgMUYoDNyLXao3+70Q==}
@@ -1620,6 +1633,11 @@ packages:
       - supports-color
     dev: true
 
+  /@faker-js/faker/7.6.0:
+    resolution: {integrity: sha512-XK6BTq1NDMo9Xqw/YkYyGjSsg44fbNwYRx7QK2CuoQgyy+f1rrTDHoExVM5PsyXCtfl2vs2vVJ0MN0yN6LppRw==}
+    engines: {node: '>=14.0.0', npm: '>=6.0.0'}
+    dev: true
+
   /@floating-ui/core/1.1.0:
     resolution: {integrity: sha512-zbsLwtnHo84w1Kc8rScAo5GMk1GdecSlrflIbfnEBJwvTSj1SL6kkOYV+nHraMCPEy+RNZZUaZyL8JosDGCtGQ==}
     dev: false
@@ -3144,6 +3162,11 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       webidl-conversions: 7.0.0
+    dev: true
+
+  /drange/1.1.1:
+    resolution: {integrity: sha512-pYxfDYpued//QpnLIm4Avk7rsNtAtQkUES2cwAYSvD/wd2pKD71gN2Ebj3e7klzXwjocvE8c5vx/1fxwpqmSxA==}
+    engines: {node: '>=4'}
     dev: true
 
   /eastasianwidth/0.2.0:
@@ -4844,6 +4867,14 @@ packages:
   /queue-microtask/1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
+  /randexp/0.5.3:
+    resolution: {integrity: sha512-U+5l2KrcMNOUPYvazA3h5ekF80FHTUG+87SEAmHZmolh1M+i/WyTCxVzmi+tidIa1tM4BSe8g2Y/D3loWDjj+w==}
+    engines: {node: '>=4'}
+    dependencies:
+      drange: 1.1.1
+      ret: 0.2.2
+    dev: true
+
   /range-parser/1.2.1:
     resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
     engines: {node: '>= 0.6'}
@@ -5024,6 +5055,11 @@ packages:
       is-core-module: 2.11.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
+    dev: true
+
+  /ret/0.2.2:
+    resolution: {integrity: sha512-M0b3YWQs7R3Z917WRQy1HHA7Ba7D8hvZg6UE5mLykJxQVE2ju0IXbGlaHPPlkY+WN7wFP+wUMXmBFA0aV6vYGQ==}
+    engines: {node: '>=4'}
     dev: true
 
   /reusify/1.0.4:

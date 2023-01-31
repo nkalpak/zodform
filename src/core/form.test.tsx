@@ -79,4 +79,64 @@ describe("Form", function () {
 
     expect(onSubmit).toBeCalledWith({});
   });
+
+  test("field labels render when provided through uiSchema", async function () {
+    const schema = z.object({
+      age: z.number().optional(),
+      name: z.string(),
+      gender: z.enum(["male", "female", "other"] as const),
+      isAccepted: z.boolean(),
+      address: z.object({
+        street: z.string(),
+        city: z.object({
+          name: z.string(),
+          zip: z.string(),
+        }),
+      }),
+      hobbies: z.array(z.string()).min(1),
+    });
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          age: {
+            label: "Age",
+          },
+          name: {
+            label: "Name",
+          },
+          gender: {
+            label: "Gender",
+          },
+          address: {
+            street: {
+              label: "Street",
+            },
+            city: {
+              name: {
+                label: "City",
+              },
+            },
+          },
+          hobbies: {
+            element: {
+              label: "Hobby",
+            },
+          },
+          isAccepted: {
+            label: "Accept",
+          },
+        }}
+      />
+    );
+
+    expect(screen.getByLabelText("Age")).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Gender")).toBeInTheDocument();
+    expect(screen.getByLabelText("Street")).toBeInTheDocument();
+    expect(screen.getByLabelText("City")).toBeInTheDocument();
+    expect(screen.getByLabelText("Hobby")).toBeInTheDocument();
+    expect(screen.getByLabelText("Accept")).toBeInTheDocument();
+  });
 });

@@ -575,7 +575,11 @@ type ResolveObject<Schema extends object> = UiPropertiesObject &
   UiSchemaInner<Schema>;
 
 type UiSchemaInner<Schema extends object> = {
-  [K in keyof Partial<Schema>]: Schema[K] extends object
+  // Boolean messes up the `IsNonUndefinedUnion` check, so we need to handle it separately
+  // TODO: Figure out how to handle this better
+  [K in keyof Partial<Schema>]: Schema[K] extends boolean
+    ? UiPropertiesLeaf<Schema[K]>
+    : Schema[K] extends object
     ? Schema[K] extends Array<any>
       ? ResolveArray<Schema[K]>
       : ResolveObject<Schema[K]>
@@ -697,8 +701,6 @@ export function Form<Schema extends SchemaType>({
       })
     );
   }, []);
-
-  console.log(formData);
 
   return (
     <form
