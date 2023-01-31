@@ -6,8 +6,9 @@ import React from "react";
 import userEvent from "@testing-library/user-event";
 import { ObjectDefault } from "../components/default/object-default";
 import { NumberDefault } from "../components/default/number-default";
+import { MultiChoiceDefault } from "../components/default/multi-choice-default";
 
-function renderArray() {
+function renderSimpleArray() {
   const user = userEvent.setup();
   const schema = z.object({
     fruits: z.array(z.string()),
@@ -294,7 +295,7 @@ describe("Form", function () {
   });
 
   test("array add element", async function () {
-    const { user, addTestId, screen } = renderArray();
+    const { user, addTestId, screen } = renderSimpleArray();
 
     await user.click(screen.getByTestId(addTestId));
 
@@ -302,11 +303,46 @@ describe("Form", function () {
   });
 
   test("array remove element", async function () {
-    const { user, removeTestId, addTestId, screen } = renderArray();
+    const { user, removeTestId, addTestId, screen } = renderSimpleArray();
 
     await user.click(screen.getByTestId(addTestId));
     await user.click(screen.getByTestId(removeTestId));
 
     expect(screen.queryAllByLabelText("fruits")).toHaveLength(0);
+  });
+
+  test("array enum element", async function () {
+    const schema = z.object({
+      fruits: z.array(z.enum(["apple", "banana", "citrus"])),
+    });
+    const testId = "test-id";
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          fruits: {
+            title: "Fruits",
+            component: (props) => (
+              <React.Fragment>
+                <MultiChoiceDefault {...props} />
+                <span data-testid={testId}>h</span>
+              </React.Fragment>
+            ),
+            optionLabels: {
+              banana: "Banana",
+              apple: "Apple",
+              citrus: "Citrus",
+            },
+          },
+        }}
+      />
+    );
+
+    expect(screen.getByText("Banana")).toBeInTheDocument();
+    expect(screen.getByText("Apple")).toBeInTheDocument();
+    expect(screen.getByText("Citrus")).toBeInTheDocument();
+    expect(screen.getByText("Fruits")).toBeInTheDocument();
+    expect(screen.getByTestId(testId)).toBeInTheDocument();
   });
 });

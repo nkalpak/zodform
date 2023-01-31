@@ -17,6 +17,7 @@ export function EnumDefault({
   description,
   errorMessage,
   options,
+  optionLabels,
 }: IEnumDefaultProps) {
   return (
     <label>
@@ -27,11 +28,14 @@ export function EnumDefault({
         name={name}
         onChange={(event) => onChange(event.target.value)}
       >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
+        {options.map((option) => {
+          const label = optionLabels?.[option] ?? option;
+          return (
+            <option key={option} value={option}>
+              {label}
+            </option>
+          );
+        })}
       </select>
 
       <ErrorOrDescription error={errorMessage} description={description} />

@@ -14,25 +14,32 @@ export function MultiChoiceDefault({
   options,
   value,
   onChange,
+  optionLabels,
+  label,
 }: IMultiChoiceDefaultProps) {
   return (
     <div>
-      {options.map((option) => (
-        <label style={{ display: "flex", flexDirection: "row" }}>
-          <input
-            onChange={() => {
-              if (value.includes(option)) {
-                onChange(value.filter((v) => v !== option));
-              } else {
-                onChange([...value, option]);
-              }
-            }}
-            type="checkbox"
-            checked={value.includes(option)}
-          />
-          <span>{option}</span>
-        </label>
-      ))}
+      {label}
+
+      {options.map((option) => {
+        const label = optionLabels?.[option] ?? option;
+        return (
+          <label key={option} style={{ display: "flex", flexDirection: "row" }}>
+            <input
+              onChange={() => {
+                if (value.includes(option)) {
+                  onChange(value.filter((v) => v !== option));
+                } else {
+                  onChange([...value, option]);
+                }
+              }}
+              type="checkbox"
+              checked={value.includes(option)}
+            />
+            <span>{label}</span>
+          </label>
+        );
+      })}
     </div>
   );
 }

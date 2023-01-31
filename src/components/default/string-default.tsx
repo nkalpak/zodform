@@ -2,7 +2,8 @@ import React from "react";
 import { ErrorOrDescription } from "./error-or-description";
 import { IComponentProps } from "../types";
 
-export interface IStringDefaultProps extends IComponentProps<string> {}
+export interface IStringDefaultProps
+  extends IComponentProps<string | undefined> {}
 
 export function StringDefault({
   name,

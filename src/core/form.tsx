@@ -305,6 +305,7 @@ function ZodArrayComponent({
     return (
       <Component
         {...uiProps}
+        label={uiProps.title}
         errorMessage={R.first(errors)?.message}
         onChange={(newValue) => {
           onChange({
