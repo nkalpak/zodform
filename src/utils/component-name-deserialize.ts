@@ -55,5 +55,6 @@ export function componentNameDeserialize(name: string): Path {
 export function componentNameSerialize(name: Path) {
   return name
     .map((part) => (typeof part === "number" ? `[${part}]` : part))
-    .join(".");
+    .join(".")
+    .replaceAll(".[", "[");
 }

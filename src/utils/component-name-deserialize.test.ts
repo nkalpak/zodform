@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { componentNameDeserialize } from "./component-name-deserialize";
+import {
+  componentNameDeserialize,
+  componentNameSerialize,
+} from "./component-name-deserialize";
 
 describe("componentNameDeserialize", () => {
   test("should return the name", () => {
@@ -13,5 +16,11 @@ describe("componentNameDeserialize", () => {
       "c",
     ]);
     expect(componentNameDeserialize("a[0][1]")).toEqual(["a", 0, 1]);
+  });
+});
+
+describe("componentNameSerialize", function () {
+  test("should serialize an object inside an array", function () {
+    expect(componentNameSerialize(["a", 0, "b"])).toEqual("a[0].b");
   });
 });
