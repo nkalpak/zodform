@@ -443,7 +443,9 @@ export function ConferenceRegistration() {
         )
         .min(1, "Please add at least one person"),
 
-      products: z.array(z.enum(["tShirt", "coffeeCup"] as const)),
+      products: z
+        .array(z.enum(["tShirt", "coffeeCup"] as const))
+        .min(1, "Please select a product"),
       paymentMethod: z.enum(["creditCard", "payPal"] as const),
     })
   );

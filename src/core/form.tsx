@@ -295,6 +295,7 @@ function ZodArrayComponent({
   uiSchema,
 }: IZodArrayComponentProps) {
   const { onChange, onArrayRemove, components } = useFormContext();
+  const { errors } = useComponent(name);
 
   if (isZodEnum(schema.element)) {
     const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoiceInner<string>;
@@ -304,6 +305,7 @@ function ZodArrayComponent({
     return (
       <Component
         {...uiProps}
+        errorMessage={R.first(errors)?.message}
         onChange={(newValue) => {
           onChange({
             op: "update",

@@ -33,6 +33,10 @@ export function formDefaultValueFromSchema(
       return undefined;
     }
     if (isZodArray(schema)) {
+      if (isZodEnum(schema._def.type)) {
+        return [];
+      }
+
       return R.range(
         0,
         schema._def.exactLength?.value ?? schema._def.minLength?.value ?? 0

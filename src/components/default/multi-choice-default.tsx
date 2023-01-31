@@ -5,6 +5,7 @@ export interface IMultiChoiceDefaultProps<Value extends string = string>
   options: Value[];
   value: Value[];
   onChange: (value: Value[]) => void;
+  errorMessage?: string;
 }
 
 export function MultiChoiceDefault({

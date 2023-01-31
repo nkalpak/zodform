@@ -50,7 +50,7 @@ describe("formDefaultValueFromSchema", function () {
       expect(result).toEqual({ hobbies: [] });
     });
 
-    test("should default to array of min length, with the element type", function () {
+    test("should default to array of min length", function () {
       const schema = z.object({ hobbies: z.array(z.string()).min(2) });
       const result = formDefaultValueFromSchema(schema);
       expect(result.hobbies).toHaveLength(2);
@@ -91,5 +91,13 @@ describe("formDefaultValueFromSchema", function () {
         address: {},
       });
     });
+  });
+
+  test("array of enums should default to empty array even when it has a min", function () {
+    const schema = z.object({
+      hobbies: z.array(z.enum(["red", "green", "blue"])).min(1),
+    });
+    const result = formDefaultValueFromSchema(schema);
+    expect(result).toEqual({ hobbies: [] });
   });
 });
