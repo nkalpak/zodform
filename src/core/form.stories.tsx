@@ -19,6 +19,7 @@ import {
 import { Alert, Box, Button, List } from "@mantine/core";
 import { IObjectDefaultProps } from "../components/default/object-default";
 import { MultiChoiceMantine } from "../components/mantine/multi-choice-mantine";
+import { ArrayMantine } from "../components/mantine/array-mantine";
 
 const components = {
   string: StringMantine,
@@ -27,6 +28,7 @@ const components = {
   boolean: BooleanMantine,
   object: ObjectMantine,
   multiChoice: MultiChoiceMantine,
+  array: ArrayMantine,
 } as const;
 
 export function Login() {
