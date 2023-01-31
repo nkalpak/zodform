@@ -294,28 +294,22 @@ function ZodArrayComponent({
 }: IZodArrayComponentProps) {
   const { onChange, onArrayRemove, components } = useFormContext();
   const { uiSchema } = useComponent<
-    UiPropertiesArray | UiPropertiesMultiChoice<string>
+    UiPropertiesArray | UiPropertiesMultiChoiceInner<string>
   >(name);
 
   if (isZodEnum(schema.element)) {
-    const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<string>;
+    const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoiceInner<string>;
     const Component =
       uiProps.component ?? components?.multiChoice ?? MultiChoiceDefault;
 
     return (
       <Component
-        onRemove={(val) => {
-          const index = value.findIndex((v) => v === val);
-          if (index < 0) {
-            return;
-          }
-          onArrayRemove(componentNameDeserialize(`${name}[${index}]`));
-        }}
-        onAdd={(val) => {
+        {...uiProps}
+        onChange={(newValue) => {
           onChange({
             op: "update",
-            path: componentNameDeserialize(`${name}[${value.length}]`),
-            value: val,
+            path: componentNameDeserialize(name),
+            value: newValue,
           });
         }}
         value={value}
@@ -508,10 +502,18 @@ type UiPropertiesArray = {
   component?: (props: IArrayDefaultProps) => JSX.Element;
 };
 
-type UiPropertiesMultiChoice<Schema extends string> = {
+type UiPropertiesMultiChoiceInner<Schema extends string> = Pick<
+  UiPropertiesEnum<Schema>,
+  "optionLabels"
+> & {
   title?: React.ReactNode;
   component?: (props: IMultiChoiceDefaultProps<Schema>) => JSX.Element;
 };
+
+export type UiPropertiesMultiChoice<Schema extends string> = Omit<
+  UiPropertiesMultiChoiceInner<Schema>,
+  "component"
+>;
 
 type UiPropertiesObject = {
   ui?: {
@@ -540,7 +542,7 @@ type ResolveArray<Schema extends Array<string>> = Schema extends Array<
   infer Element extends string
 >
   ? IsNonUndefinedUnion<Element> extends true
-    ? UiPropertiesMultiChoice<Element>
+    ? UiPropertiesMultiChoiceInner<Element>
     : UiPropertiesArray
   : UiPropertiesArray;
 

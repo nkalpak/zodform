@@ -18,6 +18,7 @@ import {
 } from "../components/mantine/object-mantine";
 import { Alert, Box, Button, List } from "@mantine/core";
 import { IObjectDefaultProps } from "../components/default/object-default";
+import { MultiChoiceMantine } from "../components/mantine/multi-choice-mantine";
 
 const components = {
   string: StringMantine,
@@ -25,6 +26,7 @@ const components = {
   number: NumberMantine,
   boolean: BooleanMantine,
   object: ObjectMantine,
+  multiChoice: MultiChoiceMantine,
 } as const;
 
 export function Login() {
@@ -430,7 +432,21 @@ export function ConferenceRegistration() {
   );
   const [uiSchema] = React.useState<UiSchema<typeof schema>>(() => ({
     people: {},
-    products: {},
+    products: {
+      title: "Products",
+      optionLabels: {
+        coffeeCup: "Coffee cup",
+        tShirt: "T-shirt",
+      },
+    },
+    paymentMethod: {
+      component: EnumMantineRadio,
+      label: "Payment method",
+      optionLabels: {
+        creditCard: <span>💳 Credit card</span>,
+        payPal: <span>🐧 PayPal</span>,
+      },
+    },
   }));
 
   return (

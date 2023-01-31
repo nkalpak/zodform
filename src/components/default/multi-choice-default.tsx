@@ -1,15 +1,16 @@
-export interface IMultiChoiceDefaultProps<Value extends string = string> {
+import { UiPropertiesMultiChoice } from "../../core/form";
+
+export interface IMultiChoiceDefaultProps<Value extends string = string>
+  extends UiPropertiesMultiChoice<Value> {
   options: Value[];
   value: Value[];
-  onAdd: (value: Value) => void;
-  onRemove: (value: Value) => void;
+  onChange: (value: Value[]) => void;
 }
 
 export function MultiChoiceDefault({
   options,
   value,
-  onRemove,
-  onAdd,
+  onChange,
 }: IMultiChoiceDefaultProps) {
   return (
     <div>
@@ -18,9 +19,9 @@ export function MultiChoiceDefault({
           <input
             onChange={() => {
               if (value.includes(option)) {
-                onRemove(option);
+                onChange(value.filter((v) => v !== option));
               } else {
-                onAdd(option);
+                onChange([...value, option]);
               }
             }}
             type="checkbox"
