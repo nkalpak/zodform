@@ -7,13 +7,13 @@ export function MultiChoiceMantine({
   options,
   value,
   optionLabels,
-  title,
+  label,
   errorMessage,
 }: IMultiChoiceDefaultProps) {
   return (
     <Checkbox.Group
       error={errorMessage}
-      label={title}
+      label={label}
       value={value}
       onChange={onChange}
     >

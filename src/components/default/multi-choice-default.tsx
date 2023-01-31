@@ -1,11 +1,13 @@
 import { UiPropertiesMultiChoice } from "../../core/form";
+import React from "react";
 
 export interface IMultiChoiceDefaultProps<Value extends string = string>
-  extends UiPropertiesMultiChoice<Value> {
+  extends Omit<UiPropertiesMultiChoice<Value>, "title"> {
   options: Value[];
   value: Value[];
   onChange: (value: Value[]) => void;
   errorMessage?: string;
+  label?: React.ReactNode;
 }
 
 export function MultiChoiceDefault({

@@ -180,14 +180,18 @@ export function StudentRegistration() {
       }),
       email: z.string().email(),
       phone: z.string().min(1, "Phone is required"),
-      courses: z.enum(["Math", "Science", "English", "History"] as const, {
-        required_error: "Please select a course",
-      }),
+      courses: z
+        .array(
+          z.enum(["Math", "Science", "English", "History"] as const, {
+            required_error: "Please select a course",
+          })
+        )
+        .min(2, "Please select at least 2 courses"),
       additionalComments: z.string().optional(),
     })
   );
 
-  const addressComponent = React.useCallback(
+  const AddressComponent = React.useCallback(
     (props: IObjectDefaultProps) => (
       <ObjectMantine {...props}>
         <Box
@@ -248,7 +252,7 @@ export function StudentRegistration() {
     address: {
       ui: {
         title: "Address",
-        component: addressComponent,
+        component: AddressComponent,
       },
       state: {
         label: "State",
@@ -274,6 +278,7 @@ export function StudentRegistration() {
 
     courses: {
       label: "Courses",
+      component: MultiChoiceMantine,
     },
 
     phone: {

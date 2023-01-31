@@ -532,7 +532,7 @@ type UiPropertiesMultiChoiceInner<Schema extends string> = Pick<
   "optionLabels"
 > & {
   title?: React.ReactNode;
-  component?: (props: IMultiChoiceDefaultProps<Schema>) => JSX.Element;
+  component?: (props: IMultiChoiceDefaultProps) => JSX.Element;
 };
 
 export type UiPropertiesMultiChoice<Schema extends string> = Omit<
