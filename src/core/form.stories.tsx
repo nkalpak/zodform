@@ -428,11 +428,9 @@ export function ConferenceRegistration() {
 
       products: z.array(z.enum(["tShirt", "coffeeCup"] as const)),
       paymentMethod: z.enum(["creditCard", "payPal"] as const),
-      bla: z.array(z.string()),
     })
   );
   const [uiSchema] = React.useState<UiSchema<typeof schema>>(() => ({
-    bla: {},
     people: {
       title: "People",
       element: {

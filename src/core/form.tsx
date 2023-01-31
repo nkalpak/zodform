@@ -46,7 +46,6 @@ import {
 } from "./schema-type-resolvers";
 import { formDefaultValueFromSchema } from "./form-default-value-from-schema";
 import { useUncontrolledToControlledWarning } from "../utils/use-uncontrolled-to-controlled-warning";
-import get from "lodash.get";
 import { unset } from "../utils/unset";
 import { ZodEffects } from "zod";
 import {
@@ -79,7 +78,6 @@ type OnChange = (
 
 const [useFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
-  uiSchema?: UiSchemaInner<any>;
   components?: Required<IFormProps<any>>["components"];
 
   onChange: OnChange;
@@ -90,16 +88,13 @@ function useComponent<UiProperties>(name: string): {
   errors: zod.ZodIssue[];
   uiSchema?: UiProperties;
 } {
-  const { errors, uiSchema } = useFormContext();
+  const { errors } = useFormContext();
 
   return React.useMemo(() => {
-    const thisUiSchema = uiSchema ? get(uiSchema, name) : undefined;
-
     return {
       errors: errors?.[name] ?? [],
-      uiSchema: thisUiSchema as UiProperties | undefined,
     };
-  }, [errors, name, uiSchema]);
+  }, [errors, name]);
 }
 
 interface IZodLeafComponentProps<
@@ -111,6 +106,7 @@ interface IZodLeafComponentProps<
   description?: string;
   isRequired: boolean;
   value?: Value;
+  uiSchema?: Record<string, any>;
 }
 
 interface IZodStringComponentProps
@@ -120,9 +116,10 @@ function ZodStringComponent({
   schema,
   value,
   isRequired,
+  uiSchema,
 }: IZodStringComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiPropertiesLeaf<string>>(name);
+  const { errors } = useComponent<UiPropertiesLeaf<string>>(name);
 
   function handleChange(value = "") {
     const isEmpty = value === "";
@@ -165,9 +162,10 @@ function ZodEnumComponent({
   name,
   value = "",
   isRequired,
+  uiSchema,
 }: IZodEnumComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiPropertiesEnumInner<any>>(name);
+  const { errors } = useComponent<UiPropertiesEnumInner<any>>(name);
 
   function handleChange(value?: string) {
     onChange({
@@ -207,9 +205,10 @@ function ZodNumberComponent({
   schema,
   value,
   isRequired,
+  uiSchema,
 }: IZodNumberComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiPropertiesLeaf<number>>(name);
+  const { errors } = useComponent<UiPropertiesLeaf<number>>(name);
 
   function handleChange(value?: number) {
     const isEmpty = R.isNil(value) || Number.isNaN(value);
@@ -251,9 +250,10 @@ function ZodBooleanComponent({
   isRequired,
   schema,
   name,
+  uiSchema,
 }: IZodBooleanComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiPropertiesLeaf<boolean>>(name);
+  const { errors } = useComponent<UiPropertiesLeaf<boolean>>(name);
 
   function handleChange(value: boolean) {
     onChange({
@@ -286,16 +286,15 @@ interface IZodArrayComponentProps
   minLength?: number;
   maxLength?: number;
   exactLength?: number;
+  uiSchema?: UiPropertiesArray<any> | UiPropertiesMultiChoiceInner<string>;
 }
 function ZodArrayComponent({
   schema,
   name,
   value = [],
+  uiSchema,
 }: IZodArrayComponentProps) {
   const { onChange, onArrayRemove, components } = useFormContext();
-  const { uiSchema } = useComponent<
-    UiPropertiesArray | UiPropertiesMultiChoiceInner<string>
-  >(name);
 
   if (isZodEnum(schema.element)) {
     const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoiceInner<string>;
@@ -318,7 +317,7 @@ function ZodArrayComponent({
     );
   }
 
-  const uiProps = (uiSchema ?? {}) as UiPropertiesArray;
+  const uiProps = (uiSchema ?? {}) as UiPropertiesArray<any>;
   const Component = uiProps.component ?? components?.array ?? ArrayDefault;
 
   return (
@@ -343,6 +342,7 @@ function ZodArrayComponent({
             name={uniqueName}
             schema={schema.element}
             value={item}
+            uiSchema={uiProps.element}
           />
         );
       })}
@@ -354,22 +354,22 @@ function ZodObjectComponent({
   value,
   schema,
   name,
+  uiSchema,
 }: {
   value: any;
   schema: AnyZodObject;
+  uiSchema?: ResolveObject<any>;
   name?: string;
 }) {
   const { components } = useFormContext();
-  const { uiSchema } = useComponent<UiPropertiesObject>(name ?? "");
-  const uiProps = name ? uiSchema?.ui ?? {} : {};
 
   // Don't create a div as the first child of the form
   const Component = name
-    ? uiProps?.component ?? components?.object ?? ObjectDefault
+    ? uiSchema?.ui?.component ?? components?.object ?? ObjectDefault
     : React.Fragment;
 
   return (
-    <Component {...R.omit(uiProps, ["component"])}>
+    <Component {...R.omit(uiSchema?.ui ?? {}, ["component"])}>
       {Object.entries(schema.shape).map(([thisName, thisSchema]) => {
         const childName = name ? [name, thisName].join(".") : thisName;
 
@@ -378,7 +378,8 @@ function ZodObjectComponent({
             key={childName}
             name={childName}
             schema={thisSchema as ZodFirstPartySchemaTypes}
-            value={value ? value?.[thisName] : undefined}
+            value={value ? value[thisName] : undefined}
+            uiSchema={uiSchema ? uiSchema[thisName] : undefined}
           />
         );
       })}
@@ -391,14 +392,23 @@ function ZodAnyComponent({
   name,
   isRequired = true,
   value,
+  uiSchema,
 }: {
   schema: ZodFirstPartySchemaTypes;
   name?: string;
   isRequired?: boolean;
   value?: any;
+  uiSchema?: Record<string, any>;
 }) {
   if (isZodObject(schema)) {
-    return <ZodObjectComponent value={value} schema={schema} name={name} />;
+    return (
+      <ZodObjectComponent
+        uiSchema={uiSchema}
+        value={value}
+        schema={schema}
+        name={name}
+      />
+    );
   }
 
   if (R.isNil(name)) {
@@ -408,6 +418,7 @@ function ZodAnyComponent({
   if (isZodString(schema)) {
     return (
       <ZodStringComponent
+        uiSchema={uiSchema}
         schema={schema}
         name={name}
         isRequired={isRequired}
@@ -419,6 +430,7 @@ function ZodAnyComponent({
   if (isZodEnum(schema)) {
     return (
       <ZodEnumComponent
+        uiSchema={uiSchema}
         value={value}
         schema={schema}
         name={name}
@@ -430,6 +442,7 @@ function ZodAnyComponent({
   if (isZodBoolean(schema)) {
     return (
       <ZodBooleanComponent
+        uiSchema={uiSchema}
         schema={schema}
         name={name}
         isRequired={isRequired}
@@ -443,6 +456,7 @@ function ZodAnyComponent({
 
     return (
       <ZodArrayComponent
+        uiSchema={uiSchema}
         schema={schema}
         name={name}
         isRequired={isRequired}
@@ -458,6 +472,7 @@ function ZodAnyComponent({
   if (isZodNumber(schema)) {
     return (
       <ZodNumberComponent
+        uiSchema={uiSchema}
         schema={schema}
         name={name}
         isRequired={isRequired}
@@ -469,6 +484,7 @@ function ZodAnyComponent({
   if (isZodOptional(schema)) {
     return (
       <ZodAnyComponent
+        uiSchema={uiSchema}
         schema={schema._def.innerType}
         name={name}
         isRequired={false}
@@ -480,6 +496,7 @@ function ZodAnyComponent({
   if (isZodDefault(schema)) {
     return (
       <ZodAnyComponent
+        uiSchema={uiSchema}
         schema={schema._def.innerType}
         name={name}
         isRequired={isRequired}
@@ -497,10 +514,19 @@ type UiPropertiesLeaf<Value> = {
   autoFocus?: boolean;
 };
 
-type UiPropertiesArray = {
-  title?: React.ReactNode;
-  component?: (props: IArrayDefaultProps) => JSX.Element;
-};
+type UiPropertiesArray<Schema extends Array<any>> =
+  (Schema extends Array<string>
+    ? {
+        element?: UiPropertiesLeaf<string>;
+      }
+    : Schema extends Array<infer El extends object>
+    ? {
+        element?: Omit<ResolveObject<El>, "ui">;
+      }
+    : { element?: UiPropertiesLeaf<Schema[0]> }) & {
+    title?: React.ReactNode;
+    component?: (props: IArrayDefaultProps) => JSX.Element;
+  };
 
 type UiPropertiesMultiChoiceInner<Schema extends string> = Pick<
   UiPropertiesEnum<Schema>,
@@ -543,10 +569,8 @@ type ResolveArray<Schema extends Array<string>> = Schema extends Array<
 >
   ? IsNonUndefinedUnion<El> extends true
     ? UiPropertiesMultiChoiceInner<El>
-    : UiPropertiesArray & { element?: UiPropertiesLeaf<string> }
-  : Schema extends Array<infer El extends object>
-  ? UiPropertiesArray & { element?: Omit<ResolveObject<El>, "ui"> }
-  : UiPropertiesArray & { element?: UiPropertiesLeaf<Schema[0]> };
+    : UiPropertiesArray<Schema>
+  : UiPropertiesArray<Schema>;
 
 type ResolveObject<Schema extends object> = UiPropertiesObject &
   UiSchemaInner<Schema>;
@@ -694,12 +718,15 @@ export function Form<Schema extends SchemaType>({
         value={{
           errors,
           onChange: handleChange,
-          uiSchema,
           components,
           onArrayRemove,
         }}
       >
-        <ZodAnyComponent value={value ?? formData} schema={objectSchema} />
+        <ZodAnyComponent
+          uiSchema={uiSchema}
+          value={value ?? formData}
+          schema={objectSchema}
+        />
       </FormContextProvider>
 
       {children ? (
