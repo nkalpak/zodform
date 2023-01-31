@@ -42,6 +42,7 @@ export function EnumMantineRadio({
   options,
   label,
   onChange,
+  optionLabels,
 }: IEnumDefaultProps) {
   return (
     <Radio.Group
@@ -54,9 +55,10 @@ export function EnumMantineRadio({
       label={label}
       onChange={onChange}
     >
-      {options.map((option) => (
-        <Radio value={option} label={option} />
-      ))}
+      {options.map((option) => {
+        const label = optionLabels?.[option];
+        return <Radio value={option} label={label ?? option} />;
+      })}
     </Radio.Group>
   );
 }

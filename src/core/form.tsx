@@ -53,7 +53,7 @@ import {
   IObjectDefaultProps,
   ObjectDefault,
 } from "../components/default/object-default";
-import { IsUnion } from "../utils/type-utils";
+import { IsNonUndefinedUnion } from "../utils/type-utils";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -163,7 +163,7 @@ function ZodEnumComponent({
   isRequired,
 }: IZodEnumComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors, uiSchema } = useComponent<UiPropertiesLeaf<string>>(name);
+  const { errors, uiSchema } = useComponent<UiPropertiesEnumInner<any>>(name);
 
   function handleChange(value?: string) {
     onChange({
@@ -173,8 +173,13 @@ function ZodEnumComponent({
     });
   }
 
+  function getEnumProps(
+    uiSchema?: UiPropertiesEnumInner<any>
+  ): UiPropertiesEnum<any> {
+    return uiSchema ? R.pick(uiSchema, ["optionLabels"]) : {};
+  }
+
   const Component = uiSchema?.component ?? components?.enum ?? EnumDefault;
-  const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
 
   return (
     <Component
@@ -186,7 +191,7 @@ function ZodEnumComponent({
       onChange={handleChange}
       value={value}
       isRequired={isRequired}
-      {...uiProps}
+      {...getEnumProps(uiSchema)}
     />
   );
 }
@@ -477,18 +482,28 @@ type UiPropertiesObject = {
 };
 
 // TODO: Implement this kind of type for all the other types (replace leaf stuff)
-type UiPropertiesEnum = {
+type UiPropertiesEnumInner<Schema extends string> = {
   component?: (props: IEnumDefaultProps) => JSX.Element;
   label?: React.ReactNode;
+  optionLabels?: Record<Schema, React.ReactNode>;
 };
+
+export type UiPropertiesEnum<Schema extends string> = Omit<
+  UiPropertiesEnumInner<Schema>,
+  "component" | "label"
+>;
+
+type ResolveUnion<Schema> = Schema extends string
+  ? UiPropertiesEnumInner<Schema>
+  : never;
 
 type UiSchemaInner<Schema extends object> = {
   [K in keyof Partial<Schema>]: Schema[K] extends object
     ? Schema[K] extends Array<any>
       ? UiPropertiesArray
       : UiPropertiesObject & UiSchemaInner<Schema[K]>
-    : IsUnion<Schema[K]> extends true
-    ? UiPropertiesEnum
+    : IsNonUndefinedUnion<Schema[K]> extends true
+    ? ResolveUnion<Schema[K]>
     : UiPropertiesLeaf<Schema[K]>;
 };
 
