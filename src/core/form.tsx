@@ -20,7 +20,6 @@ import {
   INumberDefaultProps,
   NumberDefault,
 } from "../components/default/number-default";
-import { IComponentProps } from "../components/types";
 import {
   ArrayDefault,
   IArrayDefaultProps,
@@ -511,9 +510,23 @@ function ZodAnyComponent({
   return null;
 }
 
+type ResolveComponentProps<Value> = Value extends boolean
+  ? IBooleanDefaultProps
+  : Value extends Array<any>
+  ? IArrayDefaultProps
+  : IsNonUndefinedUnion<Value> extends true
+  ? IMultiChoiceDefaultProps
+  : Value extends string
+  ? IStringDefaultProps
+  : Value extends number
+  ? INumberDefaultProps
+  : Value extends object
+  ? IObjectDefaultProps
+  : never;
+
 type UiPropertiesLeaf<Value> = {
   label?: React.ReactNode;
-  component?: (props: IComponentProps<Value | undefined>) => JSX.Element;
+  component?: (props: ResolveComponentProps<Value | undefined>) => JSX.Element;
   autoFocus?: boolean;
 };
 
