@@ -96,6 +96,16 @@ function useComponent<UiProperties>(name: string): {
   }, [errors, name]);
 }
 
+/**
+ * Extract the properties which should be available to any leaf component
+ * (string, number, boolean, enum, etc.)
+ * */
+function getLeafPropsFromUiSchema(
+  uiProps?: UiPropertiesBase<any>
+): UiPropertiesLeaf<any> {
+  return R.omit(uiProps ?? {}, ["component"]);
+}
+
 interface IZodLeafComponentProps<
   Schema extends ZodFirstPartySchemaTypes,
   Value
@@ -138,7 +148,6 @@ function ZodStringComponent({
   }
 
   const Component = uiSchema?.component ?? components?.string ?? StringDefault;
-  const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
 
   return (
     <Component
@@ -149,7 +158,7 @@ function ZodStringComponent({
       description={schema.description}
       errorMessage={R.first(errors)?.message}
       isRequired={isRequired}
-      {...uiProps}
+      {...getLeafPropsFromUiSchema(uiSchema)}
     />
   );
 }
@@ -174,10 +183,6 @@ function ZodEnumComponent({
     });
   }
 
-  function getEnumProps(uiSchema?: UiPropertiesEnum<any>) {
-    return uiSchema ? R.pick(uiSchema, ["optionLabels"]) : {};
-  }
-
   const Component = uiSchema?.component ?? components?.enum ?? EnumDefault;
 
   return (
@@ -190,7 +195,7 @@ function ZodEnumComponent({
       onChange={handleChange}
       value={value}
       isRequired={isRequired}
-      {...getEnumProps(uiSchema)}
+      {...getLeafPropsFromUiSchema(uiSchema)}
     />
   );
 }
@@ -225,7 +230,6 @@ function ZodNumberComponent({
   }
 
   const Component = uiSchema?.component ?? components?.number ?? NumberDefault;
-  const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
 
   return (
     <Component
@@ -236,7 +240,7 @@ function ZodNumberComponent({
       description={schema.description}
       errorMessage={R.first(errors)?.message}
       isRequired={isRequired}
-      {...uiProps}
+      {...getLeafPropsFromUiSchema(uiSchema)}
     />
   );
 }
@@ -262,7 +266,6 @@ function ZodBooleanComponent({
 
   const Component =
     uiSchema?.component ?? components?.boolean ?? BooleanDefault;
-  const uiProps = uiSchema ? R.pick(uiSchema, ["autoFocus"]) : {};
 
   return (
     <Component
@@ -273,7 +276,7 @@ function ZodBooleanComponent({
       description={schema.description}
       errorMessage={R.first(errors)?.message}
       isRequired={isRequired}
-      {...uiProps}
+      {...getLeafPropsFromUiSchema(uiSchema)}
     />
   );
 }
@@ -527,6 +530,11 @@ type UiPropertiesBase<Value> = {
   component?: (props: ResolveComponentProps<Value | undefined>) => JSX.Element;
   autoFocus?: boolean;
 };
+
+export type UiPropertiesLeaf<Value> = Omit<
+  UiPropertiesBase<Value>,
+  "component"
+>;
 
 type UiPropertiesEnum<Schema extends string> = Omit<
   UiPropertiesBase<Schema>,
