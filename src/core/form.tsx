@@ -360,7 +360,7 @@ function ZodObjectComponent({
 }: {
   value: any;
   schema: AnyZodObject;
-  uiSchema?: ResolveObject<any>;
+  uiSchema?: UiPropertiesObject<any>;
   name?: string;
 }) {
   const { components } = useFormContext();
@@ -534,7 +534,7 @@ type UiPropertiesArray<Schema extends Array<any>> = (Schema extends Array<
   infer El extends object
 >
   ? {
-      element?: ResolveObject<El>;
+      element?: UiPropertiesObject<El>;
     }
   : { element?: UiPropertiesLeaf<Schema[0]> }) & {
   title?: React.ReactNode;
@@ -554,7 +554,7 @@ export type UiPropertiesMultiChoice<Schema extends string> = Omit<
   "component"
 >;
 
-type UiPropertiesObject = {
+type UiPropertiesObject<Schema extends object> = UiSchemaInner<Schema> & {
   ui?: {
     title?: React.ReactNode;
     component?: (props: IObjectDefaultProps) => JSX.Element;
@@ -573,32 +573,28 @@ export type UiPropertiesEnum<Schema extends string> = Omit<
   "component" | "label"
 >;
 
-type ResolveUnion<Schema> = Schema extends string
+type ResolveArrayUiProperties<Schema extends Array<string>> =
+  Schema extends Array<infer El extends string>
+    ? IsNonUndefinedUnion<El> extends true
+      ? UiPropertiesMultiChoiceInner<El>
+      : UiPropertiesArray<Schema>
+    : UiPropertiesArray<Schema>;
+
+type ResolveUnionUiProperties<Schema> = Schema extends string
   ? UiPropertiesEnumInner<Schema>
   : never;
 
-type ResolveArray<Schema extends Array<string>> = Schema extends Array<
-  infer El extends string
->
-  ? IsNonUndefinedUnion<El> extends true
-    ? UiPropertiesMultiChoiceInner<El>
-    : UiPropertiesArray<Schema>
-  : UiPropertiesArray<Schema>;
-
-type ResolveObject<Schema extends object> = UiPropertiesObject &
-  UiSchemaInner<Schema>;
-
 type UiSchemaInner<Schema extends object> = {
-  // Boolean messes up the `IsNonUndefinedUnion` check, so we need to handle it separately
+  // Boolean messes up the `IsNonUndefinedUnion` check, so we need to handle it first
   // TODO: Figure out how to handle this better
   [K in keyof Partial<Schema>]: Schema[K] extends boolean
     ? UiPropertiesLeaf<Schema[K]>
     : Schema[K] extends object
     ? Schema[K] extends Array<any>
-      ? ResolveArray<Schema[K]>
-      : ResolveObject<Schema[K]>
+      ? ResolveArrayUiProperties<Schema[K]>
+      : UiPropertiesObject<Schema[K]>
     : IsNonUndefinedUnion<Schema[K]> extends true
-    ? ResolveUnion<Schema[K]>
+    ? ResolveUnionUiProperties<Schema[K]>
     : UiPropertiesLeaf<Schema[K]>;
 };
 
