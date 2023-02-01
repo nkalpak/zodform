@@ -304,7 +304,7 @@ function ZodArrayComponent({
     return (
       <Component
         {...uiProps}
-        label={uiProps.title}
+        label={uiProps.label}
         errorMessage={R.first(errors)?.message}
         onChange={(newValue) => {
           onChange({
@@ -324,7 +324,7 @@ function ZodArrayComponent({
 
   return (
     <Component
-      title={uiSchema?.title}
+      title={uiProps.title}
       onRemove={(index) => {
         onArrayRemove(componentNameDeserialize(`${name}[${index}]`));
       }}
@@ -545,7 +545,7 @@ type UiPropertiesMultiChoiceInner<Schema extends string> = Pick<
   UiPropertiesEnum<Schema>,
   "optionLabels"
 > & {
-  title?: React.ReactNode;
+  label?: React.ReactNode;
   component?: (props: IMultiChoiceDefaultProps) => JSX.Element;
 };
 

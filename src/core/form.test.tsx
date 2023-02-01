@@ -322,7 +322,7 @@ describe("Form", function () {
         schema={schema}
         uiSchema={{
           fruits: {
-            title: "Fruits",
+            label: "Fruits",
             component: (props) => (
               <React.Fragment>
                 <MultiChoiceDefault {...props} />
