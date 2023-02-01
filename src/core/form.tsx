@@ -558,6 +558,10 @@ type UiPropertiesObject<Schema extends object> = UiSchemaInner<Schema> & {
   };
 };
 
+/**
+ * Arrays should allow for modifying the element type's ui schema too.
+ * So, we do that through the `element` property.
+ * */
 type UiPropertiesArray<Schema extends Array<any>> = (Schema extends Array<
   infer El extends object
 >
