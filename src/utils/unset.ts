@@ -21,17 +21,25 @@ export function unset(
     }
   }
 
+  const lastKey = path[path.length - 1];
+  if (R.isNil(lastKey)) {
+    return;
+  }
+
   if (Array.isArray(current)) {
+    if (typeof lastKey !== "number") {
+      return;
+    }
     if (options.arrayBehavior === "delete") {
-      current.splice(path[path.length - 1], 1);
+      current.splice(lastKey, 1);
     } else {
-      current[path[path.length - 1]] = undefined;
+      current[lastKey] = undefined;
     }
     return;
   }
 
   if (typeof current === "object") {
-    delete current[path[path.length - 1]!];
+    delete current[lastKey];
     return;
   }
 }
