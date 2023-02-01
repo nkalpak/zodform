@@ -1,12 +1,10 @@
 import React from "react";
 import { ErrorOrDescription } from "./error-or-description";
 import { IComponentProps } from "../types";
-import { UiPropertiesEnum } from "../../core/form";
 
-export interface IEnumDefaultProps
-  extends IComponentProps<string | undefined>,
-    UiPropertiesEnum<string> {
+export interface IEnumDefaultProps extends IComponentProps<string | undefined> {
   options: string[];
+  optionLabels?: Record<string, React.ReactNode>;
 }
 
 export function EnumDefault({

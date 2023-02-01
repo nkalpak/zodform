@@ -118,7 +118,7 @@ function ZodStringComponent({
   uiSchema,
 }: IZodStringComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesLeaf<string>>(name);
+  const { errors } = useComponent<UiPropertiesBase<string>>(name);
 
   function handleChange(value = "") {
     const isEmpty = value === "";
@@ -164,7 +164,7 @@ function ZodEnumComponent({
   uiSchema,
 }: IZodEnumComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesEnumInner<any>>(name);
+  const { errors } = useComponent<UiPropertiesEnum<any>>(name);
 
   function handleChange(value?: string) {
     onChange({
@@ -174,9 +174,7 @@ function ZodEnumComponent({
     });
   }
 
-  function getEnumProps(
-    uiSchema?: UiPropertiesEnumInner<any>
-  ): UiPropertiesEnum<any> {
+  function getEnumProps(uiSchema?: UiPropertiesEnum<any>) {
     return uiSchema ? R.pick(uiSchema, ["optionLabels"]) : {};
   }
 
@@ -207,7 +205,7 @@ function ZodNumberComponent({
   uiSchema,
 }: IZodNumberComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesLeaf<number>>(name);
+  const { errors } = useComponent<UiPropertiesBase<number>>(name);
 
   function handleChange(value?: number) {
     const isEmpty = R.isNil(value) || Number.isNaN(value);
@@ -252,7 +250,7 @@ function ZodBooleanComponent({
   uiSchema,
 }: IZodBooleanComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesLeaf<boolean>>(name);
+  const { errors } = useComponent<UiPropertiesBase<boolean>>(name);
 
   function handleChange(value: boolean) {
     onChange({
@@ -285,7 +283,7 @@ interface IZodArrayComponentProps
   minLength?: number;
   maxLength?: number;
   exactLength?: number;
-  uiSchema?: UiPropertiesArray<any> | UiPropertiesMultiChoiceInner<string>;
+  uiSchema?: UiPropertiesArray<any> | UiPropertiesMultiChoice<string>;
 }
 function ZodArrayComponent({
   schema,
@@ -297,7 +295,7 @@ function ZodArrayComponent({
   const { errors } = useComponent(name);
 
   if (isZodEnum(schema.element)) {
-    const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoiceInner<string>;
+    const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<string>;
     const Component =
       uiProps.component ?? components?.multiChoice ?? MultiChoiceDefault;
 
@@ -524,35 +522,26 @@ type ResolveComponentProps<Value> = Value extends boolean
   ? IObjectDefaultProps
   : never;
 
-type UiPropertiesLeaf<Value> = {
+type UiPropertiesBase<Value> = {
   label?: React.ReactNode;
   component?: (props: ResolveComponentProps<Value | undefined>) => JSX.Element;
   autoFocus?: boolean;
 };
 
-type UiPropertiesArray<Schema extends Array<any>> = (Schema extends Array<
-  infer El extends object
->
-  ? {
-      element?: UiPropertiesObject<El>;
-    }
-  : { element?: UiPropertiesLeaf<Schema[0]> }) & {
-  title?: React.ReactNode;
-  component?: (props: IArrayDefaultProps) => JSX.Element;
+type UiPropertiesEnum<Schema extends string> = Omit<
+  UiPropertiesBase<Schema>,
+  "component"
+> & {
+  component?: (props: IEnumDefaultProps) => JSX.Element;
+  optionLabels?: Record<Schema, React.ReactNode>;
 };
 
-type UiPropertiesMultiChoiceInner<Schema extends string> = Pick<
+type UiPropertiesMultiChoice<Schema extends string> = Pick<
   UiPropertiesEnum<Schema>,
-  "optionLabels"
+  "optionLabels" | "label"
 > & {
-  label?: React.ReactNode;
   component?: (props: IMultiChoiceDefaultProps) => JSX.Element;
 };
-
-export type UiPropertiesMultiChoice<Schema extends string> = Omit<
-  UiPropertiesMultiChoiceInner<Schema>,
-  "component"
->;
 
 type UiPropertiesObject<Schema extends object> = UiSchemaInner<Schema> & {
   ui?: {
@@ -561,41 +550,40 @@ type UiPropertiesObject<Schema extends object> = UiSchemaInner<Schema> & {
   };
 };
 
-// TODO: Implement this kind of type for all the other types (replace leaf stuff)
-type UiPropertiesEnumInner<Schema extends string> = {
-  component?: (props: IEnumDefaultProps) => JSX.Element;
-  label?: React.ReactNode;
-  optionLabels?: Record<Schema, React.ReactNode>;
+type UiPropertiesArray<Schema extends Array<any>> = (Schema extends Array<
+  infer El extends object
+>
+  ? {
+      element?: UiPropertiesObject<El>;
+    }
+  : { element?: UiPropertiesBase<Schema[0]> }) & {
+  title?: React.ReactNode;
+  component?: (props: IArrayDefaultProps) => JSX.Element;
 };
-
-export type UiPropertiesEnum<Schema extends string> = Omit<
-  UiPropertiesEnumInner<Schema>,
-  "component" | "label"
->;
 
 type ResolveArrayUiProperties<Schema extends Array<string>> =
   Schema extends Array<infer El extends string>
     ? IsNonUndefinedUnion<El> extends true
-      ? UiPropertiesMultiChoiceInner<El>
+      ? UiPropertiesMultiChoice<El>
       : UiPropertiesArray<Schema>
     : UiPropertiesArray<Schema>;
 
 type ResolveUnionUiProperties<Schema> = Schema extends string
-  ? UiPropertiesEnumInner<Schema>
+  ? UiPropertiesEnum<Schema>
   : never;
 
 type UiSchemaInner<Schema extends object> = {
   // Boolean messes up the `IsNonUndefinedUnion` check, so we need to handle it first
   // TODO: Figure out how to handle this better
   [K in keyof Partial<Schema>]: Schema[K] extends boolean
-    ? UiPropertiesLeaf<Schema[K]>
+    ? UiPropertiesBase<Schema[K]>
     : Schema[K] extends object
     ? Schema[K] extends Array<any>
       ? ResolveArrayUiProperties<Schema[K]>
       : UiPropertiesObject<Schema[K]>
     : IsNonUndefinedUnion<Schema[K]> extends true
     ? ResolveUnionUiProperties<Schema[K]>
-    : UiPropertiesLeaf<Schema[K]>;
+    : UiPropertiesBase<Schema[K]>;
 };
 
 export type UiSchema<Schema extends SchemaType> = UiSchemaInner<
