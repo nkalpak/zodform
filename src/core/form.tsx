@@ -56,6 +56,8 @@ import {
   IMultiChoiceDefaultProps,
   MultiChoiceDefault,
 } from "../components/default/multi-choice-default";
+import { PartialDeep } from "type-fest";
+import { B } from "vitest/dist/types-c800444e";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -101,8 +103,8 @@ function useComponent<UiProperties>(name: string): {
  * (string, number, boolean, enum, etc.)
  * */
 function getLeafPropsFromUiSchema(
-  uiProps?: UiPropertiesBase<any>
-): UiPropertiesLeaf<any> {
+  uiProps?: UiPropertiesBase<any, any>
+): UiPropertiesLeaf<any, any> {
   return R.omit(uiProps ?? {}, ["component"]);
 }
 
@@ -128,7 +130,7 @@ function ZodStringComponent({
   uiSchema,
 }: IZodStringComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesBase<string>>(name);
+  const { errors } = useComponent<UiPropertiesBase<string, any>>(name);
 
   function handleChange(value = "") {
     const isEmpty = value === "";
@@ -173,7 +175,7 @@ function ZodEnumComponent({
   uiSchema,
 }: IZodEnumComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesEnum<any>>(name);
+  const { errors } = useComponent<UiPropertiesEnum<any, any>>(name);
 
   function handleChange(value?: string) {
     onChange({
@@ -210,7 +212,7 @@ function ZodNumberComponent({
   uiSchema,
 }: IZodNumberComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesBase<number>>(name);
+  const { errors } = useComponent<UiPropertiesBase<number, any>>(name);
 
   function handleChange(value?: number) {
     const isEmpty = R.isNil(value) || Number.isNaN(value);
@@ -254,7 +256,7 @@ function ZodBooleanComponent({
   uiSchema,
 }: IZodBooleanComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesBase<boolean>>(name);
+  const { errors } = useComponent<UiPropertiesBase<boolean, any>>(name);
 
   function handleChange(value: boolean) {
     onChange({
@@ -286,7 +288,7 @@ interface IZodArrayComponentProps
   minLength?: number;
   maxLength?: number;
   exactLength?: number;
-  uiSchema?: UiPropertiesArray<any> | UiPropertiesMultiChoice<string>;
+  uiSchema?: UiPropertiesArray<any, any> | UiPropertiesMultiChoice<string, any>;
 }
 function ZodArrayComponent({
   schema,
@@ -298,7 +300,7 @@ function ZodArrayComponent({
   const { errors } = useComponent(name);
 
   if (isZodEnum(schema.element)) {
-    const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<string>;
+    const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<string, any>;
     const Component =
       uiProps.component ?? components?.multiChoice ?? MultiChoiceDefault;
 
@@ -320,7 +322,7 @@ function ZodArrayComponent({
     );
   }
 
-  const uiProps = (uiSchema ?? {}) as UiPropertiesArray<any>;
+  const uiProps = (uiSchema ?? {}) as UiPropertiesArray<any, any>;
   const Component = uiProps.component ?? components?.array ?? ArrayDefault;
 
   return (
@@ -361,7 +363,7 @@ function ZodObjectComponent({
 }: {
   value: any;
   schema: AnyZodObject;
-  uiSchema?: UiPropertiesObject<any>;
+  uiSchema?: UiPropertiesObject<any, any>;
   name?: string;
 }) {
   const { components } = useFormContext();
@@ -525,36 +527,44 @@ type ResolveComponentProps<Value> = Value extends boolean
   ? IObjectDefaultProps
   : never;
 
-type UiPropertiesBase<Value> = {
+type UiPropertiesBase<Value, BaseSchema extends object> = {
   label?: React.ReactNode;
   component?: (props: ResolveComponentProps<Value | undefined>) => JSX.Element;
   autoFocus?: boolean;
+  cond?: (data: PartialDeep<BaseSchema>) => boolean;
 };
 
-export type UiPropertiesLeaf<Value> = Omit<
-  UiPropertiesBase<Value>,
+export type UiPropertiesLeaf<Value, BaseSchema extends object> = Omit<
+  UiPropertiesBase<Value, BaseSchema>,
   "component"
 >;
 
-type UiPropertiesEnum<Schema extends string> = Omit<
-  UiPropertiesBase<Schema>,
+type UiPropertiesEnum<Schema extends string, BaseSchema extends object> = Omit<
+  UiPropertiesBase<Schema, BaseSchema>,
   "component"
 > & {
   component?: (props: IEnumDefaultProps) => JSX.Element;
   optionLabels?: Record<Schema, React.ReactNode>;
 };
 
-type UiPropertiesMultiChoice<Schema extends string> = Pick<
-  UiPropertiesEnum<Schema>,
-  "optionLabels" | "label"
+type UiPropertiesMultiChoice<
+  Schema extends string,
+  BaseSchema extends object
+> = Pick<
+  UiPropertiesEnum<Schema, BaseSchema>,
+  "optionLabels" | "label" | "cond"
 > & {
   component?: (props: IMultiChoiceDefaultProps) => JSX.Element;
 };
 
-type UiPropertiesObject<Schema extends object> = UiSchemaInner<Schema> & {
+type UiPropertiesObject<
+  Schema extends object,
+  BaseSchema extends object
+> = UiSchemaInner<Schema, BaseSchema> & {
   ui?: {
     title?: React.ReactNode;
     component?: (props: IObjectDefaultProps) => JSX.Element;
+    cond?: (data: PartialDeep<BaseSchema>) => boolean;
   };
 };
 
@@ -562,43 +572,51 @@ type UiPropertiesObject<Schema extends object> = UiSchemaInner<Schema> & {
  * Arrays should allow for modifying the element type's ui schema too.
  * So, we do that through the `element` property.
  * */
-type UiPropertiesArray<Schema extends Array<any>> = (Schema extends Array<
-  infer El extends object
->
+type UiPropertiesArray<
+  Schema extends Array<any>,
+  BaseSchema extends object
+> = (Schema extends Array<infer El extends object>
   ? {
-      element?: UiPropertiesObject<El>;
+      element?: Omit<UiPropertiesObject<El, BaseSchema>, "ui"> & {
+        ui?: Omit<Required<UiPropertiesObject<El, BaseSchema>>["ui"], "cond">;
+      };
     }
-  : { element?: UiPropertiesBase<Schema[0]> }) & {
+  : { element?: Omit<UiPropertiesBase<Schema[0], BaseSchema>, "cond"> }) & {
   title?: React.ReactNode;
   component?: (props: IArrayDefaultProps) => JSX.Element;
+  cond?: (data: PartialDeep<BaseSchema>) => boolean;
 };
 
-type ResolveArrayUiProperties<Schema extends Array<string>> =
-  Schema extends Array<infer El extends string>
-    ? IsNonUndefinedUnion<El> extends true
-      ? UiPropertiesMultiChoice<El>
-      : UiPropertiesArray<Schema>
-    : UiPropertiesArray<Schema>;
+type ResolveArrayUiProperties<
+  Schema extends Array<string>,
+  BaseSchema extends object
+> = Schema extends Array<infer El extends string>
+  ? IsNonUndefinedUnion<El> extends true
+    ? UiPropertiesMultiChoice<El, BaseSchema>
+    : UiPropertiesArray<Schema, BaseSchema>
+  : UiPropertiesArray<Schema, BaseSchema>;
 
-type ResolveUnionUiProperties<Schema> = Schema extends string
-  ? UiPropertiesEnum<Schema>
-  : never;
+type ResolveUnionUiProperties<
+  Schema,
+  BaseSchema extends object
+> = Schema extends string ? UiPropertiesEnum<Schema, BaseSchema> : never;
 
-type UiSchemaInner<Schema extends object> = {
+type UiSchemaInner<Schema extends object, BaseSchema extends object> = {
   // Boolean messes up the `IsNonUndefinedUnion` check, so we need to handle it first
   // TODO: Figure out how to handle this better
   [K in keyof Partial<Schema>]: Schema[K] extends boolean
-    ? UiPropertiesBase<Schema[K]>
+    ? UiPropertiesBase<Schema[K], BaseSchema>
     : Schema[K] extends object
     ? Schema[K] extends Array<any>
-      ? ResolveArrayUiProperties<Schema[K]>
-      : UiPropertiesObject<Schema[K]>
+      ? ResolveArrayUiProperties<Schema[K], BaseSchema>
+      : UiPropertiesObject<Schema[K], BaseSchema>
     : IsNonUndefinedUnion<Schema[K]> extends true
-    ? ResolveUnionUiProperties<Schema[K]>
-    : UiPropertiesBase<Schema[K]>;
+    ? ResolveUnionUiProperties<Schema[K], BaseSchema>
+    : UiPropertiesBase<Schema[K], BaseSchema>;
 };
 
 export type UiSchema<Schema extends SchemaType> = UiSchemaInner<
+  zod.infer<Schema>,
   zod.infer<Schema>
 >;
 

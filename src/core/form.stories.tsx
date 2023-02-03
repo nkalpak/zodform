@@ -353,6 +353,7 @@ export function DonationForm() {
     fullName: {
       firstName: {
         label: "First name",
+        cond: (data) => data?.paymentMethod === "creditCard",
       },
       lastName: {
         label: "Last name",
