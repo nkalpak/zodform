@@ -452,6 +452,8 @@ export function ConferenceRegistration() {
         .array(z.enum(["tShirt", "coffeeCup"] as const))
         .min(1, "Please select a product"),
       paymentMethod: z.enum(["creditCard", "payPal"] as const),
+
+      paypalNumber: z.string().optional(),
     })
   );
 
@@ -496,6 +498,10 @@ export function ConferenceRegistration() {
         payPal: <span>🐧 PayPal</span>,
       },
     },
+    paypalNumber: {
+      label: "PayPal number",
+      cond: (formData) => formData.paymentMethod === "payPal",
+    },
   }));
 
   return (
@@ -506,12 +512,29 @@ export function ConferenceRegistration() {
       }}
     >
       <Form
+        onSubmit={console.log}
         components={components}
         title={<h1>Conference registration</h1>}
         schema={schema}
         uiSchema={uiSchema}
       >
-        {() => <Button type="submit">Submit</Button>}
+        {({ errors }) => {
+          return (
+            <React.Fragment>
+              {errors.length > 0 && (
+                <Alert color="red" title="Please fix the following errors:">
+                  <List>
+                    {errors.map(([, error]) => (
+                      <List.Item c="red">{error[0]?.message}</List.Item>
+                    ))}
+                  </List>
+                </Alert>
+              )}
+
+              <Button type="submit">Submit</Button>
+            </React.Fragment>
+          );
+        }}
       </Form>
     </div>
   );

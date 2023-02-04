@@ -1,5 +1,6 @@
 import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString } from "zod";
 import * as zod from "zod";
+import { ZodEffects } from "zod";
 import * as R from "remeda";
 import React from "react";
 import { createContext } from "../utils/create-context";
@@ -46,7 +47,6 @@ import {
 import { formDefaultValueFromSchema } from "./form-default-value-from-schema";
 import { useUncontrolledToControlledWarning } from "../utils/use-uncontrolled-to-controlled-warning";
 import { unset } from "../utils/unset";
-import { ZodEffects } from "zod";
 import {
   IObjectDefaultProps,
   ObjectDefault,
@@ -56,6 +56,8 @@ import {
   IMultiChoiceDefaultProps,
   MultiChoiceDefault,
 } from "../components/default/multi-choice-default";
+import { PartialDeep } from "type-fest";
+import { CondResult, resolveUiSchemaConds } from "./resolve-ui-schema-conds";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -81,19 +83,26 @@ const [useFormContext, FormContextProvider] = createContext<{
 
   onChange: OnChange;
   onArrayRemove: (path: ComponentPath) => void;
+  conds: FormConds;
 }>();
+
+function isComponentVisible(name: string, conds: FormConds): boolean {
+  return conds[name]?.cond ?? true;
+}
 
 function useComponent<UiProperties>(name: string): {
   errors: zod.ZodIssue[];
   uiSchema?: UiProperties;
+  isVisible: boolean;
 } {
-  const { errors } = useFormContext();
+  const { errors, conds } = useFormContext();
 
   return React.useMemo(() => {
     return {
       errors: errors?.[name] ?? [],
+      isVisible: isComponentVisible(name, conds),
     };
-  }, [errors, name]);
+  }, [conds, errors, name]);
 }
 
 /**
@@ -101,9 +110,9 @@ function useComponent<UiProperties>(name: string): {
  * (string, number, boolean, enum, etc.)
  * */
 function getLeafPropsFromUiSchema(
-  uiProps?: UiPropertiesBase<any>
-): UiPropertiesLeaf<any> {
-  return R.omit(uiProps ?? {}, ["component"]);
+  uiProps?: UiPropertiesBase<any, any>
+): UiPropertiesLeaf<any, any> {
+  return R.omit(uiProps ?? {}, ["component", "cond"]);
 }
 
 interface IZodLeafComponentProps<
@@ -128,7 +137,8 @@ function ZodStringComponent({
   uiSchema,
 }: IZodStringComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesBase<string>>(name);
+  const { errors, isVisible } =
+    useComponent<UiPropertiesBase<string, any>>(name);
 
   function handleChange(value = "") {
     const isEmpty = value === "";
@@ -148,6 +158,10 @@ function ZodStringComponent({
   }
 
   const Component = uiSchema?.component ?? components?.string ?? StringDefault;
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <Component
@@ -173,7 +187,7 @@ function ZodEnumComponent({
   uiSchema,
 }: IZodEnumComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesEnum<any>>(name);
+  const { errors, isVisible } = useComponent<UiPropertiesEnum<any, any>>(name);
 
   function handleChange(value?: string) {
     onChange({
@@ -184,6 +198,10 @@ function ZodEnumComponent({
   }
 
   const Component = uiSchema?.component ?? components?.enum ?? EnumDefault;
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <Component
@@ -210,7 +228,8 @@ function ZodNumberComponent({
   uiSchema,
 }: IZodNumberComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesBase<number>>(name);
+  const { errors, isVisible } =
+    useComponent<UiPropertiesBase<number, any>>(name);
 
   function handleChange(value?: number) {
     const isEmpty = R.isNil(value) || Number.isNaN(value);
@@ -230,6 +249,10 @@ function ZodNumberComponent({
   }
 
   const Component = uiSchema?.component ?? components?.number ?? NumberDefault;
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <Component
@@ -254,7 +277,8 @@ function ZodBooleanComponent({
   uiSchema,
 }: IZodBooleanComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesBase<boolean>>(name);
+  const { errors, isVisible } =
+    useComponent<UiPropertiesBase<boolean, any>>(name);
 
   function handleChange(value: boolean) {
     onChange({
@@ -266,6 +290,10 @@ function ZodBooleanComponent({
 
   const Component =
     uiSchema?.component ?? components?.boolean ?? BooleanDefault;
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <Component
@@ -286,7 +314,7 @@ interface IZodArrayComponentProps
   minLength?: number;
   maxLength?: number;
   exactLength?: number;
-  uiSchema?: UiPropertiesArray<any> | UiPropertiesMultiChoice<string>;
+  uiSchema?: UiPropertiesArray<any, any> | UiPropertiesMultiChoice<string, any>;
 }
 function ZodArrayComponent({
   schema,
@@ -295,10 +323,14 @@ function ZodArrayComponent({
   uiSchema,
 }: IZodArrayComponentProps) {
   const { onChange, onArrayRemove, components } = useFormContext();
-  const { errors } = useComponent(name);
+  const { errors, isVisible } = useComponent(name);
+
+  if (!isVisible) {
+    return null;
+  }
 
   if (isZodEnum(schema.element)) {
-    const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<string>;
+    const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<string, any>;
     const Component =
       uiProps.component ?? components?.multiChoice ?? MultiChoiceDefault;
 
@@ -320,7 +352,7 @@ function ZodArrayComponent({
     );
   }
 
-  const uiProps = (uiSchema ?? {}) as UiPropertiesArray<any>;
+  const uiProps = (uiSchema ?? {}) as UiPropertiesArray<any, any>;
   const Component = uiProps.component ?? components?.array ?? ArrayDefault;
 
   return (
@@ -361,10 +393,15 @@ function ZodObjectComponent({
 }: {
   value: any;
   schema: AnyZodObject;
-  uiSchema?: UiPropertiesObject<any>;
+  uiSchema?: UiPropertiesObject<any, any>;
   name?: string;
 }) {
+  const { isVisible } = useComponent(name ?? "");
   const { components } = useFormContext();
+
+  if (!isVisible) {
+    return null;
+  }
 
   // Don't create a div as the first child of the form
   const Component = name
@@ -525,36 +562,44 @@ type ResolveComponentProps<Value> = Value extends boolean
   ? IObjectDefaultProps
   : never;
 
-type UiPropertiesBase<Value> = {
+type UiPropertiesBase<Value, BaseSchema extends object> = {
   label?: React.ReactNode;
   component?: (props: ResolveComponentProps<Value | undefined>) => JSX.Element;
   autoFocus?: boolean;
+  cond?: (data: PartialDeep<BaseSchema>) => boolean;
 };
 
-export type UiPropertiesLeaf<Value> = Omit<
-  UiPropertiesBase<Value>,
+export type UiPropertiesLeaf<Value, BaseSchema extends object> = Omit<
+  UiPropertiesBase<Value, BaseSchema>,
   "component"
 >;
 
-type UiPropertiesEnum<Schema extends string> = Omit<
-  UiPropertiesBase<Schema>,
+type UiPropertiesEnum<Schema extends string, BaseSchema extends object> = Omit<
+  UiPropertiesBase<Schema, BaseSchema>,
   "component"
 > & {
   component?: (props: IEnumDefaultProps) => JSX.Element;
   optionLabels?: Record<Schema, React.ReactNode>;
 };
 
-type UiPropertiesMultiChoice<Schema extends string> = Pick<
-  UiPropertiesEnum<Schema>,
-  "optionLabels" | "label"
+type UiPropertiesMultiChoice<
+  Schema extends string,
+  BaseSchema extends object
+> = Pick<
+  UiPropertiesEnum<Schema, BaseSchema>,
+  "optionLabels" | "label" | "cond"
 > & {
   component?: (props: IMultiChoiceDefaultProps) => JSX.Element;
 };
 
-type UiPropertiesObject<Schema extends object> = UiSchemaInner<Schema> & {
+type UiPropertiesObject<
+  Schema extends object,
+  BaseSchema extends object
+> = UiSchemaInner<Schema, BaseSchema> & {
   ui?: {
     title?: React.ReactNode;
     component?: (props: IObjectDefaultProps) => JSX.Element;
+    cond?: (data: PartialDeep<BaseSchema>) => boolean;
   };
 };
 
@@ -562,43 +607,51 @@ type UiPropertiesObject<Schema extends object> = UiSchemaInner<Schema> & {
  * Arrays should allow for modifying the element type's ui schema too.
  * So, we do that through the `element` property.
  * */
-type UiPropertiesArray<Schema extends Array<any>> = (Schema extends Array<
-  infer El extends object
->
+type UiPropertiesArray<
+  Schema extends Array<any>,
+  BaseSchema extends object
+> = (Schema extends Array<infer El extends object>
   ? {
-      element?: UiPropertiesObject<El>;
+      element?: Omit<UiPropertiesObject<El, BaseSchema>, "ui"> & {
+        ui?: Omit<Required<UiPropertiesObject<El, BaseSchema>>["ui"], "cond">;
+      };
     }
-  : { element?: UiPropertiesBase<Schema[0]> }) & {
+  : { element?: Omit<UiPropertiesBase<Schema[0], BaseSchema>, "cond"> }) & {
   title?: React.ReactNode;
   component?: (props: IArrayDefaultProps) => JSX.Element;
+  cond?: (data: PartialDeep<BaseSchema>) => boolean;
 };
 
-type ResolveArrayUiProperties<Schema extends Array<string>> =
-  Schema extends Array<infer El extends string>
-    ? IsNonUndefinedUnion<El> extends true
-      ? UiPropertiesMultiChoice<El>
-      : UiPropertiesArray<Schema>
-    : UiPropertiesArray<Schema>;
+type ResolveArrayUiProperties<
+  Schema extends Array<string>,
+  BaseSchema extends object
+> = Schema extends Array<infer El extends string>
+  ? IsNonUndefinedUnion<El> extends true
+    ? UiPropertiesMultiChoice<El, BaseSchema>
+    : UiPropertiesArray<Schema, BaseSchema>
+  : UiPropertiesArray<Schema, BaseSchema>;
 
-type ResolveUnionUiProperties<Schema> = Schema extends string
-  ? UiPropertiesEnum<Schema>
-  : never;
+type ResolveUnionUiProperties<
+  Schema,
+  BaseSchema extends object
+> = Schema extends string ? UiPropertiesEnum<Schema, BaseSchema> : never;
 
-type UiSchemaInner<Schema extends object> = {
+type UiSchemaInner<Schema extends object, BaseSchema extends object> = {
   // Boolean messes up the `IsNonUndefinedUnion` check, so we need to handle it first
   // TODO: Figure out how to handle this better
   [K in keyof Partial<Schema>]: Schema[K] extends boolean
-    ? UiPropertiesBase<Schema[K]>
+    ? UiPropertiesBase<Schema[K], BaseSchema>
     : Schema[K] extends object
     ? Schema[K] extends Array<any>
-      ? ResolveArrayUiProperties<Schema[K]>
-      : UiPropertiesObject<Schema[K]>
+      ? ResolveArrayUiProperties<Schema[K], BaseSchema>
+      : UiPropertiesObject<Schema[K], BaseSchema>
     : IsNonUndefinedUnion<Schema[K]> extends true
-    ? ResolveUnionUiProperties<Schema[K]>
-    : UiPropertiesBase<Schema[K]>;
+    ? ResolveUnionUiProperties<Schema[K], BaseSchema>
+    : UiPropertiesBase<Schema[K], BaseSchema>;
 };
 
 export type UiSchema<Schema extends SchemaType> = UiSchemaInner<
+  zod.infer<Schema>,
   zod.infer<Schema>
 >;
 
@@ -606,6 +659,7 @@ type SchemaType = AnyZodObject | ZodEffects<any>;
 type FormChildren = (props: {
   errors: [keyof ErrorsMap, ErrorsMap[keyof ErrorsMap]][];
 }) => JSX.Element;
+type FormConds = Record<string, CondResult>;
 
 interface IFormProps<Schema extends SchemaType> {
   schema: Schema;
@@ -644,6 +698,37 @@ function resolveObjectSchema(schema: SchemaType): AnyZodObject {
   throw new Error(`Schema must be an object, got ${schema}`);
 }
 
+function resolveNextFormConds(formData: any, uiSchema: UiSchema<any>) {
+  const conds = resolveUiSchemaConds({
+    uiSchema,
+    formData,
+  });
+
+  return Object.fromEntries(
+    conds.map((cond) => [componentNameSerialize(cond.path), cond])
+  );
+}
+
+function getNextFormDataFromConds({
+  formData,
+  uiSchema,
+}: {
+  formData: Record<string, any>;
+  uiSchema: UiSchema<any>;
+}) {
+  const conds = resolveUiSchemaConds({
+    uiSchema,
+    formData,
+  });
+  return produce(formData, (draft) => {
+    conds.forEach(({ cond, path }) => {
+      if (!cond) {
+        unset(draft, path);
+      }
+    });
+  });
+}
+
 export function Form<Schema extends SchemaType>({
   schema,
   uiSchema,
@@ -665,12 +750,20 @@ export function Form<Schema extends SchemaType>({
   const [formData, setFormData] = React.useState(
     defaultValue ?? formDefaultValueFromSchema(objectSchema)
   );
+  const [conds, setConds] = React.useState<FormConds>(() =>
+    resolveNextFormConds(formData, uiSchema ?? {})
+  );
 
   useUncontrolledToControlledWarning(value);
 
-  const validate = React.useCallback(
+  const handleSubmit = React.useCallback(
     (value: typeof formData) => {
-      const parsed = schema.safeParse(value);
+      const parsed = schema.safeParse(
+        getNextFormDataFromConds({
+          formData: value,
+          uiSchema: uiSchema ?? {},
+        })
+      );
 
       if (parsed.success) {
         setErrors(undefined);
@@ -684,23 +777,29 @@ export function Form<Schema extends SchemaType>({
         );
       }
     },
-    [onSubmit, schema]
+    [onSubmit, schema, uiSchema]
   );
 
-  const handleChange: OnChange = React.useCallback((event) => {
-    function nextState(prev: typeof formData) {
-      return produce(prev, (draft) => {
-        if (event.op === "update") {
-          set(draft, event.path, event.value);
-        } else {
-          unset(draft, event.path, {
-            arrayBehavior: "setToUndefined",
-          });
-        }
-      });
-    }
-    setFormData(nextState);
-  }, []);
+  const handleChange: OnChange = React.useCallback(
+    (event) => {
+      const nextFormData = nextState(formData);
+      setFormData(nextFormData);
+      setConds(resolveNextFormConds(nextFormData, uiSchema ?? {}));
+
+      function nextState(prev: Record<string, any>) {
+        return produce(prev, (draft) => {
+          if (event.op === "update") {
+            set(draft, event.path, event.value);
+          } else {
+            unset(draft, event.path, {
+              arrayBehavior: "setToUndefined",
+            });
+          }
+        });
+      }
+    },
+    [formData, uiSchema]
+  );
 
   const onArrayRemove = React.useCallback((path: ComponentPath) => {
     setFormData((prev) =>
@@ -720,13 +819,14 @@ export function Form<Schema extends SchemaType>({
       }}
       onSubmit={(event) => {
         event.preventDefault();
-        validate(formData);
+        handleSubmit(formData);
       }}
     >
       {title}
 
       <FormContextProvider
         value={{
+          conds,
           errors,
           onChange: handleChange,
           components,
