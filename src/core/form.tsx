@@ -698,18 +698,35 @@ function resolveObjectSchema(schema: SchemaType): AnyZodObject {
   throw new Error(`Schema must be an object, got ${schema}`);
 }
 
-function getFormConds(formData: any, uiSchema: UiSchema<any>) {
-  const resolvedConds = resolveUiSchemaConds({
+function resolveNextFormConds(formData: any, uiSchema: UiSchema<any>) {
+  const conds = resolveUiSchemaConds({
     uiSchema,
     formData,
   });
 
-  return {
-    resolvedConds,
-    conds: Object.fromEntries(
-      resolvedConds.map((cond) => [componentNameSerialize(cond.path), cond])
-    ),
-  };
+  return Object.fromEntries(
+    conds.map((cond) => [componentNameSerialize(cond.path), cond])
+  );
+}
+
+function getNextFormDataFromConds({
+  formData,
+  uiSchema,
+}: {
+  formData: Record<string, any>;
+  uiSchema: UiSchema<any>;
+}) {
+  const conds = resolveUiSchemaConds({
+    uiSchema,
+    formData,
+  });
+  return produce(formData, (draft) => {
+    conds.forEach(({ cond, path }) => {
+      if (!cond) {
+        unset(draft, path);
+      }
+    });
+  });
 }
 
 export function Form<Schema extends SchemaType>({
@@ -733,16 +750,20 @@ export function Form<Schema extends SchemaType>({
   const [formData, setFormData] = React.useState(
     defaultValue ?? formDefaultValueFromSchema(objectSchema)
   );
-  const [conds, setConds] = React.useState<FormConds>(() => {
-    const { conds } = getFormConds(formData, uiSchema ?? {});
-    return conds;
-  });
+  const [conds, setConds] = React.useState<FormConds>(() =>
+    resolveNextFormConds(formData, uiSchema ?? {})
+  );
 
   useUncontrolledToControlledWarning(value);
 
-  const validate = React.useCallback(
+  const handleSubmit = React.useCallback(
     (value: typeof formData) => {
-      const parsed = schema.safeParse(value);
+      const parsed = schema.safeParse(
+        getNextFormDataFromConds({
+          formData: value,
+          uiSchema: uiSchema ?? {},
+        })
+      );
 
       if (parsed.success) {
         setErrors(undefined);
@@ -756,41 +777,14 @@ export function Form<Schema extends SchemaType>({
         );
       }
     },
-    [onSubmit, schema]
-  );
-
-  const runConds = React.useCallback(
-    ({
-      formData,
-      uiSchema,
-    }: {
-      formData: Record<string, any>;
-      uiSchema: UiSchema<any>;
-    }) => {
-      const { conds, resolvedConds } = getFormConds(formData, uiSchema);
-
-      setFormData((prev) =>
-        produce(prev, (draft) => {
-          resolvedConds.forEach(({ cond, path }) => {
-            if (!cond) {
-              unset(draft, path);
-            }
-          });
-        })
-      );
-      setConds(conds);
-    },
-    []
+    [onSubmit, schema, uiSchema]
   );
 
   const handleChange: OnChange = React.useCallback(
     (event) => {
       const nextFormData = nextState(formData);
       setFormData(nextFormData);
-      runConds({
-        formData: nextFormData,
-        uiSchema: uiSchema ?? {},
-      });
+      setConds(resolveNextFormConds(nextFormData, uiSchema ?? {}));
 
       function nextState(prev: Record<string, any>) {
         return produce(prev, (draft) => {
@@ -804,7 +798,7 @@ export function Form<Schema extends SchemaType>({
         });
       }
     },
-    [formData, runConds, uiSchema]
+    [formData, uiSchema]
   );
 
   const onArrayRemove = React.useCallback((path: ComponentPath) => {
@@ -825,7 +819,7 @@ export function Form<Schema extends SchemaType>({
       }}
       onSubmit={(event) => {
         event.preventDefault();
-        validate(formData);
+        handleSubmit(formData);
       }}
     >
       {title}
