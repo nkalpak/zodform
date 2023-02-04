@@ -518,7 +518,23 @@ export function ConferenceRegistration() {
         schema={schema}
         uiSchema={uiSchema}
       >
-        {() => <Button type="submit">Submit</Button>}
+        {({ errors }) => {
+          return (
+            <React.Fragment>
+              {errors.length > 0 && (
+                <Alert color="red" title="Please fix the following errors:">
+                  <List>
+                    {errors.map(([, error]) => (
+                      <List.Item c="red">{error[0]?.message}</List.Item>
+                    ))}
+                  </List>
+                </Alert>
+              )}
+
+              <Button type="submit">Submit</Button>
+            </React.Fragment>
+          );
+        }}
       </Form>
     </div>
   );
