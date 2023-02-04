@@ -1,5 +1,6 @@
 import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString } from "zod";
 import * as zod from "zod";
+import { ZodEffects } from "zod";
 import * as R from "remeda";
 import React from "react";
 import { createContext } from "../utils/create-context";
@@ -46,7 +47,6 @@ import {
 import { formDefaultValueFromSchema } from "./form-default-value-from-schema";
 import { useUncontrolledToControlledWarning } from "../utils/use-uncontrolled-to-controlled-warning";
 import { unset } from "../utils/unset";
-import { ZodEffects } from "zod";
 import {
   IObjectDefaultProps,
   ObjectDefault,
@@ -57,7 +57,7 @@ import {
   MultiChoiceDefault,
 } from "../components/default/multi-choice-default";
 import { PartialDeep } from "type-fest";
-import { B } from "vitest/dist/types-c800444e";
+import { CondResult, resolveUiSchemaConds } from "./resolve-ui-schema-conds";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -83,19 +83,26 @@ const [useFormContext, FormContextProvider] = createContext<{
 
   onChange: OnChange;
   onArrayRemove: (path: ComponentPath) => void;
+  conds: FormConds;
 }>();
+
+function isComponentVisible(name: string, conds: FormConds): boolean {
+  return conds[name]?.cond ?? true;
+}
 
 function useComponent<UiProperties>(name: string): {
   errors: zod.ZodIssue[];
   uiSchema?: UiProperties;
+  isVisible: boolean;
 } {
-  const { errors } = useFormContext();
+  const { errors, conds } = useFormContext();
 
   return React.useMemo(() => {
     return {
       errors: errors?.[name] ?? [],
+      isVisible: isComponentVisible(name, conds),
     };
-  }, [errors, name]);
+  }, [conds, errors, name]);
 }
 
 /**
@@ -105,7 +112,7 @@ function useComponent<UiProperties>(name: string): {
 function getLeafPropsFromUiSchema(
   uiProps?: UiPropertiesBase<any, any>
 ): UiPropertiesLeaf<any, any> {
-  return R.omit(uiProps ?? {}, ["component"]);
+  return R.omit(uiProps ?? {}, ["component", "cond"]);
 }
 
 interface IZodLeafComponentProps<
@@ -130,7 +137,8 @@ function ZodStringComponent({
   uiSchema,
 }: IZodStringComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesBase<string, any>>(name);
+  const { errors, isVisible } =
+    useComponent<UiPropertiesBase<string, any>>(name);
 
   function handleChange(value = "") {
     const isEmpty = value === "";
@@ -150,6 +158,10 @@ function ZodStringComponent({
   }
 
   const Component = uiSchema?.component ?? components?.string ?? StringDefault;
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <Component
@@ -175,7 +187,7 @@ function ZodEnumComponent({
   uiSchema,
 }: IZodEnumComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesEnum<any, any>>(name);
+  const { errors, isVisible } = useComponent<UiPropertiesEnum<any, any>>(name);
 
   function handleChange(value?: string) {
     onChange({
@@ -186,6 +198,10 @@ function ZodEnumComponent({
   }
 
   const Component = uiSchema?.component ?? components?.enum ?? EnumDefault;
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <Component
@@ -212,7 +228,8 @@ function ZodNumberComponent({
   uiSchema,
 }: IZodNumberComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesBase<number, any>>(name);
+  const { errors, isVisible } =
+    useComponent<UiPropertiesBase<number, any>>(name);
 
   function handleChange(value?: number) {
     const isEmpty = R.isNil(value) || Number.isNaN(value);
@@ -232,6 +249,10 @@ function ZodNumberComponent({
   }
 
   const Component = uiSchema?.component ?? components?.number ?? NumberDefault;
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <Component
@@ -256,7 +277,8 @@ function ZodBooleanComponent({
   uiSchema,
 }: IZodBooleanComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors } = useComponent<UiPropertiesBase<boolean, any>>(name);
+  const { errors, isVisible } =
+    useComponent<UiPropertiesBase<boolean, any>>(name);
 
   function handleChange(value: boolean) {
     onChange({
@@ -268,6 +290,10 @@ function ZodBooleanComponent({
 
   const Component =
     uiSchema?.component ?? components?.boolean ?? BooleanDefault;
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <Component
@@ -297,7 +323,11 @@ function ZodArrayComponent({
   uiSchema,
 }: IZodArrayComponentProps) {
   const { onChange, onArrayRemove, components } = useFormContext();
-  const { errors } = useComponent(name);
+  const { errors, isVisible } = useComponent(name);
+
+  if (!isVisible) {
+    return null;
+  }
 
   if (isZodEnum(schema.element)) {
     const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<string, any>;
@@ -366,7 +396,12 @@ function ZodObjectComponent({
   uiSchema?: UiPropertiesObject<any, any>;
   name?: string;
 }) {
+  const { isVisible } = useComponent(name ?? "");
   const { components } = useFormContext();
+
+  if (!isVisible) {
+    return null;
+  }
 
   // Don't create a div as the first child of the form
   const Component = name
@@ -624,6 +659,7 @@ type SchemaType = AnyZodObject | ZodEffects<any>;
 type FormChildren = (props: {
   errors: [keyof ErrorsMap, ErrorsMap[keyof ErrorsMap]][];
 }) => JSX.Element;
+type FormConds = Record<string, CondResult>;
 
 interface IFormProps<Schema extends SchemaType> {
   schema: Schema;
@@ -662,6 +698,20 @@ function resolveObjectSchema(schema: SchemaType): AnyZodObject {
   throw new Error(`Schema must be an object, got ${schema}`);
 }
 
+function getFormConds(formData: any, uiSchema: UiSchema<any>) {
+  const resolvedConds = resolveUiSchemaConds({
+    uiSchema,
+    formData,
+  });
+
+  return {
+    resolvedConds,
+    conds: Object.fromEntries(
+      resolvedConds.map((cond) => [componentNameSerialize(cond.path), cond])
+    ),
+  };
+}
+
 export function Form<Schema extends SchemaType>({
   schema,
   uiSchema,
@@ -683,6 +733,10 @@ export function Form<Schema extends SchemaType>({
   const [formData, setFormData] = React.useState(
     defaultValue ?? formDefaultValueFromSchema(objectSchema)
   );
+  const [conds, setConds] = React.useState<FormConds>(() => {
+    const { conds } = getFormConds(formData, uiSchema ?? {});
+    return conds;
+  });
 
   useUncontrolledToControlledWarning(value);
 
@@ -705,20 +759,53 @@ export function Form<Schema extends SchemaType>({
     [onSubmit, schema]
   );
 
-  const handleChange: OnChange = React.useCallback((event) => {
-    function nextState(prev: typeof formData) {
-      return produce(prev, (draft) => {
-        if (event.op === "update") {
-          set(draft, event.path, event.value);
-        } else {
-          unset(draft, event.path, {
-            arrayBehavior: "setToUndefined",
+  const runConds = React.useCallback(
+    ({
+      formData,
+      uiSchema,
+    }: {
+      formData: Record<string, any>;
+      uiSchema: UiSchema<any>;
+    }) => {
+      const { conds, resolvedConds } = getFormConds(formData, uiSchema);
+
+      setFormData((prev) =>
+        produce(prev, (draft) => {
+          resolvedConds.forEach(({ cond, path }) => {
+            if (!cond) {
+              unset(draft, path);
+            }
           });
-        }
+        })
+      );
+      setConds(conds);
+    },
+    []
+  );
+
+  const handleChange: OnChange = React.useCallback(
+    (event) => {
+      const nextFormData = nextState(formData);
+      setFormData(nextFormData);
+      runConds({
+        formData: nextFormData,
+        uiSchema: uiSchema ?? {},
       });
-    }
-    setFormData(nextState);
-  }, []);
+
+      function nextState(prev: Record<string, any>) {
+        return produce(prev, (draft) => {
+          if (event.op === "update") {
+            set(draft, event.path, event.value);
+          } else {
+            unset(draft, event.path, {
+              arrayBehavior: "setToUndefined",
+            });
+          }
+        });
+      }
+    },
+    [formData, runConds, uiSchema]
+  );
 
   const onArrayRemove = React.useCallback((path: ComponentPath) => {
     setFormData((prev) =>
@@ -745,6 +832,7 @@ export function Form<Schema extends SchemaType>({
 
       <FormContextProvider
         value={{
+          conds,
           errors,
           onChange: handleChange,
           components,
