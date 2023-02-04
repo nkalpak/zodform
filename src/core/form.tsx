@@ -562,20 +562,20 @@ type ResolveComponentProps<Value> = Value extends boolean
   ? IObjectDefaultProps
   : never;
 
-type UiPropertiesBase<Value, BaseSchema extends object> = {
+type UiPropertiesBase<Value, RootSchema extends object> = {
   label?: React.ReactNode;
   component?: (props: ResolveComponentProps<Value | undefined>) => JSX.Element;
   autoFocus?: boolean;
-  cond?: (data: PartialDeep<BaseSchema>) => boolean;
+  cond?: (data: PartialDeep<RootSchema>) => boolean;
 };
 
-export type UiPropertiesLeaf<Value, BaseSchema extends object> = Omit<
-  UiPropertiesBase<Value, BaseSchema>,
+export type UiPropertiesLeaf<Value, RootSchema extends object> = Omit<
+  UiPropertiesBase<Value, RootSchema>,
   "component"
 >;
 
-type UiPropertiesEnum<Schema extends string, BaseSchema extends object> = Omit<
-  UiPropertiesBase<Schema, BaseSchema>,
+type UiPropertiesEnum<Schema extends string, RootSchema extends object> = Omit<
+  UiPropertiesBase<Schema, RootSchema>,
   "component"
 > & {
   component?: (props: IEnumDefaultProps) => JSX.Element;
@@ -584,9 +584,9 @@ type UiPropertiesEnum<Schema extends string, BaseSchema extends object> = Omit<
 
 type UiPropertiesMultiChoice<
   Schema extends string,
-  BaseSchema extends object
+  RootSchema extends object
 > = Pick<
-  UiPropertiesEnum<Schema, BaseSchema>,
+  UiPropertiesEnum<Schema, RootSchema>,
   "optionLabels" | "label" | "cond"
 > & {
   component?: (props: IMultiChoiceDefaultProps) => JSX.Element;
@@ -594,12 +594,12 @@ type UiPropertiesMultiChoice<
 
 type UiPropertiesObject<
   Schema extends object,
-  BaseSchema extends object
-> = UiSchemaInner<Schema, BaseSchema> & {
+  RootSchema extends object
+> = UiSchemaInner<Schema, RootSchema> & {
   ui?: {
     title?: React.ReactNode;
     component?: (props: IObjectDefaultProps) => JSX.Element;
-    cond?: (data: PartialDeep<BaseSchema>) => boolean;
+    cond?: (data: PartialDeep<RootSchema>) => boolean;
   };
 };
 
@@ -609,45 +609,45 @@ type UiPropertiesObject<
  * */
 type UiPropertiesArray<
   Schema extends Array<any>,
-  BaseSchema extends object
+  RootSchema extends object
 > = (Schema extends Array<infer El extends object>
   ? {
-      element?: Omit<UiPropertiesObject<El, BaseSchema>, "ui"> & {
-        ui?: Omit<Required<UiPropertiesObject<El, BaseSchema>>["ui"], "cond">;
+      element?: Omit<UiPropertiesObject<El, RootSchema>, "ui"> & {
+        ui?: Omit<Required<UiPropertiesObject<El, RootSchema>>["ui"], "cond">;
       };
     }
-  : { element?: Omit<UiPropertiesBase<Schema[0], BaseSchema>, "cond"> }) & {
+  : { element?: Omit<UiPropertiesBase<Schema[0], RootSchema>, "cond"> }) & {
   title?: React.ReactNode;
   component?: (props: IArrayDefaultProps) => JSX.Element;
-  cond?: (data: PartialDeep<BaseSchema>) => boolean;
+  cond?: (data: PartialDeep<RootSchema>) => boolean;
 };
 
 type ResolveArrayUiProperties<
   Schema extends Array<string>,
-  BaseSchema extends object
+  RootSchema extends object
 > = Schema extends Array<infer El extends string>
   ? IsNonUndefinedUnion<El> extends true
-    ? UiPropertiesMultiChoice<El, BaseSchema>
-    : UiPropertiesArray<Schema, BaseSchema>
-  : UiPropertiesArray<Schema, BaseSchema>;
+    ? UiPropertiesMultiChoice<El, RootSchema>
+    : UiPropertiesArray<Schema, RootSchema>
+  : UiPropertiesArray<Schema, RootSchema>;
 
 type ResolveUnionUiProperties<
   Schema,
-  BaseSchema extends object
-> = Schema extends string ? UiPropertiesEnum<Schema, BaseSchema> : never;
+  RootSchema extends object
+> = Schema extends string ? UiPropertiesEnum<Schema, RootSchema> : never;
 
-type UiSchemaInner<Schema extends object, BaseSchema extends object> = {
+type UiSchemaInner<Schema extends object, RootSchema extends object> = {
   // Boolean messes up the `IsNonUndefinedUnion` check, so we need to handle it first
   // TODO: Figure out how to handle this better
   [K in keyof Partial<Schema>]: Schema[K] extends boolean
-    ? UiPropertiesBase<Schema[K], BaseSchema>
+    ? UiPropertiesBase<Schema[K], RootSchema>
     : Schema[K] extends object
     ? Schema[K] extends Array<any>
-      ? ResolveArrayUiProperties<Schema[K], BaseSchema>
-      : UiPropertiesObject<Schema[K], BaseSchema>
+      ? ResolveArrayUiProperties<Schema[K], RootSchema>
+      : UiPropertiesObject<Schema[K], RootSchema>
     : IsNonUndefinedUnion<Schema[K]> extends true
-    ? ResolveUnionUiProperties<Schema[K], BaseSchema>
-    : UiPropertiesBase<Schema[K], BaseSchema>;
+    ? ResolveUnionUiProperties<Schema[K], RootSchema>
+    : UiPropertiesBase<Schema[K], RootSchema>;
 };
 
 export type UiSchema<Schema extends SchemaType> = UiSchemaInner<
