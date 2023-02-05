@@ -668,10 +668,11 @@ type UiSchemaInner<Schema extends object, RootSchema extends object> = {
     : UiPropertiesBase<Schema[K], RootSchema>;
 };
 
-export type UiSchema<Schema extends SchemaType> = UiSchemaInner<
+export type FormUiSchema<Schema extends SchemaType> = UiSchemaInner<
   zod.infer<Schema>,
   zod.infer<Schema>
 >;
+export type FormValue<Schema extends SchemaType> = zod.infer<Schema>;
 
 type SchemaType = AnyZodObject | ZodEffects<any>;
 type FormChildren = (props: {
@@ -681,7 +682,7 @@ type FormConds = Record<string, CondResult>;
 
 interface IFormProps<Schema extends SchemaType> {
   schema: Schema;
-  uiSchema?: UiSchema<Schema>;
+  uiSchema?: FormUiSchema<Schema>;
   onSubmit?: (value: zod.infer<Schema>) => void;
   value?: zod.infer<Schema>;
   defaultValue?: zod.infer<Schema>;
@@ -716,7 +717,7 @@ function resolveObjectSchema(schema: SchemaType): AnyZodObject {
   throw new Error(`Schema must be an object, got ${schema}`);
 }
 
-function resolveNextFormConds(formData: any, uiSchema: UiSchema<any>) {
+function resolveNextFormConds(formData: any, uiSchema: FormUiSchema<any>) {
   const conds = resolveUiSchemaConds({
     uiSchema,
     formData,
@@ -732,7 +733,7 @@ function getNextFormDataFromConds({
   uiSchema,
 }: {
   formData: Record<string, any>;
-  uiSchema: UiSchema<any>;
+  uiSchema: FormUiSchema<any>;
 }) {
   const conds = resolveUiSchemaConds({
     uiSchema,

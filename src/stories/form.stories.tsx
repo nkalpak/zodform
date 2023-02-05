@@ -1,21 +1,13 @@
 import React from "react";
 import * as R from "remeda";
-import { Form, UiSchema } from "./form";
+import { Form, FormUiSchema } from "../core/form";
 import { z } from "zod";
 import {
   PasswordMantine,
-  StringMantine,
   TextareaMantine,
 } from "../components/mantine/string-mantine";
-import {
-  EnumMantine,
-  EnumMantineRadio,
-} from "../components/mantine/enum-mantine";
-import {
-  NumberMantine,
-  SliderMantine,
-} from "../components/mantine/number-mantine";
-import { BooleanMantine } from "../components/mantine/boolean-mantine";
+import { EnumMantineRadio } from "../components/mantine/enum-mantine";
+import { SliderMantine } from "../components/mantine/number-mantine";
 import {
   ObjectMantine,
   ObjectMantineRows,
@@ -23,17 +15,7 @@ import {
 import { Alert, Box, Button, List } from "@mantine/core";
 import { IObjectDefaultProps } from "../components/default/object-default";
 import { MultiChoiceMantine } from "../components/mantine/multi-choice-mantine";
-import { ArrayMantine } from "../components/mantine/array-mantine";
-
-const components = {
-  string: StringMantine,
-  enum: EnumMantine,
-  number: NumberMantine,
-  boolean: BooleanMantine,
-  object: ObjectMantine,
-  multiChoice: MultiChoiceMantine,
-  array: ArrayMantine,
-} as const;
+import { mantineComponents } from "../components/mantine/mantine-components";
 
 export function Login() {
   const [schema] = React.useState(() =>
@@ -59,7 +41,7 @@ export function Login() {
       <Form
         title={<h1>Login</h1>}
         schema={schema}
-        components={components}
+        components={mantineComponents}
         uiSchema={{
           email: {
             label: "Email",
@@ -104,7 +86,7 @@ export function Register() {
       <Form
         title={<h1>Register</h1>}
         schema={schema}
-        components={components}
+        components={mantineComponents}
         uiSchema={{
           email: {
             label: "Email",
@@ -217,7 +199,7 @@ export function StudentRegistration() {
     []
   );
 
-  const [uiSchema] = React.useState<UiSchema<typeof schema>>(() => ({
+  const [uiSchema] = React.useState<FormUiSchema<typeof schema>>(() => ({
     studentName: {
       firstName: {
         label: "First name",
@@ -307,7 +289,7 @@ export function StudentRegistration() {
       <Form
         title={<h1>Registration form</h1>}
         schema={schema}
-        components={components}
+        components={mantineComponents}
         uiSchema={uiSchema}
       >
         {({ errors }) => {
@@ -360,7 +342,7 @@ export function DonationForm() {
     })
   );
 
-  const [uiSchema] = React.useState<UiSchema<typeof schema>>(() => ({
+  const [uiSchema] = React.useState<FormUiSchema<typeof schema>>(() => ({
     fullName: {
       firstName: {
         label: "First name",
@@ -417,7 +399,7 @@ export function DonationForm() {
       }}
     >
       <Form
-        components={components}
+        components={mantineComponents}
         title={<h1>Donation form</h1>}
         schema={schema}
         uiSchema={uiSchema}
@@ -468,7 +450,7 @@ export function ConferenceRegistration() {
     })
   );
 
-  const [uiSchema] = React.useState<UiSchema<typeof schema>>(() => ({
+  const [uiSchema] = React.useState<FormUiSchema<typeof schema>>(() => ({
     people: {
       element: {
         ui: {
@@ -524,7 +506,7 @@ export function ConferenceRegistration() {
     >
       <Form
         onSubmit={console.log}
-        components={components}
+        components={mantineComponents}
         title={<h1>Conference registration</h1>}
         schema={schema}
         uiSchema={uiSchema}

@@ -1,12 +1,15 @@
 import * as R from "remeda";
-import { ComponentPath, UiSchema } from "./form";
+import { ComponentPath, FormUiSchema } from "./form";
 import { componentNameDeserialize } from "../utils/component-name-deserialize";
 import React from "react";
 
-function extractCondsFromUiSchema(uiSchema: UiSchema<any>) {
+function extractCondsFromUiSchema(uiSchema: FormUiSchema<any>) {
   const conds: Record<string, (formData: any) => boolean> = {};
 
-  function traverse(uiSchema: UiSchema<any>, path: ComponentPath = []): void {
+  function traverse(
+    uiSchema: FormUiSchema<any>,
+    path: ComponentPath = []
+  ): void {
     for (const key in uiSchema) {
       const value = uiSchema[key];
 
@@ -58,7 +61,7 @@ export function resolveUiSchemaConds({
   formData,
 }: {
   formData: Record<string, any>;
-  uiSchema: UiSchema<any>;
+  uiSchema: FormUiSchema<any>;
 }): CondResult[] {
   const result = extractCondsFromUiSchema(uiSchema);
   return Object.entries(result).map(([path, cond]) => ({

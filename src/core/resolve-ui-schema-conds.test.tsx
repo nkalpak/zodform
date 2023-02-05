@@ -1,6 +1,6 @@
 import { describe, test } from "vitest";
 import { z, ZodType } from "zod";
-import { UiSchema } from "./form";
+import { FormUiSchema } from "./form";
 import { resolveUiSchemaConds } from "./resolve-ui-schema-conds";
 import { PartialDeep } from "type-fest";
 import { ObjectMantineRows } from "../components/mantine/object-mantine";
@@ -38,7 +38,7 @@ describe("resolveUiSchemaConds", function () {
       return age >= 10;
     }
 
-    const uiSchema: UiSchema<typeof schema> = {
+    const uiSchema: FormUiSchema<typeof schema> = {
       name: {
         cond: falseCond,
       },
@@ -122,7 +122,7 @@ describe("resolveUiSchemaConds", function () {
       paypalNumber: z.string().optional(),
     });
 
-    const uiSchema: UiSchema<typeof schema> = {
+    const uiSchema: FormUiSchema<typeof schema> = {
       people: {
         element: {
           ui: {
