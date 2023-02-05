@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+index.js
+index.umd.cjs
+index.d.ts
+vite.svg
