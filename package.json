@@ -1,9 +1,8 @@
 {
   "name": "@nkalpak/zodform",
   "private": false,
-  "version": "0.0.7",
+  "version": "0.0.8",
   "type": "module",
-  "main": "index.ts",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -49,5 +48,8 @@
     "vite": "^4.0.0",
     "vitest": "^0.28.2",
     "vite-plugin-dts": "^1.7.2"
+  },
+  "exports": {
+    ".": "./index.ts"
   }
 }
