@@ -766,12 +766,18 @@ export function Form<Schema extends SchemaType>({
     [schema]
   );
   const [errors, setErrors] = React.useState<ErrorsMap>();
-  const [formData, setFormData] = React.useState(
-    defaultValue ?? formDefaultValueFromSchema(objectSchema)
-  );
-  const [conds, setConds] = React.useState<FormConds>(() =>
-    resolveNextFormConds(formData, uiSchema ?? {})
-  );
+  const [{ formData, conds }, setFormState] = React.useState<{
+    formData: Record<string, any>;
+    conds: FormConds;
+  }>(() => {
+    const formData = defaultValue ?? formDefaultValueFromSchema(objectSchema);
+    const conds = resolveNextFormConds(formData, uiSchema ?? {});
+
+    return {
+      formData,
+      conds,
+    };
+  });
 
   useUncontrolledToControlledWarning(value);
 
@@ -801,9 +807,15 @@ export function Form<Schema extends SchemaType>({
 
   const handleChange: OnChange = React.useCallback(
     (event) => {
-      const nextFormData = nextState(formData);
-      setFormData(nextFormData);
-      setConds(resolveNextFormConds(nextFormData, uiSchema ?? {}));
+      setFormState((prevState) => {
+        const nextFormData = nextState(prevState.formData);
+        const nextConds = resolveNextFormConds(nextFormData, uiSchema ?? {});
+
+        return {
+          formData: nextFormData,
+          conds: nextConds,
+        };
+      });
 
       function nextState(prev: Record<string, any>) {
         return produce(prev, (draft) => {
@@ -817,11 +829,11 @@ export function Form<Schema extends SchemaType>({
         });
       }
     },
-    [formData, uiSchema]
+    [uiSchema]
   );
 
   const onArrayRemove = React.useCallback((path: ComponentPath) => {
-    setFormData((prev) =>
+    setFormState((prev) =>
       produce(prev, (draft) => {
         unset(draft, path, {
           arrayBehavior: "delete",

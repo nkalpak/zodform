@@ -287,6 +287,7 @@ export function StudentRegistration() {
       }}
     >
       <Form
+        onSubmit={console.log}
         title={<h1>Registration form</h1>}
         schema={schema}
         components={mantineComponents}
