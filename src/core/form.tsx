@@ -4,7 +4,6 @@ import { ZodEffects } from "zod";
 import * as R from "remeda";
 import React from "react";
 import { createContext } from "../utils/create-context";
-import "../App.css";
 import {
   componentNameDeserialize,
   componentNameSerialize,
