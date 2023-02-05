@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   PasswordMantine,
   StringMantine,
+  TextareaMantine,
 } from "../components/mantine/string-mantine";
 import {
   EnumMantine,
@@ -274,6 +275,7 @@ export function StudentRegistration() {
 
     additionalComments: {
       label: "Additional comments",
+      component: TextareaMantine,
     },
 
     courses: {

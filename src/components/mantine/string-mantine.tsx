@@ -1,4 +1,4 @@
-import { TextInput } from "@mantine/core";
+import { Textarea, TextInput } from "@mantine/core";
 import { IStringDefaultProps } from "../default/string-default";
 
 export function StringMantine({
@@ -9,13 +9,17 @@ export function StringMantine({
   description,
   errorMessage,
   isRequired,
+  isMultiline = false,
 
   ...props
 }: IStringDefaultProps & {
   type?: "text" | "password";
+  isMultiline?: boolean;
 }) {
+  const Component = isMultiline ? Textarea : TextInput;
+
   return (
-    <TextInput
+    <Component
       {...props}
       required={isRequired}
       name={name}
@@ -30,4 +34,8 @@ export function StringMantine({
 
 export function PasswordMantine(props: IStringDefaultProps) {
   return <StringMantine {...props} type="password" />;
+}
+
+export function TextareaMantine(props: IStringDefaultProps) {
+  return <StringMantine {...props} isMultiline />;
 }
