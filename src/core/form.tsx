@@ -833,13 +833,14 @@ export function Form<Schema extends SchemaType>({
   );
 
   const onArrayRemove = React.useCallback((path: ComponentPath) => {
-    setFormState((prev) =>
-      produce(prev, (draft) => {
+    setFormState(({ formData, conds }) => ({
+      formData: produce(formData, (draft) => {
         unset(draft, path, {
           arrayBehavior: "delete",
         });
-      })
-    );
+      }),
+      conds: conds,
+    }));
   }, []);
 
   return (
