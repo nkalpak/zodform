@@ -7,12 +7,7 @@ import * as path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    dts({
-      include: ["index.ts"],
-    }),
-  ],
+  plugins: [react(), dts()],
   test: {
     environment: "jsdom",
     globals: true,
