@@ -7,14 +7,19 @@ import * as path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), dts({})],
+  plugins: [
+    react(),
+    dts({
+      include: ["index.ts"],
+    }),
+  ],
   test: {
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/setup-tests.ts"],
   },
   build: {
-    outDir: ".",
+    outDir: "./dist",
     lib: {
       entry: path.resolve("index.ts"),
       name: "@nkaplak/zodform",
