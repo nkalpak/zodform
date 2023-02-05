@@ -3,7 +3,6 @@ import * as zod from "zod";
 import { ZodEffects } from "zod";
 import * as R from "remeda";
 import React from "react";
-import { createContext } from "../utils/create-context";
 import {
   componentNameDeserialize,
   componentNameSerialize,
@@ -57,6 +56,7 @@ import {
 } from "../components/default/multi-choice-default";
 import { PartialDeep } from "type-fest";
 import { CondResult, resolveUiSchemaConds } from "./resolve-ui-schema-conds";
+import { createContext } from "../utils/create-context";
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -125,42 +125,49 @@ interface IZodLeafComponentProps<
   value?: Value;
 }
 
+interface IZodInnerComponentProps {
+  onChange: OnChange;
+  components: IFormProps<any>["components"];
+  errorMessage?: string;
+}
+
 interface IZodStringComponentProps
   extends IZodLeafComponentProps<ZodString, string> {
   uiSchema?: UiPropertiesBase<string, any>;
 }
-function ZodStringComponent({
+
+const ZodStringComponentInner = React.memo(function ZodStringComponentInner({
   name,
   schema,
   value,
   isRequired,
   uiSchema,
-}: IZodStringComponentProps) {
-  const { onChange, components } = useFormContext();
-  const { errors, isVisible } = useComponent(name);
 
-  function handleChange(value = "") {
-    const isEmpty = value === "";
+  onChange,
+  components,
+  errorMessage,
+}: IZodStringComponentProps & IZodInnerComponentProps) {
+  const handleChange = React.useCallback(
+    function handleChange(value = "") {
+      const isEmpty = value === "";
 
-    if (isEmpty) {
+      if (isEmpty) {
+        return onChange({
+          op: "remove",
+          path: componentNameDeserialize(name),
+        });
+      }
+
       return onChange({
-        op: "remove",
+        op: "update",
+        value,
         path: componentNameDeserialize(name),
       });
-    }
-
-    return onChange({
-      op: "update",
-      value,
-      path: componentNameDeserialize(name),
-    });
-  }
+    },
+    [name, onChange]
+  );
 
   const Component = uiSchema?.component ?? components?.string ?? StringDefault;
-
-  if (!isVisible) {
-    return null;
-  }
 
   return (
     <Component
@@ -169,9 +176,27 @@ function ZodStringComponent({
       name={name}
       label={uiSchema?.label ?? name}
       description={schema.description}
-      errorMessage={R.first(errors)?.message}
+      errorMessage={errorMessage}
       isRequired={isRequired}
       {...getLeafPropsFromUiSchema(uiSchema)}
+    />
+  );
+});
+
+function ZodStringComponent(props: IZodStringComponentProps) {
+  const { onChange, components } = useFormContext();
+  const { errors, isVisible } = useComponent(props.name);
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <ZodStringComponentInner
+      {...props}
+      errorMessage={R.first(errors)?.message}
+      onChange={onChange}
+      components={components}
     />
   );
 }
@@ -180,34 +205,35 @@ interface IZodEnumComponentProps
   extends IZodLeafComponentProps<ZodAnyEnum, string> {
   uiSchema?: UiPropertiesEnum<any, any>;
 }
-function ZodEnumComponent({
+
+const ZodEnumComponentInner = React.memo(function ZodEnumComponentInner({
   schema,
   name,
   value = "",
   isRequired,
   uiSchema,
-}: IZodEnumComponentProps) {
-  const { onChange, components } = useFormContext();
-  const { errors, isVisible } = useComponent(name);
 
-  function handleChange(value?: string) {
-    onChange({
-      op: "update",
-      value,
-      path: componentNameDeserialize(name),
-    });
-  }
+  components,
+  onChange,
+  errorMessage,
+}: IZodEnumComponentProps & IZodInnerComponentProps) {
+  const handleChange = React.useCallback(
+    function handleChange(value?: string) {
+      onChange({
+        op: "update",
+        value,
+        path: componentNameDeserialize(name),
+      });
+    },
+    [name, onChange]
+  );
 
   const Component = uiSchema?.component ?? components?.enum ?? EnumDefault;
-
-  if (!isVisible) {
-    return null;
-  }
 
   return (
     <Component
       options={schema.options}
-      errorMessage={R.first(errors)?.message}
+      errorMessage={errorMessage}
       label={uiSchema?.label ?? name}
       name={name}
       description={schema.description}
@@ -215,6 +241,24 @@ function ZodEnumComponent({
       value={value}
       isRequired={isRequired}
       {...getLeafPropsFromUiSchema(uiSchema)}
+    />
+  );
+});
+
+function ZodEnumComponent(props: IZodEnumComponentProps) {
+  const { onChange, components } = useFormContext();
+  const { errors, isVisible } = useComponent(props.name);
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <ZodEnumComponentInner
+      {...props}
+      components={components}
+      onChange={onChange}
+      errorMessage={R.first(errors)?.message}
     />
   );
 }
@@ -223,38 +267,39 @@ interface IZodNumberComponentProps
   extends IZodLeafComponentProps<zod.ZodNumber, number> {
   uiSchema?: UiPropertiesBase<number, any>;
 }
-function ZodNumberComponent({
+
+const ZodNumberComponentInner = React.memo(function ZodNumberComponentInner({
   name,
   schema,
   value,
   isRequired,
   uiSchema,
-}: IZodNumberComponentProps) {
-  const { onChange, components } = useFormContext();
-  const { errors, isVisible } = useComponent(name);
 
-  function handleChange(value?: number) {
-    const isEmpty = R.isNil(value) || Number.isNaN(value);
+  onChange,
+  components,
+  errorMessage,
+}: IZodNumberComponentProps & IZodInnerComponentProps) {
+  const handleChange = React.useCallback(
+    function handleChange(value?: number) {
+      const isEmpty = R.isNil(value) || Number.isNaN(value);
 
-    if (isEmpty) {
+      if (isEmpty) {
+        return onChange({
+          op: "remove",
+          path: componentNameDeserialize(name),
+        });
+      }
+
       return onChange({
-        op: "remove",
+        op: "update",
+        value,
         path: componentNameDeserialize(name),
       });
-    }
-
-    return onChange({
-      op: "update",
-      value,
-      path: componentNameDeserialize(name),
-    });
-  }
+    },
+    [name, onChange]
+  );
 
   const Component = uiSchema?.component ?? components?.number ?? NumberDefault;
-
-  if (!isVisible) {
-    return null;
-  }
 
   return (
     <Component
@@ -263,11 +308,29 @@ function ZodNumberComponent({
       name={name}
       label={uiSchema?.label ?? name}
       description={schema.description}
-      errorMessage={R.first(errors)?.message}
+      errorMessage={errorMessage}
       isRequired={isRequired}
       min={schema.minValue ?? undefined}
       max={schema.maxValue ?? undefined}
       {...getLeafPropsFromUiSchema(uiSchema)}
+    />
+  );
+});
+
+function ZodNumberComponent(props: IZodNumberComponentProps) {
+  const { onChange, components } = useFormContext();
+  const { errors, isVisible } = useComponent(props.name);
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <ZodNumberComponentInner
+      {...props}
+      errorMessage={R.first(errors)?.message}
+      onChange={onChange}
+      components={components}
     />
   );
 }
@@ -275,30 +338,31 @@ interface IZodBooleanComponentProps
   extends IZodLeafComponentProps<zod.ZodBoolean, boolean> {
   uiSchema?: UiPropertiesBase<boolean, any>;
 }
-function ZodBooleanComponent({
+
+const ZodBooleanComponentInner = React.memo(function ZodBooleanComponentInner({
+  name,
+  schema,
   value,
   isRequired,
-  schema,
-  name,
   uiSchema,
-}: IZodBooleanComponentProps) {
-  const { onChange, components } = useFormContext();
-  const { errors, isVisible } = useComponent(name);
 
-  function handleChange(value: boolean) {
-    onChange({
-      op: "update",
-      value,
-      path: componentNameDeserialize(name),
-    });
-  }
+  onChange,
+  components,
+  errorMessage,
+}: IZodBooleanComponentProps & IZodInnerComponentProps) {
+  const handleChange = React.useCallback(
+    function handleChange(value: boolean) {
+      onChange({
+        op: "update",
+        value,
+        path: componentNameDeserialize(name),
+      });
+    },
+    [name, onChange]
+  );
 
   const Component =
     uiSchema?.component ?? components?.boolean ?? BooleanDefault;
-
-  if (!isVisible) {
-    return null;
-  }
 
   return (
     <Component
@@ -307,9 +371,27 @@ function ZodBooleanComponent({
       name={name}
       label={uiSchema?.label ?? name}
       description={schema.description}
-      errorMessage={R.first(errors)?.message}
+      errorMessage={errorMessage}
       isRequired={isRequired}
       {...getLeafPropsFromUiSchema(uiSchema)}
+    />
+  );
+});
+
+function ZodBooleanComponent(props: IZodBooleanComponentProps) {
+  const { onChange, components } = useFormContext();
+  const { errors, isVisible } = useComponent(props.name);
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <ZodBooleanComponentInner
+      {...props}
+      components={components}
+      errorMessage={R.first(errors)?.message}
+      onChange={onChange}
     />
   );
 }
@@ -321,20 +403,18 @@ interface IZodArrayComponentProps
   exactLength?: number;
   uiSchema?: UiPropertiesArray<any, any> | UiPropertiesMultiChoice<string, any>;
 }
-function ZodArrayComponent({
-  schema,
-  name,
-  value = [],
-  uiSchema,
-}: IZodArrayComponentProps) {
-  const { onChange, onArrayRemove, components } = useFormContext();
-  const { errors, isVisible } = useComponent(name);
 
-  if (!isVisible) {
-    return null;
-  }
+const ZodArrayMultiChoiceComponent = React.memo(
+  function ZodArrayMultiChoiceComponent({
+    schema,
+    name,
+    value = [],
+    uiSchema,
 
-  if (isZodEnum(schema.element)) {
+    onChange,
+    components,
+    errorMessage,
+  }: IZodArrayComponentProps & IZodInnerComponentProps) {
     const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<string, any>;
     const Component =
       uiProps.component ?? components?.multiChoice ?? MultiChoiceDefault;
@@ -343,7 +423,7 @@ function ZodArrayComponent({
       <Component
         {...uiProps}
         label={uiProps.label}
-        errorMessage={R.first(errors)?.message}
+        errorMessage={errorMessage}
         onChange={(newValue) => {
           onChange({
             op: "update",
@@ -353,6 +433,28 @@ function ZodArrayComponent({
         }}
         value={value}
         options={schema.element.options}
+      />
+    );
+  }
+);
+
+function ZodArrayComponent(props: IZodArrayComponentProps) {
+  const { onChange, onArrayRemove, components } = useFormContext();
+  const { errors, isVisible } = useComponent(props.name);
+
+  const { schema, name, value, uiSchema } = props;
+
+  if (!isVisible) {
+    return null;
+  }
+
+  if (isZodEnum(schema.element)) {
+    return (
+      <ZodArrayMultiChoiceComponent
+        {...props}
+        onChange={onChange}
+        components={components}
+        errorMessage={R.first(errors)?.message}
       />
     );
   }
@@ -369,12 +471,12 @@ function ZodArrayComponent({
       onAdd={() => {
         onChange({
           op: "update",
-          path: componentNameDeserialize(`${name}[${value.length}]`),
+          path: componentNameDeserialize(`${name}[${value?.length ?? 0}]`),
           value: formDefaultValueFromSchema(schema.element),
         });
       }}
     >
-      {value.map((item, index) => {
+      {value?.map((item, index) => {
         const uniqueName = `${name}[${index}]`;
         return (
           <ZodAnyComponent
@@ -385,7 +487,7 @@ function ZodArrayComponent({
             uiSchema={uiProps.element}
           />
         );
-      })}
+      }) ?? []}
     </Component>
   );
 }
@@ -432,7 +534,7 @@ function ZodObjectComponent({
   );
 }
 
-function ZodAnyComponent({
+const ZodAnyComponent = React.memo(function ZodAnyComponent({
   schema,
   name,
   isRequired = true,
@@ -551,7 +653,7 @@ function ZodAnyComponent({
   }
 
   return null;
-}
+});
 
 type ResolveComponentProps<Value> = Value extends boolean
   ? IBooleanDefaultProps
