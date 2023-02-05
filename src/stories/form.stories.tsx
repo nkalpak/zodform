@@ -1,6 +1,6 @@
 import React from "react";
 import * as R from "remeda";
-import { Form, UiSchema } from "./form";
+import { Form, UiSchema } from "../core/form";
 import { z } from "zod";
 import {
   PasswordMantine,
@@ -25,7 +25,7 @@ import { IObjectDefaultProps } from "../components/default/object-default";
 import { MultiChoiceMantine } from "../components/mantine/multi-choice-mantine";
 import { ArrayMantine } from "../components/mantine/array-mantine";
 
-const components = {
+export const mantineComponents = {
   string: StringMantine,
   enum: EnumMantine,
   number: NumberMantine,
@@ -59,7 +59,7 @@ export function Login() {
       <Form
         title={<h1>Login</h1>}
         schema={schema}
-        components={components}
+        components={mantineComponents}
         uiSchema={{
           email: {
             label: "Email",
@@ -104,7 +104,7 @@ export function Register() {
       <Form
         title={<h1>Register</h1>}
         schema={schema}
-        components={components}
+        components={mantineComponents}
         uiSchema={{
           email: {
             label: "Email",
@@ -307,7 +307,7 @@ export function StudentRegistration() {
       <Form
         title={<h1>Registration form</h1>}
         schema={schema}
-        components={components}
+        components={mantineComponents}
         uiSchema={uiSchema}
       >
         {({ errors }) => {
@@ -417,7 +417,7 @@ export function DonationForm() {
       }}
     >
       <Form
-        components={components}
+        components={mantineComponents}
         title={<h1>Donation form</h1>}
         schema={schema}
         uiSchema={uiSchema}
@@ -524,7 +524,7 @@ export function ConferenceRegistration() {
     >
       <Form
         onSubmit={console.log}
-        components={components}
+        components={mantineComponents}
         title={<h1>Conference registration</h1>}
         schema={schema}
         uiSchema={uiSchema}

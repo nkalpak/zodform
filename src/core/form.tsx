@@ -403,32 +403,59 @@ function ZodObjectComponent({
   name?: string;
 }) {
   const { isVisible } = useComponent(name ?? "");
-  const { components } = useFormContext();
+  const { components, onChange } = useFormContext();
+
+  const isRootObject = R.isNil(name);
+
+  const handleChange = React.useCallback(
+    (newValue: any) => {
+      if (isRootObject) {
+        return;
+      }
+
+      onChange({
+        op: "update",
+        path: componentNameDeserialize(name),
+        value: newValue,
+      });
+    },
+    [isRootObject, name, onChange]
+  );
 
   if (!isVisible) {
     return null;
   }
 
-  // Don't create a div as the first child of the form
-  const Component = name
-    ? uiSchema?.ui?.component ?? components?.object ?? ObjectDefault
-    : React.Fragment;
+  const children = Object.entries(schema.shape).map(
+    ([thisName, thisSchema]) => {
+      const childName = name ? [name, thisName].join(".") : thisName;
+
+      return (
+        <ZodAnyComponent
+          key={childName}
+          name={childName}
+          schema={thisSchema as ZodFirstPartySchemaTypes}
+          value={value ? value[thisName] : undefined}
+          uiSchema={uiSchema ? uiSchema[thisName] : undefined}
+        />
+      );
+    }
+  );
+
+  if (isRootObject) {
+    return <React.Fragment>{children}</React.Fragment>;
+  }
+
+  const Component =
+    uiSchema?.ui?.component ?? components?.object ?? ObjectDefault;
 
   return (
-    <Component {...R.omit(uiSchema?.ui ?? {}, ["component"])}>
-      {Object.entries(schema.shape).map(([thisName, thisSchema]) => {
-        const childName = name ? [name, thisName].join(".") : thisName;
-
-        return (
-          <ZodAnyComponent
-            key={childName}
-            name={childName}
-            schema={thisSchema as ZodFirstPartySchemaTypes}
-            value={value ? value[thisName] : undefined}
-            uiSchema={uiSchema ? uiSchema[thisName] : undefined}
-          />
-        );
-      })}
+    <Component
+      {...R.omit(uiSchema?.ui ?? {}, ["component"])}
+      value={value}
+      onChange={handleChange}
+    >
+      {children}
     </Component>
   );
 }
@@ -616,7 +643,12 @@ type UiPropertiesObject<
 > = UiSchemaInner<Schema, RootSchema> & {
   ui?: {
     title?: React.ReactNode;
-    component?: (props: IObjectDefaultProps) => JSX.Element;
+    component?: (
+      props: IObjectDefaultProps & {
+        onChange: (data: Partial<Schema>) => void;
+        value: Partial<Schema>;
+      }
+    ) => JSX.Element;
     cond?: (data: PartialDeep<RootSchema>) => boolean;
   };
 };
@@ -807,12 +839,22 @@ export function Form<Schema extends SchemaType>({
       function nextState(prev: Record<string, any>) {
         return produce(prev, (draft) => {
           if (event.op === "update") {
-            set(draft, event.path, event.value);
+            if (R.isDefined(event.value) && typeof event.value === "object") {
+              setObjectValue(draft, event.path, event.value);
+            } else {
+              set(draft, event.path, event.value);
+            }
           } else {
             unset(draft, event.path, {
               arrayBehavior: "setToUndefined",
             });
           }
+        });
+      }
+
+      function setObjectValue(draft: any, path: ComponentPath, value: object) {
+        Object.entries(value).forEach(([key, value]) => {
+          set(draft, [...path, key], value);
         });
       }
     },
