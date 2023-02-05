@@ -444,7 +444,7 @@ function ZodAnyComponent({
   name?: string;
   isRequired?: boolean;
   value?: any;
-  uiSchema?: Record<string, any>;
+  uiSchema?: any;
 }) {
   if (isZodObject(schema)) {
     return (
@@ -573,7 +573,19 @@ type UiPropertiesBase<Value, RootSchema extends object> = {
   component?: (props: ResolveComponentProps<Value | undefined>) => JSX.Element;
   autoFocus?: boolean;
   cond?: (data: PartialDeep<RootSchema>) => boolean;
-};
+} & (Value extends boolean
+  ? UiPropertiesBoolean
+  : Value extends string
+  ? UiPropertiesString
+  : Value extends number
+  ? UiPropertiesNumber
+  : never);
+
+type UiPropertiesNumber = object;
+
+type UiPropertiesString = object;
+
+type UiPropertiesBoolean = object;
 
 export type UiPropertiesLeaf<Value> = Omit<
   UiPropertiesBase<Value, any>,
