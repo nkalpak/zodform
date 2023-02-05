@@ -1,7 +1,7 @@
 {
   "name": "@nkalpak/zodform",
   "private": false,
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -51,9 +51,9 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.umd.cjs"
+      "import": "./index.js",
+      "require": "./index.umd.cjs"
     }
   },
-  "files": ["dist/*/**"]
+  "files": ["index.js", "index.umd.cjs", "index.d.ts"]
 }
