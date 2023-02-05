@@ -90,9 +90,8 @@ function isComponentVisible(name: string, conds: FormConds): boolean {
   return conds[name]?.cond ?? true;
 }
 
-function useComponent<UiProperties>(name: string): {
+function useComponent(name: string): {
   errors: zod.ZodIssue[];
-  uiSchema?: UiProperties;
   isVisible: boolean;
 } {
   const { errors, conds } = useFormContext();
@@ -110,8 +109,9 @@ function useComponent<UiProperties>(name: string): {
  * (string, number, boolean, enum, etc.)
  * */
 function getLeafPropsFromUiSchema(
-  uiProps?: UiPropertiesBase<any, any>
-): UiPropertiesLeaf<any, any> {
+  // We don't care about the type of "component", since we'll omit it anyways
+  uiProps?: Omit<UiPropertiesBase<any, any>, "component"> & { component?: any }
+): UiPropertiesLeaf<any> {
   return R.omit(uiProps ?? {}, ["component", "cond"]);
 }
 
@@ -124,11 +124,12 @@ interface IZodLeafComponentProps<
   description?: string;
   isRequired: boolean;
   value?: Value;
-  uiSchema?: Record<string, any>;
 }
 
 interface IZodStringComponentProps
-  extends IZodLeafComponentProps<ZodString, string> {}
+  extends IZodLeafComponentProps<ZodString, string> {
+  uiSchema?: UiPropertiesBase<string, any>;
+}
 function ZodStringComponent({
   name,
   schema,
@@ -137,8 +138,7 @@ function ZodStringComponent({
   uiSchema,
 }: IZodStringComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors, isVisible } =
-    useComponent<UiPropertiesBase<string, any>>(name);
+  const { errors, isVisible } = useComponent(name);
 
   function handleChange(value = "") {
     const isEmpty = value === "";
@@ -178,7 +178,9 @@ function ZodStringComponent({
 }
 
 interface IZodEnumComponentProps
-  extends IZodLeafComponentProps<ZodAnyEnum, string> {}
+  extends IZodLeafComponentProps<ZodAnyEnum, string> {
+  uiSchema?: UiPropertiesEnum<any, any>;
+}
 function ZodEnumComponent({
   schema,
   name,
@@ -187,7 +189,7 @@ function ZodEnumComponent({
   uiSchema,
 }: IZodEnumComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors, isVisible } = useComponent<UiPropertiesEnum<any, any>>(name);
+  const { errors, isVisible } = useComponent(name);
 
   function handleChange(value?: string) {
     onChange({
@@ -219,7 +221,9 @@ function ZodEnumComponent({
 }
 
 interface IZodNumberComponentProps
-  extends IZodLeafComponentProps<zod.ZodNumber, number> {}
+  extends IZodLeafComponentProps<zod.ZodNumber, number> {
+  uiSchema?: UiPropertiesBase<number, any>;
+}
 function ZodNumberComponent({
   name,
   schema,
@@ -228,8 +232,7 @@ function ZodNumberComponent({
   uiSchema,
 }: IZodNumberComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors, isVisible } =
-    useComponent<UiPropertiesBase<number, any>>(name);
+  const { errors, isVisible } = useComponent(name);
 
   function handleChange(value?: number) {
     const isEmpty = R.isNil(value) || Number.isNaN(value);
@@ -263,12 +266,16 @@ function ZodNumberComponent({
       description={schema.description}
       errorMessage={R.first(errors)?.message}
       isRequired={isRequired}
+      min={schema.minValue ?? undefined}
+      max={schema.maxValue ?? undefined}
       {...getLeafPropsFromUiSchema(uiSchema)}
     />
   );
 }
 interface IZodBooleanComponentProps
-  extends IZodLeafComponentProps<zod.ZodBoolean, boolean> {}
+  extends IZodLeafComponentProps<zod.ZodBoolean, boolean> {
+  uiSchema?: UiPropertiesBase<boolean, any>;
+}
 function ZodBooleanComponent({
   value,
   isRequired,
@@ -277,8 +284,7 @@ function ZodBooleanComponent({
   uiSchema,
 }: IZodBooleanComponentProps) {
   const { onChange, components } = useFormContext();
-  const { errors, isVisible } =
-    useComponent<UiPropertiesBase<boolean, any>>(name);
+  const { errors, isVisible } = useComponent(name);
 
   function handleChange(value: boolean) {
     onChange({
@@ -569,9 +575,9 @@ type UiPropertiesBase<Value, RootSchema extends object> = {
   cond?: (data: PartialDeep<RootSchema>) => boolean;
 };
 
-export type UiPropertiesLeaf<Value, RootSchema extends object> = Omit<
-  UiPropertiesBase<Value, RootSchema>,
-  "component"
+export type UiPropertiesLeaf<Value> = Omit<
+  UiPropertiesBase<Value, any>,
+  "component" | "cond"
 >;
 
 type UiPropertiesEnum<Schema extends string, RootSchema extends object> = Omit<

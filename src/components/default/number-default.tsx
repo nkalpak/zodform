@@ -3,7 +3,10 @@ import React from "react";
 import { ErrorOrDescription } from "./error-or-description";
 
 export interface INumberDefaultProps
-  extends IComponentProps<number | undefined> {}
+  extends IComponentProps<number | undefined> {
+  min: number | undefined;
+  max: number | undefined;
+}
 
 export function NumberDefault({
   value,

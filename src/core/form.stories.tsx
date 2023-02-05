@@ -11,7 +11,10 @@ import {
   EnumMantine,
   EnumMantineRadio,
 } from "../components/mantine/enum-mantine";
-import { NumberMantine } from "../components/mantine/number-mantine";
+import {
+  NumberMantine,
+  SliderMantine,
+} from "../components/mantine/number-mantine";
 import { BooleanMantine } from "../components/mantine/boolean-mantine";
 import {
   ObjectMantine,
@@ -188,6 +191,7 @@ export function StudentRegistration() {
           })
         )
         .min(2, "Please select at least 2 courses"),
+      rating: z.number().min(0).max(100),
       additionalComments: z.string().optional(),
     })
   );
@@ -281,6 +285,11 @@ export function StudentRegistration() {
     courses: {
       label: "Courses",
       component: MultiChoiceMantine,
+    },
+
+    rating: {
+      component: SliderMantine,
+      label: "Rating",
     },
 
     phone: {

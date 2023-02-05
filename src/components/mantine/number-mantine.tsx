@@ -1,5 +1,5 @@
 import { INumberDefaultProps } from "../default/number-default";
-import { NumberInput } from "@mantine/core";
+import { NumberInput, Slider } from "@mantine/core";
 
 export function NumberMantine({
   name,
@@ -22,6 +22,28 @@ export function NumberMantine({
       onChange={(value) => onChange(value)}
       description={description}
       error={errorMessage}
+      label={label}
+    />
+  );
+}
+
+export function SliderMantine({
+  name,
+  value,
+  onChange,
+  label,
+  defaultValue,
+  min,
+  max,
+}: INumberDefaultProps) {
+  return (
+    <Slider
+      min={min}
+      max={max}
+      defaultValue={defaultValue}
+      name={name}
+      value={value}
+      onChange={onChange}
       label={label}
     />
   );
