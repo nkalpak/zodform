@@ -27,10 +27,12 @@ function extractCondsFromUiSchema(uiSchema: FormUiSchema<any>) {
         }
         // If it's the object's ui property
         if (key !== "ui") {
+          // @ts-expect-error incorrect type, TODO
           traverse(value, [...path, key]);
         }
         // If it's the array's element property
         if (key === "element") {
+          // @ts-expect-error incorrect type, TODO
           traverse(value, path);
         }
       } else if (key === "cond") {
