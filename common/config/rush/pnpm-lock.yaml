@@ -50,8 +50,6 @@ importers:
       immer: 9.0.19
       lodash.get: 4.4.2
       lodash.set: 4.3.2
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
       remeda: 1.6.1
       zod: 3.20.2
     devDependencies:
@@ -72,6 +70,8 @@ importers:
       eslint-plugin-react-hooks: 4.6.0_eslint@8.33.0
       jsdom: 21.1.0
       prettier: 2.8.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
       type-fest: 3.5.5
       typescript: 4.9.5
       vite: 4.1.1
@@ -5075,7 +5075,7 @@ packages:
       loose-envify: 1.4.0
       react: 18.2.0
       scheduler: 0.23.0
-    dev: false
+    dev: true
 
   /react-frame-component/5.2.6_ae99d26bf538c96cd8f1c5ec503a2210:
     resolution: {integrity: sha512-CwkEM5VSt6nFwZ1Op8hi3JB5rPseZlmnp5CGiismVTauE6S4Jsc4TNMlT0O7Cts4WgIC3ZBAQ2p1Mm9XgLbj+w==}
@@ -5131,7 +5131,7 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       loose-envify: 1.4.0
-    dev: false
+    dev: true
 
   /readdirp/3.6.0:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
@@ -5308,7 +5308,7 @@ packages:
     resolution: {integrity: sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==}
     dependencies:
       loose-envify: 1.4.0
-    dev: false
+    dev: true
 
   /semver/6.3.0:
     resolution: {integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==}
