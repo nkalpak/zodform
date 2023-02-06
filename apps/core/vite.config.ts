@@ -24,4 +24,9 @@ export default defineConfig({
       external: ["react", "react-dom"],
     },
   },
+  server: {
+    fs: {
+      allow: [".."],
+    }
+  }
 });
