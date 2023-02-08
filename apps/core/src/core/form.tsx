@@ -872,15 +872,13 @@ function formReducer(
       }
     });
 
-    const result = liveValidate
-      ? validate(nextFormData, action.payload.schema, uiSchema)
-      : { isValid: true, errors: STABLE_NO_ERRORS };
+    const result = liveValidate ? validate(nextFormData, action.payload.schema, uiSchema) : undefined;
 
     return {
       ...state,
       conds: resolveNextFormConds(nextFormData, uiSchema),
       formData: nextFormData,
-      errors: result.isValid ? STABLE_NO_ERRORS : result.errors
+      errors: result ? (result.isValid ? STABLE_NO_ERRORS : result.errors) : state.errors
     };
   }
 
@@ -891,14 +889,12 @@ function formReducer(
       });
     });
 
-    const result = action.payload.liveValidate
-      ? validate(nextFormData, action.payload.schema)
-      : { isValid: true, errors: STABLE_NO_ERRORS };
+    const result = action.payload.liveValidate ? validate(nextFormData, action.payload.schema) : undefined;
 
     return {
       ...state,
       formData: nextFormData,
-      errors: result.isValid ? STABLE_NO_ERRORS : result.errors
+      errors: result ? (result.isValid ? STABLE_NO_ERRORS : result.errors) : state.errors
     };
   }
 
