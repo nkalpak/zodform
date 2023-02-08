@@ -1,6 +1,6 @@
 import * as R from 'remeda';
 import { ComponentPath, FormUiSchema } from './form';
-import { componentNameDeserialize } from '../utils/component-name-deserialize';
+import { componentNameDeserialize } from './component-name-deserialize';
 import React from 'react';
 
 function extractCondsFromUiSchema(uiSchema: FormUiSchema<any>) {

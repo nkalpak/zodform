@@ -3,7 +3,7 @@ import { AnyZodObject, ZodString } from 'zod';
 import { nn } from '../utils/invariant';
 
 function getZodTypeNameFromSchema(schema: unknown): string | undefined {
-  // @ts-expect-error
+  // @ts-expect-error - private property
   return schema?._def?.typeName;
 }
 

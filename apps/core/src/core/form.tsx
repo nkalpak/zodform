@@ -2,7 +2,7 @@ import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString, ZodEffects } fr
 import * as zod from 'zod';
 import * as R from 'remeda';
 import React from 'react';
-import { componentNameDeserialize, componentNameSerialize } from '../utils/component-name-deserialize';
+import { componentNameDeserialize, componentNameSerialize } from './component-name-deserialize';
 import { IStringDefaultProps, StringDefault } from '../components/default/string-default';
 import { EnumDefault, IEnumDefaultProps } from '../components/default/enum-default';
 import { INumberDefaultProps, NumberDefault } from '../components/default/number-default';
