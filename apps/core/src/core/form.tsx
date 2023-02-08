@@ -1,4 +1,4 @@
-import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString, ZodEffects } from 'zod';
+import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString, ZodEffects, ZodIssue } from 'zod';
 import * as zod from 'zod';
 import * as R from 'remeda';
 import React from 'react';
@@ -817,8 +817,8 @@ export function Form<Schema extends SchemaType>({
 
   useUncontrolledToControlledWarning(value);
 
-  const handleSubmit = React.useCallback(
-    (value: typeof formData) => {
+  const validate = React.useCallback(
+    (value: typeof formData): { isValid: true } | { isValid: false; errors: ZodIssue[] } => {
       const parsed = schema.safeParse(
         getNextFormDataFromConds({
           formData: value,
@@ -828,13 +828,26 @@ export function Form<Schema extends SchemaType>({
 
       if (parsed.success) {
         setErrors(undefined);
-        onSubmit?.(parsed.data);
+        return { isValid: true };
       } else {
-        console.error(parsed.error);
         setErrors(() => R.groupBy(parsed.error.errors, (item) => componentNameSerialize(item.path)));
+        return { isValid: false, errors: parsed.error.errors };
       }
     },
-    [onSubmit, schema, uiSchema]
+    [schema, uiSchema]
+  );
+
+  const handleSubmit = React.useCallback(
+    (value: typeof formData) => {
+      const result = validate(value);
+
+      if (result.isValid) {
+        onSubmit?.(value);
+      } else {
+        console.error(result.errors);
+      }
+    },
+    [onSubmit, validate]
   );
 
   const handleChange: OnChange = React.useCallback(
