@@ -1,8 +1,8 @@
 import React from 'react';
-import { Form, FormUiSchema, IObjectDefaultProps } from '../../dist';
 import { z } from 'zod';
-import { ObjectDefault } from '../components/default/object-default';
+import { IObjectDefaultProps, ObjectDefault } from '../components/default/object-default';
 import { EnumDefault } from '../components/default/enum-default';
+import { Form, FormUiSchema } from '../core/form';
 
 export function ConferenceRegistration() {
   const PersonComponent = React.useCallback((props: IObjectDefaultProps) => {

@@ -1,4 +1,4 @@
-import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString, ZodEffects, ZodIssue } from 'zod';
+import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString, ZodEffects } from 'zod';
 import * as zod from 'zod';
 import * as R from 'remeda';
 import React from 'react';
@@ -38,18 +38,17 @@ type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
 export type ComponentPath = (string | number)[];
 
 type ChangeOp = 'update' | 'remove';
-type OnChange = (
-  data:
-    | {
-        value: any;
-        path: ComponentPath;
-        op: Extract<ChangeOp, 'update'>;
-      }
-    | {
-        path: ComponentPath;
-        op: Extract<ChangeOp, 'remove'>;
-      }
-) => void;
+type ChangePayload =
+  | {
+      value: any;
+      path: ComponentPath;
+      op: Extract<ChangeOp, 'update'>;
+    }
+  | {
+      path: ComponentPath;
+      op: Extract<ChangeOp, 'remove'>;
+    };
+type OnChange = (data: ChangePayload) => void;
 
 const [useFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
@@ -738,6 +737,7 @@ interface IFormProps<Schema extends SchemaType> {
   };
   title?: React.ReactNode;
   children?: FormChildren;
+  liveValidate?: boolean;
 }
 
 /**
@@ -787,6 +787,116 @@ function getNextFormDataFromConds({
   });
 }
 
+type IFormReducerPayload<T> = T & {
+  schema: SchemaType;
+};
+
+type IFormReducerAction =
+  | {
+      type: 'onChange';
+      payload: IFormReducerPayload<{
+        uiSchema: FormUiSchema<any>;
+        event: ChangePayload;
+        liveValidate?: boolean;
+      }>;
+    }
+  | {
+      type: 'arrayRemove';
+      payload: IFormReducerPayload<{
+        path: ComponentPath;
+        liveValidate?: boolean;
+      }>;
+    };
+
+interface IFormReducerState {
+  formData: Record<string, any>;
+  conds: FormConds;
+  errors: ErrorsMap;
+}
+
+function validate(
+  value: any,
+  schema: SchemaType,
+  uiSchema?: FormUiSchema<any>
+):
+  | {
+      isValid: true;
+    }
+  | {
+      isValid: false;
+      errors: ErrorsMap;
+    } {
+  const parsed = schema.safeParse(
+    getNextFormDataFromConds({
+      formData: value,
+      uiSchema: uiSchema ?? {}
+    })
+  );
+
+  if (parsed.success) {
+    return { isValid: true };
+  } else {
+    return {
+      isValid: false,
+      errors: R.groupBy(parsed.error.errors, (item) => componentNameSerialize(item.path))
+    };
+  }
+}
+
+const STABLE_NO_ERRORS = {};
+
+function formReducer(
+  state: IFormReducerState = {
+    formData: {},
+    conds: {},
+    errors: {}
+  },
+  action: IFormReducerAction
+) {
+  if (action.type === 'onChange') {
+    const { uiSchema, event, liveValidate } = action.payload;
+
+    const nextFormData = produce(state.formData, (draft) => {
+      if (event.op === 'update') {
+        set(draft, event.path, event.value);
+      } else {
+        unset(draft, event.path, {
+          arrayBehavior: 'setToUndefined'
+        });
+      }
+    });
+
+    const result = liveValidate
+      ? validate(nextFormData, action.payload.schema, uiSchema)
+      : { isValid: true, errors: STABLE_NO_ERRORS };
+
+    return {
+      ...state,
+      conds: resolveNextFormConds(nextFormData, uiSchema),
+      formData: nextFormData,
+      errors: result.isValid ? STABLE_NO_ERRORS : result.errors
+    };
+  }
+
+  if (action.type === 'arrayRemove') {
+    const nextFormData = produce(state.formData, (draft) => {
+      unset(draft, action.payload.path, {
+        arrayBehavior: 'delete'
+      });
+    });
+
+    const result = action.payload.liveValidate
+      ? validate(nextFormData, action.payload.schema)
+      : { isValid: true, errors: STABLE_NO_ERRORS };
+
+    return {
+      ...state,
+      formData: nextFormData,
+      errors: result.isValid ? STABLE_NO_ERRORS : result.errors
+    };
+  }
+}
+
 export function Form<Schema extends SchemaType>({
   schema,
   uiSchema,
@@ -798,95 +908,66 @@ export function Form<Schema extends SchemaType>({
   components,
   title,
 
-  children
+  children,
+  liveValidate = true
 }: IFormProps<Schema>) {
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
-  const [errors, setErrors] = React.useState<ErrorsMap>();
-  const [{ formData, conds }, setFormState] = React.useState<{
-    formData: Record<string, any>;
-    conds: FormConds;
-  }>(() => {
+
+  const [state, dispatch] = React.useReducer(formReducer, undefined, () => {
     const formData = defaultValue ?? formDefaultValueFromSchema(objectSchema);
     const conds = resolveNextFormConds(formData, uiSchema ?? {});
-
     return {
       formData,
-      conds
+      conds,
+      errors: STABLE_NO_ERRORS
     };
   });
+  const { formData, conds, errors } = state!;
 
   useUncontrolledToControlledWarning(value);
 
-  const validate = React.useCallback(
-    (value: typeof formData): { isValid: true } | { isValid: false; errors: ZodIssue[] } => {
-      const parsed = schema.safeParse(
-        getNextFormDataFromConds({
-          formData: value,
-          uiSchema: uiSchema ?? {}
-        })
-      );
-
-      if (parsed.success) {
-        setErrors(undefined);
-        return { isValid: true };
-      } else {
-        setErrors(() => R.groupBy(parsed.error.errors, (item) => componentNameSerialize(item.path)));
-        return { isValid: false, errors: parsed.error.errors };
-      }
-    },
-    [schema, uiSchema]
-  );
-
   const handleSubmit = React.useCallback(
     (value: typeof formData) => {
-      const result = validate(value);
+      const result = validate(value, schema, uiSchema ?? {});
 
       if (result.isValid) {
         onSubmit?.(value);
       } else {
+        // handle errors here
         console.error(result.errors);
       }
     },
-    [onSubmit, validate]
+    [onSubmit, schema, uiSchema]
   );
 
   const handleChange: OnChange = React.useCallback(
     (event) => {
-      setFormState((prevState) => {
-        const nextFormData = nextState(prevState.formData);
-        const nextConds = resolveNextFormConds(nextFormData, uiSchema ?? {});
-
-        return {
-          formData: nextFormData,
-          conds: nextConds
-        };
+      dispatch({
+        type: 'onChange',
+        payload: {
+          event,
+          uiSchema: uiSchema ?? {},
+          schema,
+          liveValidate
+        }
       });
-
-      function nextState(prev: Record<string, any>) {
-        return produce(prev, (draft) => {
-          if (event.op === 'update') {
-            set(draft, event.path, event.value);
-          } else {
-            unset(draft, event.path, {
-              arrayBehavior: 'setToUndefined'
-            });
-          }
-        });
-      }
     },
-    [uiSchema]
+    [liveValidate, schema, uiSchema]
   );
 
-  const onArrayRemove = React.useCallback((path: ComponentPath) => {
-    setFormState(({ formData, conds }) => ({
-      formData: produce(formData, (draft) => {
-        unset(draft, path, {
-          arrayBehavior: 'delete'
-        });
-      }),
-      conds: conds
-    }));
-  }, []);
+  const onArrayRemove = React.useCallback(
+    (path: ComponentPath) => {
+      dispatch({
+        type: 'arrayRemove',
+        payload: {
+          path,
+          schema,
+          liveValidate
+        }
+      });
+    },
+    [liveValidate, schema]
+  );
 
   return (
     <form
