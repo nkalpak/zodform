@@ -725,7 +725,6 @@ interface IFormProps<Schema extends SchemaType> {
   uiSchema?: FormUiSchema<Schema>;
   onSubmit?: (value: zod.infer<Schema>) => void;
   value?: zod.infer<Schema>;
-  defaultValue?: zod.infer<Schema>;
   components?: {
     string?: (props: IStringDefaultProps) => JSX.Element;
     number?: (props: INumberDefaultProps) => JSX.Element;
@@ -856,7 +855,7 @@ function formReducer(
   state: IFormReducerState = {
     formData: {},
     conds: {},
-    errors: {}
+    errors: STABLE_NO_ERRORS
   },
   action: IFormReducerAction
 ) {
@@ -917,7 +916,6 @@ export function Form<Schema extends SchemaType>({
 
   onSubmit,
   value,
-  defaultValue,
 
   components,
   title,
@@ -929,7 +927,7 @@ export function Form<Schema extends SchemaType>({
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
 
   const [state, dispatch] = React.useReducer(formReducer, undefined, () => {
-    const formData = defaultValue ?? formDefaultValueFromSchema(objectSchema);
+    const formData = formDefaultValueFromSchema(objectSchema);
     const conds = resolveNextFormConds(formData, uiSchema ?? {});
     return {
       formData,
