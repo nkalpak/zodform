@@ -16,7 +16,8 @@
       "commandKind": "global",
       "safeForSimultaneousRushProcesses": true,
       "autoinstallerName": "rush-prettier",
-      "shellCommand": "pretty-quick --staged"
+      "shellCommand": "pretty-quick --staged",
+      "summary": "Runs prettier on staged files"
     }
     // {
     //   /**

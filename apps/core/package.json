@@ -15,14 +15,12 @@
     "ts:watch": "tsc --watch"
   },
   "dependencies": {
-    "@emotion/react": "^11.10.5",
-    "@mantine/core": "^5.10.2",
-    "@mantine/hooks": "^5.10.2",
     "immer": "^9.0.19",
     "lodash.set": "^4.3.2",
     "remeda": "^1.6.0"
   },
   "devDependencies": {
+    "@testing-library/dom": "^8.20.0",
     "@testing-library/user-event": "^14.4.3",
     "@ladle/react": "^2.5.1",
     "zod": "^3.20.2",
@@ -57,5 +55,7 @@
     "react-dom": "^18.2.0",
     "zod": "^3.20.2"
   },
-  "files": ["dist"]
+  "files": [
+    "dist"
+  ]
 }

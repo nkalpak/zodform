@@ -1,37 +1,34 @@
-import { describe, expect, test, vi } from "vitest";
-import { render } from "@testing-library/react";
-import { Form } from "./form";
-import { z } from "zod";
-import React from "react";
-import userEvent from "@testing-library/user-event";
-import { ObjectDefault } from "../components/default/object-default";
-import { NumberDefault } from "../components/default/number-default";
-import { MultiChoiceDefault } from "../components/default/multi-choice-default";
+import { describe, expect, test, vi } from 'vitest';
+import { render } from '@testing-library/react';
+import { Form } from './form';
+import { z } from 'zod';
+import React from 'react';
+import userEvent from '@testing-library/user-event';
+import { ObjectDefault } from '../components/default/object-default';
+import { NumberDefault } from '../components/default/number-default';
+import { MultiChoiceDefault } from '../components/default/multi-choice-default';
 
 function renderSimpleArray() {
   const user = userEvent.setup();
   const schema = z.object({
-    fruits: z.array(z.string()),
+    fruits: z.array(z.string())
   });
-  const addTestId = "add-test-id";
-  const removeTestId = "remove-test-id";
+  const addTestId = 'add-test-id';
+  const removeTestId = 'remove-test-id';
 
-
-
-  
   const screen = render(
     <Form
       schema={schema}
       uiSchema={{
         fruits: {
           element: {
-            label: "fruits",
+            label: 'fruits'
           },
           component: (props) => (
             <div>
               {props.children.map((child, index) => (
                 <div key={index}>
-                  {child}{" "}
+                  {child}{' '}
                   <button
                     type="button"
                     data-testid={removeTestId}
@@ -43,16 +40,12 @@ function renderSimpleArray() {
                   </button>
                 </div>
               ))}
-              <button
-                type="button"
-                data-testid={addTestId}
-                onClick={props.onAdd}
-              >
+              <button type="button" data-testid={addTestId} onClick={props.onAdd}>
                 +
               </button>
             </div>
-          ),
-        },
+          )
+        }
       }}
     />
   );
@@ -60,16 +53,16 @@ function renderSimpleArray() {
   return { screen, user, addTestId, removeTestId };
 }
 
-describe("Form", function () {
-  test("should remove the property when the text field is cleared and the schema is optional", async function () {
+describe('Form', function () {
+  test('should remove the property when the text field is cleared and the schema is optional', async function () {
     const user = userEvent.setup();
     const schema = z.object({
-      name: z.string().min(3).optional(),
+      name: z.string().min(3).optional()
     });
     const onSubmit = vi.fn();
 
-    const NAME = "John doe";
-    const LABEL = "Name";
+    const NAME = 'John doe';
+    const LABEL = 'Name';
 
     const screen = render(
       <Form
@@ -77,8 +70,8 @@ describe("Form", function () {
         schema={schema}
         uiSchema={{
           name: {
-            label: LABEL,
-          },
+            label: LABEL
+          }
         }}
       />
     );
@@ -86,69 +79,69 @@ describe("Form", function () {
     expect(screen.getByLabelText(LABEL)).toHaveValue(NAME);
 
     await user.clear(screen.getByLabelText(LABEL));
-    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
 
     expect(onSubmit).toBeCalledWith({});
   });
 
-  test("number input submits when valid", async function () {
+  test('number input submits when valid', async function () {
     const user = userEvent.setup();
     const schema = z.object({
-      age: z.number(),
+      age: z.number()
     });
     const onSubmit = vi.fn();
 
     const AGE = 18;
 
     const screen = render(<Form onSubmit={onSubmit} schema={schema} />);
-    await user.type(screen.getByLabelText("age"), AGE.toString());
-    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.type(screen.getByLabelText('age'), AGE.toString());
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
 
     expect(onSubmit).toBeCalledWith({ age: AGE });
   });
 
-  test("submit empty number field when optional", async function () {
+  test('submit empty number field when optional', async function () {
     const user = userEvent.setup();
     const schema = z.object({
-      age: z.number().optional(),
+      age: z.number().optional()
     });
     const onSubmit = vi.fn();
 
     const screen = render(<Form onSubmit={onSubmit} schema={schema} />);
-    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
 
     expect(onSubmit).toBeCalledWith({});
   });
 
-  test("empty, optional number input is submittable after type & clear", async function () {
+  test('empty, optional number input is submittable after type & clear', async function () {
     const user = userEvent.setup();
     const schema = z.object({
-      age: z.number().optional(),
+      age: z.number().optional()
     });
     const onSubmit = vi.fn();
 
     const screen = render(<Form onSubmit={onSubmit} schema={schema} />);
-    await user.type(screen.getByLabelText("age"), "18");
-    await user.clear(screen.getByLabelText("age"));
-    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.type(screen.getByLabelText('age'), '18');
+    await user.clear(screen.getByLabelText('age'));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
 
     expect(onSubmit).toBeCalledWith({});
   });
 
-  test("field labels render when provided through uiSchema", async function () {
+  test('field labels render when provided through uiSchema', async function () {
     const schema = z.object({
       age: z.number().optional(),
       name: z.string(),
-      gender: z.enum(["male", "female", "other"] as const),
+      gender: z.enum(['male', 'female', 'other'] as const),
       isAccepted: z.boolean(),
       address: z.object({
         street: z.string(),
         city: z.object({
           name: z.string(),
-          zip: z.string(),
-        }),
+          zip: z.string()
+        })
       }),
-      hobbies: z.array(z.string()).min(1),
+      hobbies: z.array(z.string()).min(1)
     });
 
     const screen = render(
@@ -156,54 +149,54 @@ describe("Form", function () {
         schema={schema}
         uiSchema={{
           age: {
-            label: "Age",
+            label: 'Age'
           },
           name: {
-            label: "Name",
+            label: 'Name'
           },
           gender: {
-            label: "Gender",
+            label: 'Gender'
           },
           address: {
             street: {
-              label: "Street",
+              label: 'Street'
             },
             city: {
               name: {
-                label: "City",
-              },
-            },
+                label: 'City'
+              }
+            }
           },
           hobbies: {
             element: {
-              label: "Hobby",
-            },
+              label: 'Hobby'
+            }
           },
           isAccepted: {
-            label: "Accept",
-          },
+            label: 'Accept'
+          }
         }}
       />
     );
 
-    expect(screen.getByLabelText("Age")).toBeInTheDocument();
-    expect(screen.getByLabelText("Name")).toBeInTheDocument();
-    expect(screen.getByLabelText("Gender")).toBeInTheDocument();
-    expect(screen.getByLabelText("Street")).toBeInTheDocument();
-    expect(screen.getByLabelText("City")).toBeInTheDocument();
-    expect(screen.getByLabelText("Hobby")).toBeInTheDocument();
-    expect(screen.getByLabelText("Accept")).toBeInTheDocument();
+    expect(screen.getByLabelText('Age')).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Gender')).toBeInTheDocument();
+    expect(screen.getByLabelText('Street')).toBeInTheDocument();
+    expect(screen.getByLabelText('City')).toBeInTheDocument();
+    expect(screen.getByLabelText('Hobby')).toBeInTheDocument();
+    expect(screen.getByLabelText('Accept')).toBeInTheDocument();
   });
 
-  test("object ui properties", async function () {
+  test('object ui properties', async function () {
     const schema = z.object({
       address: z.object({
         street: z.string(),
-        city: z.string(),
-      }),
+        city: z.string()
+      })
     });
 
-    const testId = "test-id";
+    const testId = 'test-id';
 
     const screen = render(
       <Form
@@ -211,35 +204,35 @@ describe("Form", function () {
         uiSchema={{
           address: {
             ui: {
-              title: "Address",
+              title: 'Address',
               component: (props) => (
                 <ObjectDefault {...props}>
                   {props.children} <span data-testid={testId}>h</span>
                 </ObjectDefault>
-              ),
-            },
-          },
+              )
+            }
+          }
         }}
       />
     );
 
-    expect(screen.getByText("Address")).toBeInTheDocument();
+    expect(screen.getByText('Address')).toBeInTheDocument();
     expect(screen.getByTestId(testId)).toBeInTheDocument();
   });
 
-  test("object as an array element", async function () {
+  test('object as an array element', async function () {
     const schema = z.object({
       people: z
         .array(
           z.object({
-            age: z.number(),
+            age: z.number()
           })
         )
-        .min(1),
+        .min(1)
     });
 
-    const ageId = "age-id";
-    const personId = "person-id";
+    const ageId = 'age-id';
+    const personId = 'person-id';
 
     const screen = render(
       <Form
@@ -248,37 +241,37 @@ describe("Form", function () {
           people: {
             element: {
               age: {
-                label: "Name",
+                label: 'Name',
                 component: (props) => (
                   <React.Fragment>
                     <NumberDefault {...props} />
                     <span data-testid={ageId}>h</span>
                   </React.Fragment>
-                ),
+                )
               },
               ui: {
-                title: "Person",
+                title: 'Person',
                 component: (props) => (
                   <ObjectDefault {...props}>
                     {props.children} <span data-testid={personId}>h</span>
                   </ObjectDefault>
-                ),
-              },
-            },
-          },
+                )
+              }
+            }
+          }
         }}
       />
     );
 
-    expect(screen.getByText("Person")).toBeInTheDocument();
-    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(screen.getByText('Person')).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
     expect(screen.getByTestId(ageId)).toBeInTheDocument();
     expect(screen.getByTestId(personId)).toBeInTheDocument();
   });
 
-  test("array with N elements schema generates N elements by default", async function () {
+  test('array with N elements schema generates N elements by default', async function () {
     const schema = z.object({
-      fruits: z.array(z.string()).length(2),
+      fruits: z.array(z.string()).length(2)
     });
 
     const screen = render(
@@ -287,45 +280,45 @@ describe("Form", function () {
         uiSchema={{
           fruits: {
             element: {
-              label: "fruits",
-            },
-          },
+              label: 'fruits'
+            }
+          }
         }}
       />
     );
 
-    expect(screen.getAllByLabelText("fruits")).toHaveLength(2);
+    expect(screen.getAllByLabelText('fruits')).toHaveLength(2);
   });
 
-  test("array add element", async function () {
+  test('array add element', async function () {
     const { user, addTestId, screen } = renderSimpleArray();
 
     await user.click(screen.getByTestId(addTestId));
 
-    expect(screen.getAllByLabelText("fruits")).toHaveLength(1);
+    expect(screen.getAllByLabelText('fruits')).toHaveLength(1);
   });
 
-  test("array remove element", async function () {
+  test('array remove element', async function () {
     const { user, removeTestId, addTestId, screen } = renderSimpleArray();
 
     await user.click(screen.getByTestId(addTestId));
     await user.click(screen.getByTestId(removeTestId));
 
-    expect(screen.queryAllByLabelText("fruits")).toHaveLength(0);
+    expect(screen.queryAllByLabelText('fruits')).toHaveLength(0);
   });
 
-  test("array enum element", async function () {
+  test('array enum element', async function () {
     const schema = z.object({
-      fruits: z.array(z.enum(["apple", "banana", "citrus"])),
+      fruits: z.array(z.enum(['apple', 'banana', 'citrus']))
     });
-    const testId = "test-id";
+    const testId = 'test-id';
 
     const screen = render(
       <Form
         schema={schema}
         uiSchema={{
           fruits: {
-            label: "Fruits",
+            label: 'Fruits',
             component: (props) => (
               <React.Fragment>
                 <MultiChoiceDefault {...props} />
@@ -333,19 +326,19 @@ describe("Form", function () {
               </React.Fragment>
             ),
             optionLabels: {
-              banana: "Banana",
-              apple: "Apple",
-              citrus: "Citrus",
-            },
-          },
+              banana: 'Banana',
+              apple: 'Apple',
+              citrus: 'Citrus'
+            }
+          }
         }}
       />
     );
 
-    expect(screen.getByText("Banana")).toBeInTheDocument();
-    expect(screen.getByText("Apple")).toBeInTheDocument();
-    expect(screen.getByText("Citrus")).toBeInTheDocument();
-    expect(screen.getByText("Fruits")).toBeInTheDocument();
+    expect(screen.getByText('Banana')).toBeInTheDocument();
+    expect(screen.getByText('Apple')).toBeInTheDocument();
+    expect(screen.getByText('Citrus')).toBeInTheDocument();
+    expect(screen.getByText('Fruits')).toBeInTheDocument();
     expect(screen.getByTestId(testId)).toBeInTheDocument();
   });
 });
