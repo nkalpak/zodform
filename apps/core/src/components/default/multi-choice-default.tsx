@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export interface IMultiChoiceDefaultProps<Value extends string = string> {
   options: Value[];
@@ -14,7 +14,7 @@ export function MultiChoiceDefault({
   value,
   onChange,
   optionLabels,
-  label,
+  label
 }: IMultiChoiceDefaultProps) {
   return (
     <div>
@@ -23,7 +23,7 @@ export function MultiChoiceDefault({
       {options.map((option) => {
         const label = optionLabels?.[option] ?? option;
         return (
-          <label key={option} style={{ display: "flex", flexDirection: "row" }}>
+          <label key={option} style={{ display: 'flex', flexDirection: 'row' }}>
             <input
               onChange={() => {
                 if (value.includes(option)) {

@@ -1,15 +1,12 @@
-import * as R from "remeda";
-import { ComponentPath, FormUiSchema } from "./form";
-import { componentNameDeserialize } from "../utils/component-name-deserialize";
-import React from "react";
+import * as R from 'remeda';
+import { ComponentPath, FormUiSchema } from './form';
+import { componentNameDeserialize } from '../utils/component-name-deserialize';
+import React from 'react';
 
 function extractCondsFromUiSchema(uiSchema: FormUiSchema<any>) {
   const conds: Record<string, (formData: any) => boolean> = {};
 
-  function traverse(
-    uiSchema: FormUiSchema<any>,
-    path: ComponentPath = []
-  ): void {
+  function traverse(uiSchema: FormUiSchema<any>, path: ComponentPath = []): void {
     for (const key in uiSchema) {
       const value = uiSchema[key];
 
@@ -18,25 +15,25 @@ function extractCondsFromUiSchema(uiSchema: FormUiSchema<any>) {
         continue;
       }
 
-      if (typeof value === "object") {
-        if ("ui" in value) {
-          const name = [...path, key].join(".");
+      if (typeof value === 'object') {
+        if ('ui' in value) {
+          const name = [...path, key].join('.');
           if (value.ui?.cond) {
             conds[name] = value.ui.cond;
           }
         }
         // If it's the object's ui property
-        if (key !== "ui") {
+        if (key !== 'ui') {
           // @ts-expect-error incorrect type, TODO
           traverse(value, [...path, key]);
         }
         // If it's the array's element property
-        if (key === "element") {
+        if (key === 'element') {
           // @ts-expect-error incorrect type, TODO
           traverse(value, path);
         }
-      } else if (key === "cond") {
-        conds[path.join(".")] = value;
+      } else if (key === 'cond') {
+        conds[path.join('.')] = value;
       }
     }
   }
@@ -60,7 +57,7 @@ export type CondResult = {
  * */
 export function resolveUiSchemaConds({
   uiSchema,
-  formData,
+  formData
 }: {
   formData: Record<string, any>;
   uiSchema: FormUiSchema<any>;
@@ -68,6 +65,6 @@ export function resolveUiSchemaConds({
   const result = extractCondsFromUiSchema(uiSchema);
   return Object.entries(result).map(([path, cond]) => ({
     cond: cond(formData),
-    path: componentNameDeserialize(path),
+    path: componentNameDeserialize(path)
   }));
 }

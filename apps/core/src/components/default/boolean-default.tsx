@@ -1,5 +1,5 @@
-import { IComponentProps } from "../types";
-import { ErrorOrDescription } from "./error-or-description";
+import { IComponentProps } from '../types';
+import { ErrorOrDescription } from './error-or-description';
 
 export interface IBooleanDefaultProps extends IComponentProps<boolean> {}
 
@@ -11,7 +11,7 @@ export function BooleanDefault({
   description,
   errorMessage,
   name,
-  autoFocus,
+  autoFocus
 }: IBooleanDefaultProps) {
   return (
     <div>

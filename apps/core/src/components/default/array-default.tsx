@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export interface IArrayDefaultProps {
   children: React.ReactNode[];
@@ -7,12 +7,7 @@ export interface IArrayDefaultProps {
   title?: React.ReactNode;
 }
 
-export function ArrayDefault({
-  children,
-  onAdd,
-  onRemove,
-  title,
-}: IArrayDefaultProps) {
+export function ArrayDefault({ children, onAdd, onRemove, title }: IArrayDefaultProps) {
   return (
     <React.Fragment>
       {title}

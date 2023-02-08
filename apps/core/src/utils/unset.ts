@@ -1,16 +1,16 @@
-import { ComponentPath } from "../core/form";
-import * as R from "remeda";
+import { ComponentPath } from '../core/form';
+import * as R from 'remeda';
 
 interface IUnsetOptions {
   // What to do when the path points to an array element?
-  arrayBehavior?: "delete" | "setToUndefined";
+  arrayBehavior?: 'delete' | 'setToUndefined';
 }
 
 export function unset(
   obj: Record<string, any>,
   path: ComponentPath,
   options: IUnsetOptions = {
-    arrayBehavior: "delete",
+    arrayBehavior: 'delete'
   }
 ): void {
   let current = obj;
@@ -27,10 +27,10 @@ export function unset(
   }
 
   if (Array.isArray(current)) {
-    if (typeof lastKey !== "number") {
+    if (typeof lastKey !== 'number') {
       return;
     }
-    if (options.arrayBehavior === "delete") {
+    if (options.arrayBehavior === 'delete') {
       current.splice(lastKey, 1);
     } else {
       current[lastKey] = undefined;
@@ -38,7 +38,7 @@ export function unset(
     return;
   }
 
-  if (typeof current === "object") {
+  if (typeof current === 'object') {
     delete current[lastKey];
     return;
   }

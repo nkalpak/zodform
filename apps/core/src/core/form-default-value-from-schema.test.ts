@@ -1,101 +1,101 @@
-import { describe, test } from "vitest";
-import { z } from "zod";
-import { formDefaultValueFromSchema } from "./form-default-value-from-schema";
+import { describe, test } from 'vitest';
+import { z } from 'zod';
+import { formDefaultValueFromSchema } from './form-default-value-from-schema';
 
-describe("formDefaultValueFromSchema", function () {
-  describe("string", function () {
-    test("should default to default value", function () {
-      const schema = z.object({ name: z.string().default("John") });
+describe('formDefaultValueFromSchema', function () {
+  describe('string', function () {
+    test('should default to default value', function () {
+      const schema = z.object({ name: z.string().default('John') });
       const result = formDefaultValueFromSchema(schema);
-      expect(result).toEqual({ name: "John" });
+      expect(result).toEqual({ name: 'John' });
     });
   });
 
-  describe("number", function () {
-    test("should default to default value", function () {
+  describe('number', function () {
+    test('should default to default value', function () {
       const schema = z.object({ age: z.number().default(18) });
       const result = formDefaultValueFromSchema(schema);
       expect(result).toEqual({ age: 18 });
     });
   });
 
-  describe("enum", function () {
-    test("should default to default value", function () {
+  describe('enum', function () {
+    test('should default to default value', function () {
       const schema = z.object({
-        color: z.enum(["red", "green", "blue"]).default("green"),
+        color: z.enum(['red', 'green', 'blue']).default('green')
       });
       const result = formDefaultValueFromSchema(schema);
-      expect(result).toEqual({ color: "green" });
+      expect(result).toEqual({ color: 'green' });
     });
   });
 
-  describe("boolean", function () {
-    test("should default to false", function () {
+  describe('boolean', function () {
+    test('should default to false', function () {
       const schema = z.object({ isHuman: z.boolean() });
       const result = formDefaultValueFromSchema(schema);
       expect(result).toEqual({ isHuman: false });
     });
 
-    test("should default to default value", function () {
+    test('should default to default value', function () {
       const schema = z.object({ isHuman: z.boolean().default(true) });
       const result = formDefaultValueFromSchema(schema);
       expect(result).toEqual({ isHuman: true });
     });
   });
 
-  describe("array", function () {
-    test("should default to empty array", function () {
+  describe('array', function () {
+    test('should default to empty array', function () {
       const schema = z.object({ hobbies: z.array(z.string()) });
       const result = formDefaultValueFromSchema(schema);
       expect(result).toEqual({ hobbies: [] });
     });
 
-    test("should default to array of min length", function () {
+    test('should default to array of min length', function () {
       const schema = z.object({ hobbies: z.array(z.string()).min(2) });
       const result = formDefaultValueFromSchema(schema);
       expect(result.hobbies).toHaveLength(2);
     });
   });
 
-  describe("object", function () {
-    test("should default to empty object", function () {
+  describe('object', function () {
+    test('should default to empty object', function () {
       const schema = z.object({ address: z.object({}) });
       const result = formDefaultValueFromSchema(schema);
       expect(result).toEqual({ address: {} });
     });
 
-    test("should default to object with default values", function () {
+    test('should default to object with default values', function () {
       const schema = z.object({
         address: z.object({
-          street: z.string().default(""),
-          city: z.string().default(""),
-          country: z.string().default(""),
-        }),
+          street: z.string().default(''),
+          city: z.string().default(''),
+          country: z.string().default('')
+        })
       });
       const result = formDefaultValueFromSchema(schema);
       expect(result).toEqual({
-        address: { street: "", city: "", country: "" },
+        address: { street: '', city: '', country: '' }
       });
     });
 
-    test("should default to object without any properties", function () {
+    test('should default to object without any properties', function () {
       const schema = z.object({
         address: z.object({
           street: z.string(),
           city: z.string(),
-          country: z.string(),
-        }),
+          country: z.string()
+        })
       });
       const result = formDefaultValueFromSchema(schema);
       expect(result).toEqual({
-        address: {},
+        address: {}
       });
     });
   });
 
-  test("array of enums should default to empty array even when it has a min", function () {
+  test('array of enums should default to empty array even when it has a min', function () {
     const schema = z.object({
-      hobbies: z.array(z.enum(["red", "green", "blue"])).min(1),
+      hobbies: z.array(z.enum(['red', 'green', 'blue'])).min(1)
     });
     const result = formDefaultValueFromSchema(schema);
     expect(result).toEqual({ hobbies: [] });

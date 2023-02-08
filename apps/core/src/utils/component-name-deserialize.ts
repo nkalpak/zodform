@@ -10,8 +10,8 @@ type Path = (string | number)[];
  *  - a[0][1] => ["a", 0, 1]
  * */
 export function componentNameDeserialize(name: string): Path {
-  const hasObjectSeparator = name.includes(".");
-  const hasArraySeparator = name.includes("[");
+  const hasObjectSeparator = name.includes('.');
+  const hasArraySeparator = name.includes('[');
 
   if (hasObjectSeparator) {
     return resolveObject(name);
@@ -25,8 +25,8 @@ export function componentNameDeserialize(name: string): Path {
 
   function resolveObject(name: string) {
     const result: Path = [];
-    for (const part of name.split(".")) {
-      const [key, index] = part.split("[");
+    for (const part of name.split('.')) {
+      const [key, index] = part.split('[');
       if (key) {
         result.push(key!);
       }
@@ -39,8 +39,8 @@ export function componentNameDeserialize(name: string): Path {
 
   function resolveMatrix(name: string) {
     const result: Path = [];
-    for (const part of name.split("[")) {
-      const [key] = part.split("]");
+    for (const part of name.split('[')) {
+      const [key] = part.split(']');
       const asNumber = parseInt(key!);
       if (Number.isNaN(asNumber)) {
         result.push(key!);
@@ -54,7 +54,7 @@ export function componentNameDeserialize(name: string): Path {
 
 export function componentNameSerialize(name: Path) {
   return name
-    .map((part) => (typeof part === "number" ? `[${part}]` : part))
-    .join(".")
-    .replaceAll(".[", "[");
+    .map((part) => (typeof part === 'number' ? `[${part}]` : part))
+    .join('.')
+    .replaceAll('.[', '[');
 }

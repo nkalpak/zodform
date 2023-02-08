@@ -1,8 +1,5 @@
 // Asserts that the condition is true, otherwise throws an error with the given message
-export function invariant(
-  condition: unknown,
-  message?: string
-): asserts condition {
+export function invariant(condition: unknown, message?: string): asserts condition {
   if (!condition) {
     throw new Error(message);
   }

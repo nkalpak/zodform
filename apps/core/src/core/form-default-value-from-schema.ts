@@ -1,5 +1,5 @@
-import { ZodFirstPartySchemaTypes, ZodObject } from "zod";
-import * as R from "remeda";
+import { ZodFirstPartySchemaTypes, ZodObject } from 'zod';
+import * as R from 'remeda';
 import {
   isZodArray,
   isZodBoolean,
@@ -8,12 +8,10 @@ import {
   isZodNumber,
   isZodObject,
   isZodOptional,
-  isZodString,
-} from "./schema-type-resolvers";
+  isZodString
+} from './schema-type-resolvers';
 
-export function formDefaultValueFromSchema(
-  schema: ZodObject<any>
-): Record<string, any> {
+export function formDefaultValueFromSchema(schema: ZodObject<any>): Record<string, any> {
   return iterator(schema);
 
   function iterator(schema: ZodFirstPartySchemaTypes): any {
@@ -37,10 +35,9 @@ export function formDefaultValueFromSchema(
         return [];
       }
 
-      return R.range(
-        0,
-        schema._def.exactLength?.value ?? schema._def.minLength?.value ?? 0
-      ).map(() => iterator(schema._def.type));
+      return R.range(0, schema._def.exactLength?.value ?? schema._def.minLength?.value ?? 0).map(() =>
+        iterator(schema._def.type)
+      );
     }
     if (isZodDefault(schema)) {
       return schema._def.defaultValue();

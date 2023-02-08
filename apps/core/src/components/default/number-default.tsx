@@ -1,9 +1,8 @@
-import { IComponentProps } from "../types";
-import React from "react";
-import { ErrorOrDescription } from "./error-or-description";
+import { IComponentProps } from '../types';
+import React from 'react';
+import { ErrorOrDescription } from './error-or-description';
 
-export interface INumberDefaultProps
-  extends IComponentProps<number | undefined> {
+export interface INumberDefaultProps extends IComponentProps<number | undefined> {
   min: number | undefined;
   max: number | undefined;
 }
@@ -14,7 +13,7 @@ export function NumberDefault({
   label,
   description,
   errorMessage,
-  name,
+  name
 }: INumberDefaultProps) {
   return (
     <label>
@@ -23,13 +22,9 @@ export function NumberDefault({
       <input
         type="number"
         name={name}
-        value={value ?? ""}
+        value={value ?? ''}
         onChange={(event) =>
-          onChange(
-            Number.isNaN(event.target.valueAsNumber)
-              ? undefined
-              : event.target.valueAsNumber
-          )
+          onChange(Number.isNaN(event.target.valueAsNumber) ? undefined : event.target.valueAsNumber)
         }
       />
 

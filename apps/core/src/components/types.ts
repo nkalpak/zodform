@@ -1,5 +1,5 @@
-import React from "react";
-import { UiPropertiesLeaf } from "../core/form";
+import React from 'react';
+import { UiPropertiesLeaf } from '../core/form';
 
 export type IComponentProps<Value> = UiPropertiesLeaf<Value> & {
   value?: Value;
