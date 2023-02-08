@@ -9,6 +9,7 @@ importers:
     specifiers:
       '@anatine/zod-mock': ^3.8.3
       '@faker-js/faker': ^7.6.0
+      '@ladle/react': ^2.5.4
       '@testing-library/dom': ^8.20.0
       '@testing-library/jest-dom': ^5.16.5
       '@testing-library/react': ^13.4.0
@@ -45,6 +46,7 @@ importers:
     devDependencies:
       '@anatine/zod-mock': 3.8.3_@faker-js+faker@7.6.0
       '@faker-js/faker': 7.6.0
+      '@ladle/react': 2.5.4_c1a0ab078636c04037f749460a3ab884
       '@testing-library/dom': 8.20.0
       '@testing-library/jest-dom': 5.16.5
       '@testing-library/react': 13.4.0_react-dom@18.2.0+react@18.2.0
