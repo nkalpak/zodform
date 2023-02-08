@@ -5,6 +5,8 @@ import { EnumDefault } from '../components/default/enum-default';
 import { Form, FormUiSchema } from '../core/form';
 
 export function ConferenceRegistration() {
+  const [liveValidate, setLiveValidate] = React.useState(false);
+
   const PersonComponent = React.useCallback((props: IObjectDefaultProps) => {
     return (
       <ObjectDefault {...props}>
@@ -97,10 +99,15 @@ export function ConferenceRegistration() {
       }}
     >
       <Form
+        liveValidate={liveValidate}
         onSubmit={console.log}
         title={<h1>Conference registration</h1>}
         schema={schema}
         uiSchema={uiSchema}
+        onErrorsChange={(errors) => {
+          const isInvalid = Object.keys(errors).length > 0;
+          setLiveValidate(isInvalid);
+        }}
       >
         {() => {
           return <button type="submit">Submit</button>;

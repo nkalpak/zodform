@@ -738,6 +738,7 @@ interface IFormProps<Schema extends SchemaType> {
   title?: React.ReactNode;
   children?: FormChildren;
   liveValidate?: boolean;
+  onErrorsChange?: (errors: ErrorsMap) => void;
 }
 
 /**
@@ -922,7 +923,8 @@ export function Form<Schema extends SchemaType>({
   title,
 
   children,
-  liveValidate = true
+  liveValidate = true,
+  onErrorsChange
 }: IFormProps<Schema>) {
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
 
@@ -985,6 +987,10 @@ export function Form<Schema extends SchemaType>({
     },
     [liveValidate, schema]
   );
+
+  React.useEffect(() => {
+    onErrorsChange?.(errors);
+  }, [errors, onErrorsChange]);
 
   return (
     <form
