@@ -29,10 +29,3 @@ when compared to these libraries:
    2. JSON schema is just data, it doesn't depend on any runtime and as such can be stored in a datastore.
    ZodForm uses runtime features (such as functions) to generate the form, so it isn't serializable and as such
    cannot be stored in a datastore
-
-# Run locally
-
-1. Clone the repo
-2. `pnpm i` to install dependencies
-3. `pnpm run stories` to preview the stories
-4. Check out the code for the stories in `src/stories`
