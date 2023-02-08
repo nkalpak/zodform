@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event';
 import { ObjectDefault } from '../components/default/object-default';
 import { NumberDefault } from '../components/default/number-default';
 import { MultiChoiceDefault } from '../components/default/multi-choice-default';
+import { StringDefault } from '../components/default/string-default';
 
 function renderSimpleArray() {
   const user = userEvent.setup();
@@ -15,10 +16,21 @@ function renderSimpleArray() {
   });
   const addTestId = 'add-test-id';
   const removeTestId = 'remove-test-id';
+  const elementTestId = 'element-test-id';
 
   const screen = render(
     <Form
       schema={schema}
+      components={{
+        string: (props) => {
+          return (
+            <React.Fragment>
+              <StringDefault {...props} />
+              <span data-testid={elementTestId} />
+            </React.Fragment>
+          );
+        }
+      }}
       uiSchema={{
         fruits: {
           element: {
@@ -50,7 +62,7 @@ function renderSimpleArray() {
     />
   );
 
-  return { screen, user, addTestId, removeTestId };
+  return { screen, user, addTestId, removeTestId, elementTestId };
 }
 
 describe('Form', function () {
@@ -291,11 +303,11 @@ describe('Form', function () {
   });
 
   test('array add element', async function () {
-    const { user, addTestId, screen } = renderSimpleArray();
+    const { user, addTestId, screen, elementTestId } = renderSimpleArray();
 
     await user.click(screen.getByTestId(addTestId));
 
-    expect(screen.getAllByLabelText('fruits')).toHaveLength(1);
+    expect(screen.getAllByTestId(elementTestId)).toHaveLength(1);
   });
 
   test('array remove element', async function () {
