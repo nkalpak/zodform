@@ -787,14 +787,14 @@ function getNextFormDataFromConds({
   });
 }
 
-type IFormReducerPayload<T> = T & {
+type IFormReducerBasePayload<T> = T & {
   schema: SchemaType;
 };
 
 type IFormReducerAction =
   | {
       type: 'onChange';
-      payload: IFormReducerPayload<{
+      payload: IFormReducerBasePayload<{
         uiSchema: FormUiSchema<any>;
         event: ChangePayload;
         liveValidate?: boolean;
@@ -802,10 +802,16 @@ type IFormReducerAction =
     }
   | {
       type: 'arrayRemove';
-      payload: IFormReducerPayload<{
+      payload: IFormReducerBasePayload<{
         path: ComponentPath;
         liveValidate?: boolean;
       }>;
+    }
+  | {
+      type: 'onError';
+      payload: {
+        errors: ErrorsMap;
+      };
     };
 
 interface IFormReducerState {
@@ -895,6 +901,13 @@ function formReducer(
       errors: result.isValid ? STABLE_NO_ERRORS : result.errors
     };
   }
+
+  if (action.type === 'onError') {
+    return {
+      ...state,
+      errors: action.payload.errors
+    };
+  }
 }
 
 export function Form<Schema extends SchemaType>({
@@ -933,8 +946,12 @@ export function Form<Schema extends SchemaType>({
       if (result.isValid) {
         onSubmit?.(value);
       } else {
-        // handle errors here
-        console.error(result.errors);
+        dispatch({
+          type: 'onError',
+          payload: {
+            errors: result.errors
+          }
+        });
       }
     },
     [onSubmit, schema, uiSchema]
