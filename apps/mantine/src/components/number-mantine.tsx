@@ -1,5 +1,5 @@
-import { INumberDefaultProps } from "../default/number-default";
-import { NumberInput, Slider } from "@mantine/core";
+import { INumberDefaultProps } from '@zodform/core';
+import { NumberInput, Slider } from '@mantine/core';
 
 export function NumberMantine({
   name,
@@ -10,7 +10,7 @@ export function NumberMantine({
   label,
   isRequired,
   autoFocus,
-  defaultValue,
+  defaultValue
 }: INumberDefaultProps) {
   return (
     <NumberInput
@@ -27,15 +27,7 @@ export function NumberMantine({
   );
 }
 
-export function SliderMantine({
-  name,
-  value,
-  onChange,
-  label,
-  defaultValue,
-  min,
-  max,
-}: INumberDefaultProps) {
+export function SliderMantine({ name, value, onChange, label, defaultValue, min, max }: INumberDefaultProps) {
   return (
     <Slider
       min={min}

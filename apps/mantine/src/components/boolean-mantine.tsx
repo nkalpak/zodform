@@ -1,5 +1,5 @@
-import { IBooleanDefaultProps } from "../default/boolean-default";
-import { Checkbox } from "@mantine/core";
+import { IBooleanDefaultProps } from '@zodform/core';
+import { Checkbox } from '@mantine/core';
 
 export function BooleanMantine({
   value,
@@ -10,7 +10,7 @@ export function BooleanMantine({
   errorMessage,
   name,
   isRequired,
-  autoFocus,
+  autoFocus
 }: IBooleanDefaultProps) {
   return (
     <Checkbox

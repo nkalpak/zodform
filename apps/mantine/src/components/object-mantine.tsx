@@ -1,5 +1,5 @@
-import { IObjectDefaultProps } from "../default/object-default";
-import { Box, Text } from "@mantine/core";
+import { IObjectDefaultProps } from '@zodform/core';
+import { Box, Text } from '@mantine/core';
 
 export function ObjectMantine({ children, title }: IObjectDefaultProps) {
   return (
@@ -18,9 +18,7 @@ export function ObjectMantine({ children, title }: IObjectDefaultProps) {
 export function ObjectMantineRows(props: IObjectDefaultProps) {
   return (
     <ObjectMantine {...props}>
-      <Box sx={{ display: "flex", gap: 8, "& > *": { flex: 1 } }}>
-        {props.children}
-      </Box>
+      <Box sx={{ display: 'flex', gap: 8, '& > *': { flex: 1 } }}>{props.children}</Box>
     </ObjectMantine>
   );
 }

@@ -1,21 +1,14 @@
-import React from "react";
-import * as R from "remeda";
-import { Form, FormUiSchema } from "../core/form";
-import { z } from "zod";
-import {
-  PasswordMantine,
-  TextareaMantine,
-} from "../components/mantine/string-mantine";
-import { EnumMantineRadio } from "../components/mantine/enum-mantine";
-import { SliderMantine } from "../components/mantine/number-mantine";
-import {
-  ObjectMantine,
-  ObjectMantineRows,
-} from "../components/mantine/object-mantine";
-import { Alert, Box, Button, List } from "@mantine/core";
-import { IObjectDefaultProps } from "../components/default/object-default";
-import { MultiChoiceMantine } from "../components/mantine/multi-choice-mantine";
-import { mantineComponents } from "../components/mantine/mantine-components";
+import * as R from 'remeda';
+import { Alert, Box, Button, List } from '@mantine/core';
+import React from 'react';
+import { z } from 'zod';
+import { mantineComponents } from '../components/mantine-components';
+import { PasswordMantine, TextareaMantine } from '../components/string-mantine';
+import { Form, FormUiSchema, IObjectDefaultProps } from '@zodform/core';
+import { ObjectMantine, ObjectMantineRows } from '../components/object-mantine';
+import { MultiChoiceMantine } from '../components/multi-choice-mantine';
+import { EnumMantineRadio } from '../components/enum-mantine';
+import { SliderMantine } from '../components/number-mantine';
 
 export function Login() {
   const [schema] = React.useState(() =>
@@ -23,11 +16,8 @@ export function Login() {
       email: z.string().email(),
       password: z
         .string()
-        .describe("Make sure that your password is strong")
-        .regex(
-          /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
-          "Password not strong enough"
-        ),
+        .describe('Make sure that your password is strong')
+        .regex(/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/, 'Password not strong enough')
     })
   );
 
@@ -35,7 +25,7 @@ export function Login() {
     <div
       style={{
         maxWidth: 500,
-        margin: "auto",
+        margin: 'auto'
       }}
     >
       <Form
@@ -44,12 +34,12 @@ export function Login() {
         components={mantineComponents}
         uiSchema={{
           email: {
-            label: "Email",
+            label: 'Email'
           },
           password: {
-            label: "Password",
-            component: PasswordMantine,
-          },
+            label: 'Password',
+            component: PasswordMantine
+          }
         }}
       >
         {() => (
@@ -68,11 +58,11 @@ export function Register() {
       .object({
         email: z.string().email(),
         password: z.string(),
-        confirmPassword: z.string(),
+        confirmPassword: z.string()
       })
       .refine((data) => data.confirmPassword === data.password, {
-        path: ["confirmPassword"],
-        message: "Passwords do not match",
+        path: ['confirmPassword'],
+        message: 'Passwords do not match'
       })
   );
 
@@ -80,7 +70,7 @@ export function Register() {
     <div
       style={{
         maxWidth: 500,
-        margin: "auto",
+        margin: 'auto'
       }}
     >
       <Form
@@ -89,16 +79,16 @@ export function Register() {
         components={mantineComponents}
         uiSchema={{
           email: {
-            label: "Email",
+            label: 'Email'
           },
           password: {
-            label: "Password",
-            component: PasswordMantine,
+            label: 'Password',
+            component: PasswordMantine
           },
           confirmPassword: {
-            label: "Confirm password",
-            component: PasswordMantine,
-          },
+            label: 'Confirm password',
+            component: PasswordMantine
+          }
         }}
       >
         {() => (
@@ -112,69 +102,63 @@ export function Register() {
 }
 
 const monthOptions: [string, ...string[]] = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December'
 ];
 
-const dayOptions = R.range(1, 32).map((n) => n.toString()) as [
-  string,
-  ...string[]
-];
+const dayOptions = R.range(1, 32).map((n) => n.toString()) as [string, ...string[]];
 
-const yearOptions = R.range(1980, 2021).map((n) => n.toString()) as [
-  string,
-  ...string[]
-];
+const yearOptions = R.range(1980, 2021).map((n) => n.toString()) as [string, ...string[]];
 
 export function StudentRegistration() {
   const [schema] = React.useState(() =>
     z.object({
       studentName: z.object({
-        firstName: z.string().min(1, "First name is required"),
+        firstName: z.string().min(1, 'First name is required'),
         middleName: z.string().optional(),
-        lastName: z.string().min(1, "Last name is required"),
+        lastName: z.string().min(1, 'Last name is required')
       }),
       birthDate: z.object({
         month: z.enum(monthOptions, {
-          required_error: "Please select a birth month",
+          required_error: 'Please select a birth month'
         }),
         day: z.enum(dayOptions, {
-          required_error: "Please select a birth day",
+          required_error: 'Please select a birth day'
         }),
         year: z.enum(yearOptions, {
-          required_error: "Please select a birth year",
-        }),
+          required_error: 'Please select a birth year'
+        })
       }),
-      gender: z.enum(["Male", "Female", "Other"] as const, {
-        required_error: "Please select a gender",
+      gender: z.enum(['Male', 'Female', 'Other'] as const, {
+        required_error: 'Please select a gender'
       }),
       address: z.object({
-        street: z.string().min(1, "Street is required"),
-        city: z.string().min(1, "City is required"),
+        street: z.string().min(1, 'Street is required'),
+        city: z.string().min(1, 'City is required'),
         state: z.string().optional(),
-        zip: z.string().min(1, "Zip is required"),
+        zip: z.string().min(1, 'Zip is required')
       }),
       email: z.string().email(),
-      phone: z.string().min(1, "Phone is required"),
+      phone: z.string().min(1, 'Phone is required'),
       courses: z
         .array(
-          z.enum(["Math", "Science", "English", "History"] as const, {
-            required_error: "Please select a course",
+          z.enum(['Math', 'Science', 'English', 'History'] as const, {
+            required_error: 'Please select a course'
           })
         )
-        .min(2, "Please select at least 2 courses"),
+        .min(2, 'Please select at least 2 courses'),
       rating: z.number().min(0).max(100),
-      additionalComments: z.string().optional(),
+      additionalComments: z.string().optional()
     })
   );
 
@@ -183,13 +167,13 @@ export function StudentRegistration() {
       <ObjectMantine {...props}>
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
             gap: 8,
 
-            "& :first-child, & :last-child": {
-              gridColumn: "span 2",
-            },
+            '& :first-child, & :last-child': {
+              gridColumn: 'span 2'
+            }
           }}
         >
           {props.children}
@@ -202,88 +186,88 @@ export function StudentRegistration() {
   const [uiSchema] = React.useState<FormUiSchema<typeof schema>>(() => ({
     studentName: {
       firstName: {
-        label: "First name",
+        label: 'First name'
       },
       lastName: {
-        label: "Last name",
+        label: 'Last name'
       },
       middleName: {
-        label: "Middle name",
+        label: 'Middle name'
       },
       ui: {
-        title: "Student name",
-        component: ObjectMantineRows,
-      },
+        title: 'Student name',
+        component: ObjectMantineRows
+      }
     },
 
     birthDate: {
       month: {
-        label: "Month",
+        label: 'Month'
       },
       day: {
-        label: "Day",
+        label: 'Day'
       },
       year: {
-        label: "Year",
+        label: 'Year'
       },
       ui: {
-        title: "Birth date",
-        component: ObjectMantineRows,
-      },
+        title: 'Birth date',
+        component: ObjectMantineRows
+      }
     },
 
     gender: {
-      label: "Gender",
+      label: 'Gender'
     },
 
     address: {
       ui: {
-        title: "Address",
-        component: AddressComponent,
+        title: 'Address',
+        component: AddressComponent
       },
       state: {
-        label: "State",
+        label: 'State'
       },
       city: {
-        label: "City",
+        label: 'City'
       },
       zip: {
-        label: "Zip",
+        label: 'Zip'
       },
       street: {
-        label: "Street",
-      },
+        label: 'Street'
+      }
     },
 
     email: {
-      label: "Email",
+      label: 'Email'
     },
 
     additionalComments: {
-      label: "Additional comments",
-      component: TextareaMantine,
+      label: 'Additional comments',
+      component: TextareaMantine
     },
 
     courses: {
-      label: "Courses",
-      component: MultiChoiceMantine,
+      label: 'Courses',
+      component: MultiChoiceMantine
     },
 
     rating: {
       component: SliderMantine,
-      label: "Rating",
+      label: 'Rating'
     },
 
     phone: {
-      label: "Phone",
-    },
+      label: 'Phone'
+    }
   }));
 
   return (
     <div
       style={{
         maxWidth: 500,
-        margin: "auto",
+        margin: 'auto'
       }}
     >
       <Form
@@ -300,9 +284,7 @@ export function StudentRegistration() {
                 <Alert title="Please resolve the errors" color="red">
                   <List>
                     {errors.map(([, errors]) =>
-                      errors.map((error) => (
-                        <List.Item c="red">{error.message}</List.Item>
-                      ))
+                      errors.map((error) => <List.Item c="red">{error.message}</List.Item>)
                     )}
                   </List>
                 </Alert>
@@ -321,90 +303,82 @@ export function DonationForm() {
   const [schema] = React.useState(() =>
     z.object({
       fullName: z.object({
-        firstName: z.string().min(1, "First name is required"),
-        lastName: z.string().min(1, "Last name is required"),
+        firstName: z.string().min(1, 'First name is required'),
+        lastName: z.string().min(1, 'Last name is required')
       }),
-      email: z.string().email().describe("myname@example.com"),
-      phoneNumber: z
-        .string()
-        .min(1, "Phone number is required")
-        .describe('e.g. "+1 555 555 5555"'),
-      donationType: z.enum(["oneTime", "monthly"] as const, {
-        required_error: "Please select a donation type",
+      email: z.string().email().describe('myname@example.com'),
+      phoneNumber: z.string().min(1, 'Phone number is required').describe('e.g. "+1 555 555 5555"'),
+      donationType: z.enum(['oneTime', 'monthly'] as const, {
+        required_error: 'Please select a donation type'
       }),
       comments: z.string().optional(),
       donationAmount: z
         .number()
-        .min(0.01, "Donation should be larger than zero")
-        .describe("Please enter your donation amount"),
-      paymentMethod: z.enum(["creditCard", "payPal"] as const, {
-        required_error: "Please select a payment method",
-      }),
+        .min(0.01, 'Donation should be larger than zero')
+        .describe('Please enter your donation amount'),
+      paymentMethod: z.enum(['creditCard', 'payPal'] as const, {
+        required_error: 'Please select a payment method'
+      })
     })
   );
 
   const [uiSchema] = React.useState<FormUiSchema<typeof schema>>(() => ({
     fullName: {
       firstName: {
-        label: "First name",
+        label: 'First name'
       },
       lastName: {
-        label: "Last name",
+        label: 'Last name'
       },
       ui: {
-        title: "Full name",
-        component: ObjectMantineRows,
-      },
+        title: 'Full name',
+        component: ObjectMantineRows
+      }
     },
 
     email: {
-      label: "Email",
+      label: 'Email'
     },
 
     phoneNumber: {
-      label: "Phone number",
+      label: 'Phone number'
     },
 
     donationType: {
       component: EnumMantineRadio,
-      label: "Donation type",
+      label: 'Donation type',
       optionLabels: {
-        monthly: "Monthly",
-        oneTime: "One time",
-      },
+        monthly: 'Monthly',
+        oneTime: 'One time'
+      }
     },
 
     comments: {
-      label: "Comments",
+      label: 'Comments'
     },
 
     donationAmount: {
-      label: "Donation amount",
+      label: 'Donation amount'
     },
 
     paymentMethod: {
       component: EnumMantineRadio,
-      label: "Payment method",
+      label: 'Payment method',
       optionLabels: {
         creditCard: <span>💳 Credit card</span>,
-        payPal: <span>🐧 PayPal</span>,
-      },
-    },
+        payPal: <span>🐧 PayPal</span>
+      }
+    }
   }));
 
   return (
     <div
       style={{
         maxWidth: 500,
-        margin: "auto",
+        margin: 'auto'
       }}
     >
-      <Form
-        components={mantineComponents}
-        title={<h1>Donation form</h1>}
-        schema={schema}
-        uiSchema={uiSchema}
-      >
+      <Form components={mantineComponents} title={<h1>Donation form</h1>} schema={schema} uiSchema={uiSchema}>
         {() => <Button type="submit">Submit</Button>}
       </Form>
     </div>
@@ -417,8 +391,8 @@ export function ConferenceRegistration() {
       <ObjectMantine {...props}>
         <Box
           sx={{
-            display: "grid",
-            gap: 8,
+            display: 'grid',
+            gap: 8
           }}
         >
           {props.children}
@@ -433,21 +407,19 @@ export function ConferenceRegistration() {
         .array(
           z.object({
             fullName: z.object({
-              firstName: z.string().min(1, "First name is required"),
-              lastName: z.string().min(1, "Last name is required"),
+              firstName: z.string().min(1, 'First name is required'),
+              lastName: z.string().min(1, 'Last name is required')
             }),
-            email: z.string().email().describe("myname@example.com"),
-            phoneNumber: z.string().describe('e.g. "+1 555 555 5555"'),
+            email: z.string().email().describe('myname@example.com'),
+            phoneNumber: z.string().describe('e.g. "+1 555 555 5555"')
           })
         )
-        .min(1, "Please add at least one person"),
+        .min(1, 'Please add at least one person'),
 
-      products: z
-        .array(z.enum(["tShirt", "coffeeCup"] as const))
-        .min(1, "Please select a product"),
-      paymentMethod: z.enum(["creditCard", "payPal"] as const),
+      products: z.array(z.enum(['tShirt', 'coffeeCup'] as const)).min(1, 'Please select a product'),
+      paymentMethod: z.enum(['creditCard', 'payPal'] as const),
 
-      paypalNumber: z.string().optional(),
+      paypalNumber: z.string().optional()
     })
   );
 
@@ -455,54 +427,54 @@ export function ConferenceRegistration() {
     people: {
       element: {
         ui: {
-          title: "Attendee",
-          component: PersonComponent,
+          title: 'Attendee',
+          component: PersonComponent
         },
         fullName: {
           ui: {
-            component: ObjectMantineRows,
+            component: ObjectMantineRows
           },
           firstName: {
-            label: "First name",
+            label: 'First name'
           },
           lastName: {
-            label: "Last name",
-          },
+            label: 'Last name'
+          }
         },
         email: {
-          label: "Email",
+          label: 'Email'
         },
         phoneNumber: {
-          label: "Phone number",
-        },
-      },
+          label: 'Phone number'
+        }
+      }
     },
     products: {
-      title: "Products",
+      title: 'Products',
       optionLabels: {
-        coffeeCup: "Coffee cup",
-        tShirt: "T-shirt",
-      },
+        coffeeCup: 'Coffee cup',
+        tShirt: 'T-shirt'
+      }
     },
     paymentMethod: {
       component: EnumMantineRadio,
-      label: "Payment method",
+      label: 'Payment method',
       optionLabels: {
         creditCard: <span>💳 Credit card</span>,
-        payPal: <span>🐧 PayPal</span>,
-      },
+        payPal: <span>🐧 PayPal</span>
+      }
     },
     paypalNumber: {
-      label: "PayPal number",
-      cond: (formData) => formData.paymentMethod === "payPal",
-    },
+      label: 'PayPal number',
+      cond: (formData) => formData.paymentMethod === 'payPal'
+    }
   }));
 
   return (
     <div
       style={{
         maxWidth: 500,
-        margin: "auto",
+        margin: 'auto'
       }}
     >
       <Form

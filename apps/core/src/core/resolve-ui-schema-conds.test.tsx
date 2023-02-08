@@ -1,32 +1,32 @@
-import { describe, test } from "vitest";
-import { z, ZodType } from "zod";
-import { FormUiSchema } from "./form";
-import { resolveUiSchemaConds } from "./resolve-ui-schema-conds";
-import { PartialDeep } from "type-fest";
-import { ObjectMantineRows } from "../components/mantine/object-mantine";
-import { EnumMantineRadio } from "../components/mantine/enum-mantine";
-import React from "react";
+import { describe, test } from 'vitest';
+import { z, ZodType } from 'zod';
+import { FormUiSchema } from './form';
+import { resolveUiSchemaConds } from './resolve-ui-schema-conds';
+import { PartialDeep } from 'type-fest';
+import { ObjectMantineRows } from '../../../mantine/src/components/object-mantine';
+import { EnumMantineRadio } from '../../../mantine/src/components/enum-mantine';
+import React from 'react';
 
 type CondFormData<Schema extends ZodType> = PartialDeep<z.infer<Schema>>;
 
-describe("resolveUiSchemaConds", function () {
-  test("resolves nested properties", function () {
+describe('resolveUiSchemaConds', function () {
+  test('resolves nested properties', function () {
     const schema = z.object({
       name: z.string(),
       age: z.number(),
       address: z.object({
         street: z.string(),
-        fruits: z.array(z.enum(["apple", "banana"] as const)),
+        fruits: z.array(z.enum(['apple', 'banana'] as const)),
         city: z.object({
-          name: z.string(),
+          name: z.string()
         }),
         people: z.array(
           z.object({
             name: z.string(),
-            age: z.number(),
+            age: z.number()
           })
-        ),
-      }),
+        )
+      })
     });
 
     function falseCond(formData: CondFormData<typeof schema>) {
@@ -40,31 +40,31 @@ describe("resolveUiSchemaConds", function () {
 
     const uiSchema: FormUiSchema<typeof schema> = {
       name: {
-        cond: falseCond,
+        cond: falseCond
       },
       address: {
         ui: {
-          cond: falseCond,
+          cond: falseCond
         },
         street: {
-          cond: falseCond,
+          cond: falseCond
         },
         fruits: {
-          cond: trueCond,
+          cond: trueCond
         },
         city: {
           name: {
-            cond: trueCond,
-          },
+            cond: trueCond
+          }
         },
         people: {
           element: {
             age: {
-              cond: trueCond,
-            },
-          },
-        },
-      },
+              cond: trueCond
+            }
+          }
+        }
+      }
     };
 
     const result = resolveUiSchemaConds({ uiSchema, formData: { age: 10 } });
@@ -72,105 +72,103 @@ describe("resolveUiSchemaConds", function () {
     expect(result).toEqual(
       expect.arrayContaining([
         {
-          path: ["name"],
-          cond: false,
+          path: ['name'],
+          cond: false
         },
         {
           cond: false,
-          path: ["address", "street"],
+          path: ['address', 'street']
         },
         {
           cond: true,
-          path: ["address", "fruits"],
+          path: ['address', 'fruits']
         },
         {
           cond: false,
-          path: ["address"],
+          path: ['address']
         },
         {
           cond: true,
-          path: ["address", "city", "name"],
+          path: ['address', 'city', 'name']
         },
         {
           cond: true,
-          path: ["address", "people", "age"],
-        },
+          path: ['address', 'people', 'age']
+        }
       ])
     );
   });
 
-  test("works", function () {
+  test('works', function () {
     const schema = z.object({
       people: z
         .array(
           z.object({
             fullName: z.object({
-              firstName: z.string().min(1, "First name is required"),
-              lastName: z.string().min(1, "Last name is required"),
+              firstName: z.string().min(1, 'First name is required'),
+              lastName: z.string().min(1, 'Last name is required')
             }),
-            email: z.string().email().describe("myname@example.com"),
-            phoneNumber: z.string().describe('e.g. "+1 555 555 5555"'),
+            email: z.string().email().describe('myname@example.com'),
+            phoneNumber: z.string().describe('e.g. "+1 555 555 5555"')
           })
         )
-        .min(1, "Please add at least one person"),
+        .min(1, 'Please add at least one person'),
 
-      products: z
-        .array(z.enum(["tShirt", "coffeeCup"] as const))
-        .min(1, "Please select a product"),
-      paymentMethod: z.enum(["creditCard", "payPal"] as const),
+      products: z.array(z.enum(['tShirt', 'coffeeCup'] as const)).min(1, 'Please select a product'),
+      paymentMethod: z.enum(['creditCard', 'payPal'] as const),
 
-      paypalNumber: z.string().optional(),
+      paypalNumber: z.string().optional()
     });
 
     const uiSchema: FormUiSchema<typeof schema> = {
       people: {
         element: {
           ui: {
-            title: "Attendee",
+            title: 'Attendee'
           },
           fullName: {
             ui: {
-              component: ObjectMantineRows,
+              component: ObjectMantineRows
             },
             firstName: {
-              label: "First name",
+              label: 'First name'
             },
             lastName: {
-              label: "Last name",
-            },
+              label: 'Last name'
+            }
           },
           email: {
-            label: "Email",
+            label: 'Email'
           },
           phoneNumber: {
-            label: "Phone number",
-          },
-        },
+            label: 'Phone number'
+          }
+        }
       },
       paymentMethod: {
         component: EnumMantineRadio,
-        label: "Payment method",
+        label: 'Payment method',
         optionLabels: {
           creditCard: <span>💳 Credit card</span>,
-          payPal: <span>🐧 PayPal</span>,
-        },
+          payPal: <span>🐧 PayPal</span>
+        }
       },
       paypalNumber: {
-        cond: (formData) => formData.paymentMethod === "payPal",
-      },
+        cond: (formData) => formData.paymentMethod === 'payPal'
+      }
     };
 
     const result = resolveUiSchemaConds({
       uiSchema,
-      formData: {},
+      formData: {}
     });
 
     expect(result).toEqual(
       expect.arrayContaining([
         {
           cond: false,
-          path: ["paypalNumber"],
-        },
+          path: ['paypalNumber']
+        }
       ])
     );
   });

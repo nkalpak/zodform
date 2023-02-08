@@ -1,5 +1,5 @@
-import { Textarea, TextInput } from "@mantine/core";
-import { IStringDefaultProps } from "../default/string-default";
+import { Textarea, TextInput } from '@mantine/core';
+import { IStringDefaultProps } from '@zodform/core';
 
 export function StringMantine({
   name,
@@ -13,7 +13,7 @@ export function StringMantine({
 
   ...props
 }: IStringDefaultProps & {
-  type?: "text" | "password";
+  type?: 'text' | 'password';
   isMultiline?: boolean;
 }) {
   const Component = isMultiline ? Textarea : TextInput;
@@ -23,7 +23,7 @@ export function StringMantine({
       {...props}
       required={isRequired}
       name={name}
-      value={value ?? ""}
+      value={value ?? ''}
       onChange={(event) => onChange(event.target.value)}
       label={label}
       description={description}

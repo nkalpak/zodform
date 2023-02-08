@@ -1,17 +1,12 @@
-import { IArrayDefaultProps } from "../default/array-default";
-import { Box, Button, Text } from "@mantine/core";
+import { IArrayDefaultProps } from '@zodform/core';
+import { Box, Button, Text } from '@mantine/core';
 
-export function ArrayMantine({
-  children,
-  title,
-  onAdd,
-  onRemove,
-}: IArrayDefaultProps) {
+export function ArrayMantine({ children, title, onAdd, onRemove }: IArrayDefaultProps) {
   return (
     <Box
       sx={{
-        display: "grid",
-        gap: 32,
+        display: 'grid',
+        gap: 32
       }}
     >
       {title && <Text size="lg">{title}</Text>}
@@ -33,7 +28,7 @@ export function ArrayMantine({
         </Box>
       ))}
 
-      <Button sx={{ justifySelf: "end" }} onClick={onAdd}>
+      <Button sx={{ justifySelf: 'end' }} onClick={onAdd}>
         Add attendee
       </Button>
     </Box>

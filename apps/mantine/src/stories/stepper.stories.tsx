@@ -1,43 +1,43 @@
-import { z } from "zod";
-import React from "react";
-import { Alert, Button, Container, Stepper, Text } from "@mantine/core";
-import { Form, FormUiSchema, FormValue } from "../core/form";
-import { mantineComponents } from "../components/mantine/mantine-components";
+import { z } from 'zod';
+import React from 'react';
+import { Alert, Button, Container, Stepper, Text } from '@mantine/core';
+import { Form, FormUiSchema, FormValue } from '@zodform/core';
+import { mantineComponents } from '../components/mantine-components';
 
 const step1 = z.object({
   firstName: z.string(),
-  lastName: z.string(),
+  lastName: z.string()
 });
 
 const step1Ui: FormUiSchema<typeof step1> = {
   lastName: {
-    label: "Last name",
+    label: 'Last name'
   },
   firstName: {
-    label: "First name",
-  },
+    label: 'First name'
+  }
 };
 
 const step2 = z.object({
   street: z.string(),
   city: z.string(),
   state: z.string(),
-  zip: z.string(),
+  zip: z.string()
 });
 
 const step2Ui: FormUiSchema<typeof step2> = {
   street: {
-    label: "Street",
+    label: 'Street'
   },
   city: {
-    label: "City",
+    label: 'City'
   },
   state: {
-    label: "State",
+    label: 'State'
   },
   zip: {
-    label: "Zip",
-  },
+    label: 'Zip'
+  }
 };
 
 export function StepperStory() {
@@ -71,12 +71,7 @@ export function StepperStory() {
           </Stepper.Step>
 
           <Stepper.Step title="Address">
-            <Form
-              components={mantineComponents}
-              schema={step2}
-              uiSchema={step2Ui}
-              onSubmit={setStep2Value}
-            >
+            <Form components={mantineComponents} schema={step2} uiSchema={step2Ui} onSubmit={setStep2Value}>
               {() => <Button type="submit">Finish</Button>}
             </Form>
           </Stepper.Step>

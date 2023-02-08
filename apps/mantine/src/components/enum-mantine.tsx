@@ -1,5 +1,5 @@
-import { IEnumDefaultProps } from "../default/enum-default";
-import { Radio, Select } from "@mantine/core";
+import { IEnumDefaultProps } from '@zodform/core';
+import { Radio, Select } from '@mantine/core';
 
 export function EnumMantine({
   value,
@@ -11,7 +11,7 @@ export function EnumMantine({
   options,
   isRequired,
   defaultValue,
-  autoFocus,
+  autoFocus
 }: IEnumDefaultProps) {
   return (
     <Select
@@ -26,7 +26,7 @@ export function EnumMantine({
       error={errorMessage}
       data={options.map((option) => ({
         value: option,
-        label: option,
+        label: option
       }))}
     />
   );
@@ -42,7 +42,7 @@ export function EnumMantineRadio({
   options,
   label,
   onChange,
-  optionLabels,
+  optionLabels
 }: IEnumDefaultProps) {
   return (
     <Radio.Group
