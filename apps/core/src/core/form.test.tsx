@@ -16,6 +16,9 @@ function renderSimpleArray() {
   const addTestId = "add-test-id";
   const removeTestId = "remove-test-id";
 
+
+
+  
   const screen = render(
     <Form
       schema={schema}
