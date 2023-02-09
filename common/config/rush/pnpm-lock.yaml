@@ -42,6 +42,7 @@ importers:
       immer: 9.0.19
       lodash.set: 4.3.2
       remeda: 1.6.1
+      type-fest: 3.5.5
     devDependencies:
       '@anatine/zod-mock': 3.8.3_@faker-js+faker@7.6.0
       '@faker-js/faker': 7.6.0
@@ -65,7 +66,6 @@ importers:
       prettier: 2.8.3
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      type-fest: 3.5.5
       typescript: 4.9.5
       vite: 4.1.1
       vite-plugin-dts: 1.7.2_vite@4.1.1
@@ -5868,7 +5868,7 @@ packages:
   /type-fest/3.5.5:
     resolution: {integrity: sha512-Nudle2CLcCaf9/1bVQunwzX1/ZH4Z6mvP8hkWWZCbKrxtnN52QwD5Xn/mo68aofQhGU4be1GlEC6LQCTKGXkRw==}
     engines: {node: '>=14.16'}
-    dev: true
+    dev: false
 
   /type-is/1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}
