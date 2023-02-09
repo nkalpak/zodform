@@ -18,10 +18,10 @@
     "@mantine/hooks": "^5.10.2",
     "@babel/core": "^7.20.12",
     "remeda": "^1.6.1",
-    "@zodform/core": "workspace:*",
     "zod": "^3.20.2"
   },
   "devDependencies": {
+    "@zodform/core": "workspace:*",
     "vite-plugin-dts": "^1.7.2",
     "@ladle/react": "^2.5.4",
     "@types/react": "^18.0.27",
@@ -34,7 +34,8 @@
   },
   "peerDependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "@zodform/core": "^0.0.1"
   },
   "files": [
     "dist"
