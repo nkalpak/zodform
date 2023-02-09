@@ -8,6 +8,7 @@ import { ObjectDefault } from '../components/default/object-default';
 import { NumberDefault } from '../components/default/number-default';
 import { MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { StringDefault } from '../components/default/string-default';
+import { DateDefault } from '../components/default/date-default';
 
 function renderSimpleArray() {
   const user = userEvent.setup();
@@ -351,6 +352,51 @@ describe('Form', function () {
     expect(screen.getByText('Apple')).toBeInTheDocument();
     expect(screen.getByText('Citrus')).toBeInTheDocument();
     expect(screen.getByText('Fruits')).toBeInTheDocument();
+    expect(screen.getByTestId(testId)).toBeInTheDocument();
+  });
+
+  test('renders date', async function () {
+    const schema = z.object({
+      date: z.date()
+    });
+    const label = 'DATE';
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          date: {
+            label
+          }
+        }}
+      />
+    );
+
+    expect(screen.getByLabelText(label)).toBeInTheDocument();
+  });
+
+  test('renders date with custom component', async function () {
+    const schema = z.object({
+      date: z.date()
+    });
+    const testId = 'test-id';
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          date: {
+            component: (props) => (
+              <React.Fragment>
+                <DateDefault {...props} />
+                <span data-testid={testId}>h</span>
+              </React.Fragment>
+            )
+          }
+        }}
+      />
+    );
+
     expect(screen.getByTestId(testId)).toBeInTheDocument();
   });
 });

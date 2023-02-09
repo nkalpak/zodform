@@ -3,6 +3,7 @@ import * as R from 'remeda';
 import {
   isZodArray,
   isZodBoolean,
+  isZodDate,
   isZodDefault,
   isZodEnum,
   isZodNumber,
@@ -28,6 +29,9 @@ export function formDefaultValueFromSchema(schema: ZodObject<any>): Record<strin
       return undefined;
     }
     if (isZodOptional(schema)) {
+      return undefined;
+    }
+    if (isZodDate(schema)) {
       return undefined;
     }
     if (isZodArray(schema)) {

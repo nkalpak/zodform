@@ -13,6 +13,7 @@ import produce from 'immer';
 import {
   isZodArray,
   isZodBoolean,
+  isZodDate,
   isZodDefault,
   isZodEffects,
   isZodEnum,
@@ -32,6 +33,7 @@ import { IMultiChoiceDefaultProps, MultiChoiceDefault } from '../components/defa
 import { PartialDeep } from 'type-fest';
 import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
 import { createContext } from '../utils/create-context';
+import { DateDefault, IDateDefaultProps } from '../components/default/date-default';
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -362,6 +364,66 @@ function ZodBooleanComponent(props: IZodBooleanComponentProps) {
   );
 }
 
+interface IZodDateComponentProps extends IZodLeafComponentProps<zod.ZodDate, Date> {
+  uiSchema?: UiPropertiesBase<Date, any>;
+}
+
+const ZodDateComponentInner = React.memo(function ZodDateComponentInner({
+  name,
+  schema,
+  value,
+  isRequired,
+  uiSchema,
+
+  onChange,
+  components,
+  errorMessage
+}: IZodDateComponentProps & IZodInnerComponentProps) {
+  const handleChange = React.useCallback(
+    function handleChange(value: Date) {
+      onChange({
+        op: 'update',
+        value,
+        path: componentNameDeserialize(name)
+      });
+    },
+    [name, onChange]
+  );
+
+  const Component = uiSchema?.component ?? components?.date ?? DateDefault;
+
+  return (
+    <Component
+      value={value}
+      onChange={handleChange}
+      name={name}
+      label={uiSchema?.label ?? name}
+      description={schema.description}
+      errorMessage={errorMessage}
+      isRequired={isRequired}
+      {...getLeafPropsFromUiSchema(uiSchema)}
+    />
+  );
+});
+
+function ZodDateComponent(props: IZodDateComponentProps) {
+  const { onChange, components } = useFormContext();
+  const { errors, isVisible } = useComponent(props.name);
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <ZodDateComponentInner
+      {...props}
+      components={components}
+      errorMessage={R.first(errors)?.message}
+      onChange={onChange}
+    />
+  );
+}
+
 interface IZodArrayComponentProps extends IZodLeafComponentProps<ZodAnyArray, any[]> {
   minLength?: number;
   maxLength?: number;
@@ -605,10 +667,24 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
     );
   }
 
+  if (isZodDate(schema)) {
+    return (
+      <ZodDateComponent
+        uiSchema={uiSchema}
+        schema={schema}
+        name={name}
+        isRequired={isRequired}
+        value={value}
+      />
+    );
+  }
+
   return null;
 });
 
-type ResolveComponentProps<Value> = Value extends boolean
+type ResolveComponentProps<Value> = Value extends Date
+  ? IDateDefaultProps
+  : Value extends boolean
   ? IBooleanDefaultProps
   : Value extends Array<any>
   ? IArrayDefaultProps
@@ -633,6 +709,8 @@ type UiPropertiesBase<Value, RootSchema extends object> = {
   ? UiPropertiesString
   : Value extends number
   ? UiPropertiesNumber
+  : Value extends Date
+  ? UiPropertiesDate
   : never);
 
 type UiPropertiesNumber = object;
@@ -640,6 +718,8 @@ type UiPropertiesNumber = object;
 type UiPropertiesString = object;
 
 type UiPropertiesBoolean = object;
+
+type UiPropertiesDate = object;
 
 export type UiPropertiesLeaf<Value> = Omit<UiPropertiesBase<Value, any>, 'component' | 'cond'>;
 
@@ -702,7 +782,9 @@ type ResolveUnionUiProperties<Schema, RootSchema extends object> = Schema extend
 type UiSchemaInner<Schema extends object, RootSchema extends object> = {
   // Boolean messes up the `IsNonUndefinedUnion` check, so we need to handle it first
   // TODO: Figure out how to handle this better
-  [K in keyof Partial<Schema>]: Schema[K] extends boolean
+  [K in keyof Partial<Schema>]: Schema[K] extends Date
+    ? UiPropertiesBase<Schema[K], RootSchema>
+    : Schema[K] extends boolean
     ? UiPropertiesBase<Schema[K], RootSchema>
     : Schema[K] extends object
     ? Schema[K] extends Array<any>
@@ -733,6 +815,7 @@ interface IFormProps<Schema extends SchemaType> {
     object?: (props: IObjectDefaultProps) => JSX.Element;
     array?: (props: IArrayDefaultProps) => JSX.Element;
     multiChoice?: (props: IMultiChoiceDefaultProps) => JSX.Element;
+    date?: (props: IDateDefaultProps) => JSX.Element;
   };
   title?: React.ReactNode;
   children?: FormChildren;

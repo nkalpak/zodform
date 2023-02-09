@@ -123,7 +123,8 @@ export function Register() {
       .object({
         email: z.string().email(),
         password: z.string(),
-        confirmPassword: z.string()
+        confirmPassword: z.string(),
+        birthDate: z.date()
       })
       .refine(
         (data) => {
@@ -142,7 +143,16 @@ export function Register() {
         margin: 'auto'
       }}
     >
-      <Form liveValidate={false} schema={schema} onSubmit={console.log}>
+      <Form
+        uiSchema={{
+          birthDate: {
+            label: 'Birth date'
+          }
+        }}
+        liveValidate={false}
+        schema={schema}
+        onSubmit={console.log}
+      >
         {({ errors }) => {
           return (
             <React.Fragment>
