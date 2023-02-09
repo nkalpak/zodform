@@ -6,7 +6,7 @@ import { ObjectMantine } from './object-mantine';
 import { MultiChoiceMantine } from './multi-choice-mantine';
 import { ArrayMantine } from './array-mantine';
 
-export const mantineComponents = {
+export const components = {
   string: StringMantine,
   enum: EnumMantine,
   number: NumberMantine,

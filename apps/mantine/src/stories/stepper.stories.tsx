@@ -2,7 +2,7 @@ import { z } from 'zod';
 import React from 'react';
 import { Alert, Button, Container, Stepper, Text } from '@mantine/core';
 import { Form, FormUiSchema, FormValue } from '@zodform/core';
-import { mantineComponents } from '../components/mantine-components';
+import { components } from '../components/components';
 
 const step1 = z.object({
   firstName: z.string(),
@@ -58,7 +58,7 @@ export function StepperStory() {
         >
           <Stepper.Step title="Personal info">
             <Form
-              components={mantineComponents}
+              components={components}
               schema={step1}
               uiSchema={step1Ui}
               onSubmit={(value) => {
@@ -71,7 +71,7 @@ export function StepperStory() {
           </Stepper.Step>
 
           <Stepper.Step title="Address">
-            <Form components={mantineComponents} schema={step2} uiSchema={step2Ui} onSubmit={setStep2Value}>
+            <Form components={components} schema={step2} uiSchema={step2Ui} onSubmit={setStep2Value}>
               {() => <Button type="submit">Finish</Button>}
             </Form>
           </Stepper.Step>

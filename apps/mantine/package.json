@@ -1,8 +1,11 @@
 {
   "name": "@zodform/mantine",
+  "author": "nkalpak",
   "private": false,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -19,6 +22,7 @@
     "zod": "^3.20.2"
   },
   "devDependencies": {
+    "vite-plugin-dts": "^1.7.2",
     "@ladle/react": "^2.5.4",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
@@ -31,5 +35,8 @@
   "peerDependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

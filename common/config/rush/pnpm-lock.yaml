@@ -14,7 +14,6 @@ importers:
       '@testing-library/jest-dom': ^5.16.5
       '@testing-library/react': ^13.4.0
       '@testing-library/user-event': ^14.4.3
-      '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
       '@types/react': ^18.0.27
       '@types/react-dom': ^18.0.10
@@ -51,7 +50,6 @@ importers:
       '@testing-library/jest-dom': 5.16.5
       '@testing-library/react': 13.4.0_react-dom@18.2.0+react@18.2.0
       '@testing-library/user-event': 14.4.3_@testing-library+dom@8.20.0
-      '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
       '@types/react': 18.0.27
       '@types/react-dom': 18.0.10
@@ -90,6 +88,7 @@ importers:
       remeda: ^1.6.1
       typescript: ^4.9.4
       vite: ^4.1.0
+      vite-plugin-dts: ^1.7.2
       zod: ^3.20.2
     dependencies:
       '@babel/core': 7.20.12
@@ -108,6 +107,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       typescript: 4.9.5
       vite: 4.1.1
+      vite-plugin-dts: 1.7.2_vite@4.1.1
 
 packages:
 
@@ -2336,12 +2336,6 @@ packages:
 
   /@types/json-schema/7.0.11:
     resolution: {integrity: sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==}
-    dev: true
-
-  /@types/lodash.get/4.4.7:
-    resolution: {integrity: sha512-af34Mj+KdDeuzsJBxc/XeTtOx0SZHZNLd+hdrn+PcKGQs0EG2TJTzQAOTCZTgDJCArahlCzLWSy8c2w59JRz7Q==}
-    dependencies:
-      '@types/lodash': 4.14.191
     dev: true
 
   /@types/lodash.set/4.3.7:

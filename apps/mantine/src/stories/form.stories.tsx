@@ -2,7 +2,7 @@ import * as R from 'remeda';
 import { Alert, Box, Button, List } from '@mantine/core';
 import React from 'react';
 import { z } from 'zod';
-import { mantineComponents } from '../components/mantine-components';
+import { components } from '../components/components';
 import { PasswordMantine, TextareaMantine } from '../components/string-mantine';
 import { Form, FormUiSchema, IObjectDefaultProps } from '@zodform/core';
 import { ObjectMantine, ObjectMantineRows } from '../components/object-mantine';
@@ -31,7 +31,7 @@ export function Login() {
       <Form
         title={<h1>Login</h1>}
         schema={schema}
-        components={mantineComponents}
+        components={components}
         uiSchema={{
           email: {
             label: 'Email'
@@ -76,7 +76,7 @@ export function Register() {
       <Form
         title={<h1>Register</h1>}
         schema={schema}
-        components={mantineComponents}
+        components={components}
         uiSchema={{
           email: {
             label: 'Email'
@@ -274,7 +274,7 @@ export function StudentRegistration() {
         onSubmit={console.log}
         title={<h1>Registration form</h1>}
         schema={schema}
-        components={mantineComponents}
+        components={components}
         uiSchema={uiSchema}
       >
         {({ errors }) => {
@@ -378,7 +378,7 @@ export function DonationForm() {
         margin: 'auto'
       }}
     >
-      <Form components={mantineComponents} title={<h1>Donation form</h1>} schema={schema} uiSchema={uiSchema}>
+      <Form components={components} title={<h1>Donation form</h1>} schema={schema} uiSchema={uiSchema}>
         {() => <Button type="submit">Submit</Button>}
       </Form>
     </div>
@@ -479,7 +479,7 @@ export function ConferenceRegistration() {
     >
       <Form
         onSubmit={console.log}
-        components={mantineComponents}
+        components={components}
         title={<h1>Conference registration</h1>}
         schema={schema}
         uiSchema={uiSchema}
