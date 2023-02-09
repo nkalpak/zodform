@@ -330,11 +330,15 @@
   "projects": [
     {
       "packageName": "@zodform/core",
-      "projectFolder": "apps/core"
+      "projectFolder": "apps/core",
+      "shouldPublish": true,
+      "publishFolder": "dist"
     },
     {
       "packageName": "@zodform/mantine",
-      "projectFolder": "apps/mantine"
+      "projectFolder": "apps/mantine",
+      "shouldPublish": true,
+      "publishFolder": "dist"
     }
     // {
     //   /**
