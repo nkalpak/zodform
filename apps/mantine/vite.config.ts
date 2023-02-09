@@ -19,7 +19,7 @@ export default defineConfig({
       fileName: 'index'
     },
     rollupOptions: {
-      external: ['react', 'react-dom']
+      external: ['react', 'react-dom', '@mantine/core', '@mantine/hooks', '@emotion/react', '@zodform/core']
     }
   }
 });
