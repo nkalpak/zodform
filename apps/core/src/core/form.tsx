@@ -812,6 +812,9 @@ type IFormReducerAction =
       payload: {
         errors: ErrorsMap;
       };
+    }
+  | {
+      type: 'submitSuccess';
     };
 
 interface IFormReducerState {
@@ -904,6 +907,13 @@ function formReducer(
       errors: action.payload.errors
     };
   }
+
+  if (action.type === 'submitSuccess') {
+    return {
+      ...state,
+      errors: STABLE_NO_ERRORS
+    };
+  }
 }
 
 export function Form<Schema extends SchemaType>({
@@ -940,6 +950,9 @@ export function Form<Schema extends SchemaType>({
       const result = validate(value, schema, uiSchema ?? {});
 
       if (result.isValid) {
+        dispatch({
+          type: 'submitSuccess'
+        });
         onSubmit?.(value);
       } else {
         dispatch({

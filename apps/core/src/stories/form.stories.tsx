@@ -116,3 +116,49 @@ export function ConferenceRegistration() {
     </div>
   );
 }
+
+export function Register() {
+  const [schema] = React.useState(() =>
+    z
+      .object({
+        email: z.string().email(),
+        password: z.string(),
+        confirmPassword: z.string()
+      })
+      .refine(
+        (data) => {
+          return data.password === data.confirmPassword;
+        },
+        {
+          message: 'Passwords do not match'
+        }
+      )
+  );
+
+  return (
+    <div
+      style={{
+        width: 500,
+        margin: 'auto'
+      }}
+    >
+      <Form liveValidate={false} schema={schema} onSubmit={console.log}>
+        {({ errors }) => {
+          return (
+            <React.Fragment>
+              {errors.length > 0 && (
+                <ul>
+                  {errors.map(([key, error]) => (
+                    <li key={key}>{error[0]?.message}</li>
+                  ))}
+                </ul>
+              )}
+
+              <button type="submit">Submit</button>
+            </React.Fragment>
+          );
+        }}
+      </Form>
+    </div>
+  );
+}
