@@ -29,7 +29,7 @@ export function ArrayMantine({ children, title, onAdd, onRemove }: IArrayDefault
       ))}
 
       <Button sx={{ justifySelf: 'end' }} onClick={onAdd}>
-        Add attendee
+        Add
       </Button>
     </Box>
   );
