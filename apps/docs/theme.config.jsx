@@ -1,5 +1,5 @@
 export default {
-  logo: <span>My Nextra Documentation</span>,
+  logo: <span style={{ fontWeight: 'bold' }}>ZodForm</span>,
   project: {
     link: 'https://github.com/nkalpak/zodform'
   }
