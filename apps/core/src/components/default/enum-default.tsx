@@ -1,6 +1,7 @@
 import React from 'react';
 import { ErrorOrDescription } from './error-or-description';
 import { IComponentProps } from '../types';
+import { ComponentLabel } from '../component-label';
 
 export interface IEnumDefaultProps extends IComponentProps<string | undefined> {
   options: string[];
@@ -18,9 +19,7 @@ export function EnumDefault({
   optionLabels
 }: IEnumDefaultProps) {
   return (
-    <label>
-      {label}
-
+    <ComponentLabel label={label}>
       <select value={value} name={name} onChange={(event) => onChange(event.target.value)}>
         <option value={undefined}>Select</option>
 
@@ -35,6 +34,6 @@ export function EnumDefault({
       </select>
 
       <ErrorOrDescription error={errorMessage} description={description} />
-    </label>
+    </ComponentLabel>
   );
 }

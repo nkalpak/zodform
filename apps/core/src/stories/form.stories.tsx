@@ -13,7 +13,7 @@ export function ConferenceRegistration() {
         <div
           style={{
             display: 'grid',
-            gap: 8
+            gap: 16
           }}
         >
           {props.children}
@@ -40,7 +40,11 @@ export function ConferenceRegistration() {
       products: z.array(z.enum(['tShirt', 'coffeeCup'] as const)).min(1, 'Please select a product'),
       paymentMethod: z.enum(['creditCard', 'payPal'] as const),
 
-      paypalNumber: z.string().optional()
+      paypalNumber: z.string().optional(),
+
+      isAccepting: z.boolean(),
+      age: z.number(),
+      future: z.date()
     })
   );
 
@@ -71,7 +75,7 @@ export function ConferenceRegistration() {
       }
     },
     products: {
-      title: 'Products',
+      label: 'Products',
       optionLabels: {
         coffeeCup: 'Coffee cup',
         tShirt: 'T-shirt'
@@ -81,8 +85,8 @@ export function ConferenceRegistration() {
       component: EnumDefault,
       label: 'Payment method',
       optionLabels: {
-        creditCard: <span>💳 Credit card</span>,
-        payPal: <span>🐧 PayPal</span>
+        creditCard: '💳 Credit card',
+        payPal: '🐧 PayPal'
       }
     },
     paypalNumber: {

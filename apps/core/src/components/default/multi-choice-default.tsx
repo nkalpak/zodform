@@ -20,6 +20,8 @@ export function MultiChoiceDefault({
     <div>
       {label}
 
+      <div style={{ minHeight: 4 }} />
+
       {options.map((option) => {
         const label = optionLabels?.[option] ?? option;
         return (

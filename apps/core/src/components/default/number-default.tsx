@@ -1,6 +1,7 @@
 import { IComponentProps } from '../types';
 import React from 'react';
 import { ErrorOrDescription } from './error-or-description';
+import { ComponentLabel } from '../component-label';
 
 export interface INumberDefaultProps extends IComponentProps<number | undefined> {
   min: number | undefined;
@@ -16,9 +17,7 @@ export function NumberDefault({
   name
 }: INumberDefaultProps) {
   return (
-    <label>
-      {label}
-
+    <ComponentLabel label={label}>
       <input
         type="number"
         name={name}
@@ -29,6 +28,6 @@ export function NumberDefault({
       />
 
       <ErrorOrDescription error={errorMessage} description={description} />
-    </label>
+    </ComponentLabel>
   );
 }
