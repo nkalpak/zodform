@@ -283,9 +283,11 @@ export function StudentRegistration() {
               {errors.length > 0 && (
                 <Alert title="Please resolve the errors" color="red">
                   <List>
-                    {errors.map(([, errors]) =>
-                      errors.map((error) => <List.Item c="red">{error.message}</List.Item>)
-                    )}
+                    {errors.map((error) => (
+                      <List.Item key={error.path.join('')} c="red">
+                        {error.message}
+                      </List.Item>
+                    ))}
                   </List>
                 </Alert>
               )}
@@ -490,8 +492,10 @@ export function ConferenceRegistration() {
               {errors.length > 0 && (
                 <Alert color="red" title="Please fix the following errors:">
                   <List>
-                    {errors.map(([, error]) => (
-                      <List.Item c="red">{error[0]?.message}</List.Item>
+                    {errors.map((error) => (
+                      <List.Item key={error.path.join('')} c="red">
+                        {error.message}
+                      </List.Item>
                     ))}
                   </List>
                 </Alert>

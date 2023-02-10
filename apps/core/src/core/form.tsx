@@ -799,7 +799,7 @@ export type FormUiSchema<Schema extends FormSchema> = UiSchemaInner<zod.infer<Sc
 export type FormValue<Schema extends FormSchema> = zod.infer<Schema>;
 
 export type FormSchema = AnyZodObject | ZodEffects<any>;
-type FormChildren = (props: { errors: [keyof ErrorsMap, ErrorsMap[keyof ErrorsMap]][] }) => JSX.Element;
+type FormChildren = (props: { errors: zod.ZodIssue[] }) => JSX.Element;
 type FormConds = Record<string, CondResult>;
 
 export interface IFormProps<Schema extends FormSchema> {
@@ -820,7 +820,7 @@ export interface IFormProps<Schema extends FormSchema> {
   title?: React.ReactNode;
   children?: FormChildren;
   liveValidate?: boolean;
-  onErrorsChange?: (errors: ErrorsMap) => void;
+  onErrorsChange?: (errors: zod.ZodIssue[]) => void;
 }
 
 /**
@@ -999,6 +999,10 @@ function formReducer(
   }
 }
 
+function flattenErrorsToZodIssues(errors: ErrorsMap): zod.ZodIssue[] {
+  return R.pipe(errors, R.values, R.flatten());
+}
+
 export function Form<Schema extends FormSchema>({
   schema,
   uiSchema,
@@ -1079,7 +1083,7 @@ export function Form<Schema extends FormSchema>({
   );
 
   React.useEffect(() => {
-    onErrorsChange?.(errors);
+    onErrorsChange?.(flattenErrorsToZodIssues(errors));
   }, [errors, onErrorsChange]);
 
   return (
@@ -1107,7 +1111,11 @@ export function Form<Schema extends FormSchema>({
         <ZodAnyComponent uiSchema={uiSchema} value={value ?? formData} schema={objectSchema} />
       </FormContextProvider>
 
-      {children ? children({ errors: Object.entries(errors ?? {}) }) : <button type="submit">Submit</button>}
+      {children ? (
+        children({ errors: flattenErrorsToZodIssues(errors) })
+      ) : (
+        <button type="submit">Submit</button>
+      )}
     </form>
   );
 }

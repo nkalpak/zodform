@@ -162,8 +162,8 @@ export function Register() {
             <React.Fragment>
               {errors.length > 0 && (
                 <ul>
-                  {errors.map(([key, error]) => (
-                    <li key={key}>{error[0]?.message}</li>
+                  {errors.map((error) => (
+                    <li key={error.path.join('')}>{error.message}</li>
                   ))}
                 </ul>
               )}
