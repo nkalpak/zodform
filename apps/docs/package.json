@@ -7,5 +7,8 @@
     "react-dom": "^18.2.0",
     "nextra": "^2.2.14",
     "nextra-theme-docs": "^2.2.14"
+  },
+  "scripts": {
+    "build": ""
   }
 }
