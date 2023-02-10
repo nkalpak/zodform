@@ -1,11 +1,11 @@
 import { Callout } from 'nextra-theme-docs';
 
-## Custom Components
+## Custom Theme
 
 You can override the default components for every data type by passing a `components` prop to the `Form` component.
 
 ```tsx
-import { Form, IStringDefaultProps, INumberDefaultProps } from '@zodform/core';
+import { Form, IStringDefaultProps, INumberDefaultProps, IFormProps, FormSchema } from '@zodform/core';
 import { z } from 'zod';
 
 function TextField(props: IStringDefaultProps) {
@@ -16,22 +16,33 @@ function NumberField(props: INumberDefaultProps) {
   // ...
 }
 
-const schema = z.object({
-  name: z.string(),
-  age: z.number()
-});
-
 const components = {
   string: TextField,
   number: NumberField
 } as const;
 
-export function MyForm() {
-  return <Form schema={schema} components={components} />;
+export function CustomForm<Schema extends FormSchema>(props: Omit<IFormProps<Schema>, 'components'>) {
+  return <Form {...props} components={components} />;
 }
 ```
 
-<Callout type="info">Note that we define the `components` object outside of any React component.</Callout>
+<Callout type="info">Note that we define the `components` object outside the component.</Callout>
+
+We can then use the custom form normally:
+
+```tsx
+import { CustomForm } from './custom-form';
+import { z } from 'zod';
+
+const schema = z.object({
+  name: z.string(),
+  age: z.number()
+});
+
+function Component() {
+  return <CustomForm schema={schema} />;
+}
+```
 
 ## Mantine
 
@@ -48,19 +59,13 @@ pnpm i @zodform/mantine @mantine/core @mantine/hooks @emotion/react @babel/core
 ### Usage
 
 ```tsx
-import { Form } from '@zodform/core';
+import { Form, FormSchema, IFormProps } from '@zodform/core';
 import { components } from '@zodform/mantine';
-import { z } from 'zod';
 
-const schema = z.object({
-  name: z.string(),
-  age: z.number()
-});
-
-export function MyForm() {
-  return <Form schema={schema} components={components} />;
+export function MantineForm<Schema extends FormSchema>(props: Omit<IFormProps<Schema>, 'components'>) {
+  return <Form {...props} components={components} />;
 }
 ```
 
-The mantine theme is just a `components` object, much like the one
+The mantine theme is just a predefined `components` object, much like the one
 we defined in the [Custom Components](#custom-components) section.

@@ -795,14 +795,14 @@ type UiSchemaInner<Schema extends object, RootSchema extends object> = {
     : UiPropertiesBase<Schema[K], RootSchema>;
 };
 
-export type FormUiSchema<Schema extends SchemaType> = UiSchemaInner<zod.infer<Schema>, zod.infer<Schema>>;
-export type FormValue<Schema extends SchemaType> = zod.infer<Schema>;
+export type FormUiSchema<Schema extends FormSchema> = UiSchemaInner<zod.infer<Schema>, zod.infer<Schema>>;
+export type FormValue<Schema extends FormSchema> = zod.infer<Schema>;
 
-type SchemaType = AnyZodObject | ZodEffects<any>;
+export type FormSchema = AnyZodObject | ZodEffects<any>;
 type FormChildren = (props: { errors: [keyof ErrorsMap, ErrorsMap[keyof ErrorsMap]][] }) => JSX.Element;
 type FormConds = Record<string, CondResult>;
 
-interface IFormProps<Schema extends SchemaType> {
+export interface IFormProps<Schema extends FormSchema> {
   schema: Schema;
   uiSchema?: FormUiSchema<Schema>;
   onSubmit?: (value: zod.infer<Schema>) => void;
@@ -829,7 +829,7 @@ interface IFormProps<Schema extends SchemaType> {
  * so we need to resolve the schema to the actual
  * object schema from which we can generate the form
  * */
-function resolveObjectSchema(schema: SchemaType): AnyZodObject {
+function resolveObjectSchema(schema: FormSchema): AnyZodObject {
   if (isZodObject(schema)) {
     return schema;
   }
@@ -871,7 +871,7 @@ function getNextFormDataFromConds({
 }
 
 type IFormReducerBasePayload<T> = T & {
-  schema: SchemaType;
+  schema: FormSchema;
 };
 
 type IFormReducerAction =
@@ -908,7 +908,7 @@ interface IFormReducerState {
 
 function validate(
   value: any,
-  schema: SchemaType,
+  schema: FormSchema,
   uiSchema?: FormUiSchema<any>
 ):
   | {
@@ -999,7 +999,7 @@ function formReducer(
   }
 }
 
-export function Form<Schema extends SchemaType>({
+export function Form<Schema extends FormSchema>({
   schema,
   uiSchema,
 
