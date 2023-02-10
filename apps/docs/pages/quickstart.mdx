@@ -1,0 +1,57 @@
+import { Callout } from 'nextra-theme-docs';
+
+```bash
+pnpm i @zodform/core zod
+```
+
+## Usage
+
+All you need to create a very basic form is a Zod schema.
+
+```tsx
+import { Form } from '@zodform/core';
+import { z } from 'zod';
+
+const schema = z.object({
+  name: z.string(),
+  age: z.number()
+});
+
+export function PersonForm() {
+  return <Form schema={schema} />;
+}
+```
+
+## UI Schema
+
+Since the Zod schema has a limited amount of information about how the form should look,
+you will likely want to use the UI schema to further customize the form (for example, to add a label).
+
+```tsx
+import { Form, FormUiSchema } from '@zodform/core';
+import { z } from 'zod';
+
+const schema = z.object({
+  name: z.string(),
+  age: z.number()
+});
+
+const uiSchema: FormUiSchema<typeof schema> = {
+  name: {
+    label: 'Name'
+  },
+  age: {
+    label: 'Age'
+  }
+};
+
+export function PersonForm() {
+  return <Form schema={schema} uiSchema={uiSchema} />;
+}
+```
+
+<Callout type="info">
+  Note that both the schema and UI schema are defined outside of the component. This is to avoid creating a
+  new object every time the `PersonForm` renders. Providing stable references for the schemas enables the form
+  to make optimizations in order to avoid re-rendering the inputs whose values haven't changed.
+</Callout>
