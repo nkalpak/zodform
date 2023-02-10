@@ -380,7 +380,7 @@ const ZodDateComponentInner = React.memo(function ZodDateComponentInner({
   errorMessage
 }: IZodDateComponentProps & IZodInnerComponentProps) {
   const handleChange = React.useCallback(
-    function handleChange(value: Date) {
+    function handleChange(value: Date | undefined) {
       onChange({
         op: 'update',
         value,
@@ -1010,7 +1010,7 @@ export function Form<Schema extends SchemaType>({
   title,
 
   children,
-  liveValidate = true,
+  liveValidate = false,
   onErrorsChange
 }: IFormProps<Schema>) {
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
