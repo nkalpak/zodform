@@ -1,15 +1,17 @@
 import React from 'react';
+import { UiPropertiesCompound } from '../../core/form';
 
-export interface IObjectDefaultProps {
+export interface IObjectDefaultProps extends UiPropertiesCompound<any, any> {
   children: React.ReactNode[] | React.ReactNode;
-  title?: React.ReactNode;
 }
 
-export function ObjectDefault({ children, title }: IObjectDefaultProps) {
+export function ObjectDefault({ children, title, description }: IObjectDefaultProps) {
   return (
     <div>
       {title && <h2>{title}</h2>}
       {children}
+
+      {description && <p>{description}</p>}
     </div>
   );
 }

@@ -1,21 +1,24 @@
 import React from 'react';
+import { ErrorOrDescription } from './error-or-description';
+import { IComponentProps } from '../types';
 
-export interface IMultiChoiceDefaultProps<Value extends string = string> {
+export type IMultiChoiceDefaultProps<Value extends string = string> = IComponentProps<Value[]> & {
   options: Value[];
-  value: Value[];
-  onChange: (value: Value[]) => void;
-  errorMessage?: string;
-  label?: React.ReactNode;
   optionLabels?: Record<Value, React.ReactNode>;
-}
+};
 
 export function MultiChoiceDefault({
   options,
-  value,
+  value = [],
   onChange,
   optionLabels,
-  label
+  label,
+  errorMessage,
+  defaultValue,
+  description
 }: IMultiChoiceDefaultProps) {
+  const resolvedValue = value ?? defaultValue ?? [];
+
   return (
     <div>
       {label}
@@ -28,19 +31,23 @@ export function MultiChoiceDefault({
           <label key={option} style={{ display: 'flex', flexDirection: 'row' }}>
             <input
               onChange={() => {
-                if (value.includes(option)) {
-                  onChange(value.filter((v) => v !== option));
+                if (resolvedValue.includes(option)) {
+                  onChange(resolvedValue.filter((v) => v !== option));
                 } else {
-                  onChange([...value, option]);
+                  onChange([...resolvedValue, option]);
                 }
               }}
               type="checkbox"
-              checked={value.includes(option)}
+              checked={resolvedValue.includes(option)}
             />
             <span>{label}</span>
           </label>
         );
       })}
+
+      <div style={{ minHeight: 4 }} />
+
+      <ErrorOrDescription description={description} error={errorMessage} />
     </div>
   );
 }

@@ -93,7 +93,7 @@ function getLeafPropsFromUiSchema(
 interface IZodLeafComponentProps<Schema extends ZodFirstPartySchemaTypes, Value> {
   schema: Schema;
   name: string;
-  description?: string;
+  description?: React.ReactNode;
   isRequired: boolean;
   value?: Value;
 }
@@ -447,7 +447,7 @@ const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComp
   return (
     <Component
       {...uiProps}
-      label={uiProps.label}
+      name={name}
       errorMessage={errorMessage}
       onChange={(newValue) => {
         onChange({
@@ -488,6 +488,7 @@ function ZodArrayComponent(props: IZodArrayComponentProps) {
 
   return (
     <Component
+      description={schema.description ?? uiProps.description}
       title={uiProps.title}
       onRemove={(index) => {
         onArrayRemove(componentNameDeserialize(`${name}[${index}]`));
@@ -530,16 +531,9 @@ function ZodObjectComponent({
   const { isVisible } = useComponent(name ?? '');
   const { components } = useFormContext();
 
-  if (!isVisible) {
-    return null;
-  }
-
-  // Don't create a div as the first child of the form
-  const Component = name ? uiSchema?.ui?.component ?? components?.object ?? ObjectDefault : React.Fragment;
-
-  return (
-    <Component {...R.omit(uiSchema?.ui ?? {}, ['component'])}>
-      {Object.entries(schema.shape).map(([thisName, thisSchema]) => {
+  const children = React.useMemo(
+    () =>
+      Object.entries(schema.shape).map(([thisName, thisSchema]) => {
         const childName = name ? [name, thisName].join('.') : thisName;
 
         return (
@@ -551,7 +545,27 @@ function ZodObjectComponent({
             uiSchema={uiSchema ? uiSchema[thisName] : undefined}
           />
         );
-      })}
+      }),
+    [name, schema.shape, uiSchema, value]
+  );
+
+  if (!isVisible) {
+    return null;
+  }
+
+  // Don't create a div as the first child of the form
+  if (R.isNil(name)) {
+    return <React.Fragment>{children}</React.Fragment>;
+  }
+
+  const Component = uiSchema?.ui?.component ?? components?.object ?? ObjectDefault;
+
+  return (
+    <Component
+      description={schema.description ?? uiSchema?.ui?.description}
+      {...R.omit(uiSchema?.ui ?? {}, ['component'])}
+    >
+      {children}
     </Component>
   );
 }
@@ -703,6 +717,7 @@ type UiPropertiesBase<Value, RootSchema extends object> = {
   component?: (props: ResolveComponentProps<Value | undefined>) => JSX.Element;
   autoFocus?: boolean;
   cond?: (data: PartialDeep<RootSchema>) => boolean;
+  description?: React.ReactNode;
 } & (Value extends boolean
   ? UiPropertiesBoolean
   : Value extends string
@@ -711,7 +726,7 @@ type UiPropertiesBase<Value, RootSchema extends object> = {
   ? UiPropertiesNumber
   : Value extends Date
   ? UiPropertiesDate
-  : never);
+  : object);
 
 type UiPropertiesNumber = object;
 
@@ -738,15 +753,24 @@ type UiPropertiesMultiChoice<Schema extends string, RootSchema extends object> =
   component?: (props: IMultiChoiceDefaultProps) => JSX.Element;
 };
 
+// These are the properties for non-leaf nodes such as array, object
+type UiPropertiesCompoundInner<Schema extends object, RootSchema extends object> = {
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  cond?: (data: PartialDeep<RootSchema>) => boolean;
+  component?: (props: ResolveComponentProps<Schema>) => JSX.Element;
+};
+
+export type UiPropertiesCompound<Schema extends object, RootSchema extends object> = Omit<
+  UiPropertiesCompoundInner<Schema, RootSchema>,
+  'cond' | 'component'
+>;
+
 type UiPropertiesObject<Schema extends object, RootSchema extends object> = UiSchemaInner<
   Schema,
   RootSchema
 > & {
-  ui?: {
-    title?: React.ReactNode;
-    component?: (props: IObjectDefaultProps) => JSX.Element;
-    cond?: (data: PartialDeep<RootSchema>) => boolean;
-  };
+  ui?: UiPropertiesCompoundInner<Schema, RootSchema>;
 };
 
 /**
@@ -761,11 +785,8 @@ type UiPropertiesArray<Schema extends Array<any>, RootSchema extends object> = (
         ui?: Omit<Required<UiPropertiesObject<El, RootSchema>>['ui'], 'cond'>;
       };
     }
-  : { element?: Omit<UiPropertiesBase<Schema[0], RootSchema>, 'cond'> }) & {
-  title?: React.ReactNode;
-  component?: (props: IArrayDefaultProps) => JSX.Element;
-  cond?: (data: PartialDeep<RootSchema>) => boolean;
-};
+  : { element?: Omit<UiPropertiesBase<Schema[0], RootSchema>, 'cond'> }) &
+  UiPropertiesCompoundInner<Schema, RootSchema>;
 
 type ResolveArrayUiProperties<Schema extends Array<string>, RootSchema extends object> = Schema extends Array<
   infer El extends string

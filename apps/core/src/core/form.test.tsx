@@ -399,4 +399,94 @@ describe('Form', function () {
 
     expect(screen.getByTestId(testId)).toBeInTheDocument();
   });
+
+  test('renders object description from schema', async function () {
+    const DESCRIPTION = 'DESCRIPTION';
+    const schema = z.object({
+      address: z
+        .object({
+          street: z.string()
+        })
+        .describe(DESCRIPTION)
+    });
+
+    const screen = render(<Form schema={schema} />);
+
+    expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
+  });
+
+  test('renders object description from uiSchema', async function () {
+    const DESCRIPTION = 'DESCRIPTION';
+    const schema = z.object({
+      address: z.object({
+        street: z.string()
+      })
+    });
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          address: {
+            ui: {
+              description: DESCRIPTION
+            }
+          }
+        }}
+      />
+    );
+
+    expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
+  });
+
+  test('renders array description from schema', async function () {
+    const DESCRIPTION = 'DESCRIPTION';
+    const schema = z.object({
+      addresses: z.array(z.string()).describe(DESCRIPTION)
+    });
+
+    const screen = render(<Form schema={schema} />);
+
+    expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
+  });
+
+  test('renders array description from uiSchema', async function () {
+    const DESCRIPTION = 'DESCRIPTION';
+    const schema = z.object({
+      addresses: z.array(z.string())
+    });
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          addresses: {
+            description: DESCRIPTION
+          }
+        }}
+      />
+    );
+
+    expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
+  });
+
+  test('renders leaf description from ui schema', async function () {
+    const DESCRIPTION = 'DESCRIPTION';
+    const schema = z.object({
+      name: z.string()
+    });
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          name: {
+            description: DESCRIPTION
+          }
+        }}
+      />
+    );
+
+    expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
+  });
 });

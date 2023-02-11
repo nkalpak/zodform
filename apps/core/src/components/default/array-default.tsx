@@ -1,13 +1,13 @@
 import React from 'react';
+import { UiPropertiesCompound } from '../../core/form';
 
-export interface IArrayDefaultProps {
+export interface IArrayDefaultProps extends UiPropertiesCompound<any, any> {
   children: React.ReactNode[];
   onAdd: () => void;
   onRemove: (index: number) => void;
-  title?: React.ReactNode;
 }
 
-export function ArrayDefault({ children, onAdd, onRemove, title }: IArrayDefaultProps) {
+export function ArrayDefault({ children, onAdd, onRemove, title, description }: IArrayDefaultProps) {
   return (
     <React.Fragment>
       {title}
@@ -24,6 +24,8 @@ export function ArrayDefault({ children, onAdd, onRemove, title }: IArrayDefault
       <button type="button" onClick={onAdd}>
         +
       </button>
+
+      {description}
     </React.Fragment>
   );
 }
