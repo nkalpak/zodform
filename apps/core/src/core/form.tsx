@@ -1045,7 +1045,7 @@ function flattenErrorsToZodIssues(errors: ErrorsMap): zod.ZodIssue[] {
 export function Form<Schema extends FormSchema>(props: IFormProps<Schema>) {
   useUncontrolledToControlledWarning(props.value);
 
-  if (R.isNil(props.schema)) {
+  if (R.isNil(props.value)) {
     return <UncontrolledForm {...props} />;
   }
 
