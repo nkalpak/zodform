@@ -1,7 +1,7 @@
 import React from 'react';
 import { UiPropertiesCompound } from '../../core/form';
 
-export interface IObjectDefaultProps extends UiPropertiesCompound<any, any> {
+export interface IObjectDefaultProps extends UiPropertiesCompound<any> {
   children: React.ReactNode[] | React.ReactNode;
 }
 

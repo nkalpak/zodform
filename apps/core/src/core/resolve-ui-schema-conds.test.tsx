@@ -128,7 +128,14 @@ describe('resolveUiSchemaConds', function () {
           },
           fullName: {
             ui: {
-              component: ObjectMantineRows
+              component: (props) => {
+                return (
+                  <ObjectMantineRows {...props}>
+                    {props.children.firstName}
+                    {props.children.lastName}
+                  </ObjectMantineRows>
+                );
+              }
             },
             firstName: {
               label: 'First name'

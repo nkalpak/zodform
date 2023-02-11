@@ -1,36 +1,18 @@
 import React from 'react';
 import { z } from 'zod';
-import { IObjectDefaultProps, ObjectDefault } from '../components/default/object-default';
 import { EnumDefault } from '../components/default/enum-default';
 import { Form, FormUiSchema } from '../core/form';
 
 export function ConferenceRegistration() {
   const [liveValidate, setLiveValidate] = React.useState(false);
 
-  const PersonComponent = React.useCallback((props: IObjectDefaultProps) => {
-    return (
-      <ObjectDefault {...props}>
-        <div
-          style={{
-            display: 'grid',
-            gap: 16
-          }}
-        >
-          {props.children}
-        </div>
-      </ObjectDefault>
-    );
-  }, []);
-
   const [schema] = React.useState(() =>
     z.object({
       people: z
         .array(
           z.object({
-            fullName: z.object({
-              firstName: z.string().min(1, 'First name is required'),
-              lastName: z.string().min(1, 'Last name is required')
-            }),
+            firstName: z.string().min(1, 'First name is required'),
+            lastName: z.string().min(1, 'Last name is required'),
             email: z.string().email().describe('myname@example.com'),
             phoneNumber: z.string().describe('e.g. "+1 555 555 5555"')
           })
@@ -53,24 +35,28 @@ export function ConferenceRegistration() {
       element: {
         ui: {
           title: 'Attendee',
-          component: PersonComponent
-        },
-        fullName: {
-          ui: {
-            component: ObjectDefault
-          },
-          firstName: {
-            label: 'First name'
-          },
-          lastName: {
-            label: 'Last name'
+          component: ({ children, title }) => {
+            return (
+              <div>
+                <h3>{title}</h3>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px'
+                  }}
+                >
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    {children.firstName}
+                    {children.lastName}
+                  </div>
+                  {children.email}
+                  {children.phoneNumber}
+                </div>
+              </div>
+            );
           }
-        },
-        email: {
-          label: 'Email'
-        },
-        phoneNumber: {
-          label: 'Phone number'
         }
       }
     },
