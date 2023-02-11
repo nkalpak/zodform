@@ -822,9 +822,12 @@ type UiSchemaInner<Schema extends object, RootSchema extends object> = {
 };
 
 export type FormUiSchema<Schema extends FormSchema> = UiSchemaInner<zod.infer<Schema>, zod.infer<Schema>>;
-export type FormValue<Schema extends FormSchema> = zod.infer<Schema>;
-
+export type FormValue<Schema extends FormSchema> = PartialDeep<zod.infer<Schema>>;
 export type FormSchema = AnyZodObject | ZodEffects<any>;
+export type FormOnChange<Schema extends FormSchema> = (
+  updater: (oldValue: FormValue<Schema>) => FormValue<Schema>
+) => void;
+
 type FormChildren = (props: { errors: zod.ZodIssue[] }) => JSX.Element;
 type FormConds = Record<string, CondResult>;
 
@@ -832,7 +835,8 @@ export interface IFormProps<Schema extends FormSchema> {
   schema: Schema;
   uiSchema?: FormUiSchema<Schema>;
   onSubmit?: (value: zod.infer<Schema>) => void;
-  value?: zod.infer<Schema>;
+  onChange?: FormOnChange<Schema>;
+  value?: FormValue<Schema>;
   defaultValues?: zod.infer<Schema>;
   components?: {
     string?: (props: IStringDefaultProps) => JSX.Element;
@@ -964,6 +968,26 @@ function validate(
 
 const STABLE_NO_ERRORS = {};
 
+function formNextValue(prev: any, event: ChangePayload): any {
+  return produce(prev, (draft: any) => {
+    if (event.op === 'update') {
+      set(draft, event.path, event.value);
+    } else {
+      unset(draft, event.path, {
+        arrayBehavior: 'setToUndefined'
+      });
+    }
+  });
+}
+
+function formArrayRemove(prev: any, path: ComponentPath): any {
+  return produce(prev, (draft: any) => {
+    unset(draft, path, {
+      arrayBehavior: 'delete'
+    });
+  });
+}
+
 function formReducer(
   state: IFormReducerState = {
     formData: {},
@@ -975,15 +999,7 @@ function formReducer(
   if (action.type === 'onChange') {
     const { uiSchema, event, liveValidate } = action.payload;
 
-    const nextFormData = produce(state.formData, (draft) => {
-      if (event.op === 'update') {
-        set(draft, event.path, event.value);
-      } else {
-        unset(draft, event.path, {
-          arrayBehavior: 'setToUndefined'
-        });
-      }
-    });
+    const nextFormData = formNextValue(state.formData, event);
 
     const result = liveValidate ? validate(nextFormData, action.payload.schema, uiSchema) : undefined;
 
@@ -996,11 +1012,7 @@ function formReducer(
   }
 
   if (action.type === 'arrayRemove') {
-    const nextFormData = produce(state.formData, (draft) => {
-      unset(draft, action.payload.path, {
-        arrayBehavior: 'delete'
-      });
-    });
+    const nextFormData = formArrayRemove(state.formData, action.payload.path);
 
     const result = action.payload.liveValidate ? validate(nextFormData, action.payload.schema) : undefined;
 
@@ -1030,7 +1042,17 @@ function flattenErrorsToZodIssues(errors: ErrorsMap): zod.ZodIssue[] {
   return R.pipe(errors, R.values, R.flatten());
 }
 
-export function Form<Schema extends FormSchema>({
+export function Form<Schema extends FormSchema>(props: IFormProps<Schema>) {
+  useUncontrolledToControlledWarning(props.value);
+
+  if (R.isNil(props.schema)) {
+    return <UncontrolledForm {...props} />;
+  }
+
+  return <ControlledForm {...props} />;
+}
+
+function UncontrolledForm<Schema extends FormSchema>({
   schema,
   uiSchema,
 
@@ -1057,8 +1079,6 @@ export function Form<Schema extends FormSchema>({
     };
   });
   const { formData, conds, errors } = state!;
-
-  useUncontrolledToControlledWarning(value);
 
   const handleSubmit = React.useCallback(
     (value: typeof formData) => {
@@ -1137,6 +1157,102 @@ export function Form<Schema extends FormSchema>({
         }}
       >
         <ZodAnyComponent uiSchema={uiSchema} value={value ?? formData} schema={objectSchema} />
+      </FormContextProvider>
+
+      {children ? (
+        children({ errors: flattenErrorsToZodIssues(errors) })
+      ) : (
+        <button type="submit">Submit</button>
+      )}
+    </form>
+  );
+}
+
+function ControlledForm<Schema extends FormSchema>({
+  schema,
+  value,
+  components,
+  onChange,
+  onErrorsChange,
+  uiSchema,
+  liveValidate,
+  title,
+  children,
+  onSubmit
+}: IFormProps<Schema>) {
+  const [errors, setErrors] = React.useState<ErrorsMap>(STABLE_NO_ERRORS);
+  const [conds, setConds] = React.useState<FormConds>(resolveNextFormConds(value, uiSchema ?? {}));
+
+  const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
+
+  const handleValidateResult = React.useCallback(
+    (result: ReturnType<typeof validate>) => {
+      if (result.isValid) {
+        setErrors(STABLE_NO_ERRORS);
+        onErrorsChange?.([]);
+      } else {
+        setErrors(result.errors);
+        onErrorsChange?.(flattenErrorsToZodIssues(result.errors));
+      }
+    },
+    [onErrorsChange]
+  );
+
+  const handleSubmit = React.useCallback(() => {
+    const result = validate(value, schema, uiSchema ?? {});
+    handleValidateResult(result);
+    if (result.isValid) {
+      onSubmit?.(value);
+    }
+  }, [handleValidateResult, onSubmit, schema, uiSchema, value]);
+
+  const handleChange: OnChange = React.useCallback(
+    (event) => {
+      onChange?.((oldValue) => formNextValue(oldValue, event));
+    },
+    [onChange]
+  );
+
+  const onArrayRemove = React.useCallback(
+    (path: ComponentPath) => {
+      onChange?.((oldValue) => formArrayRemove(oldValue, path));
+    },
+    [onChange]
+  );
+
+  React.useEffect(() => {
+    if (liveValidate) {
+      handleValidateResult(validate(value, schema, uiSchema ?? {}));
+    }
+  }, [handleValidateResult, liveValidate, schema, uiSchema, value]);
+
+  React.useEffect(() => {
+    setConds(resolveNextFormConds(value, uiSchema ?? {}));
+  }, [uiSchema, value]);
+
+  return (
+    <form
+      style={{
+        display: 'grid',
+        gap: 32
+      }}
+      onSubmit={(event) => {
+        event.preventDefault();
+        handleSubmit();
+      }}
+    >
+      {title}
+
+      <FormContextProvider
+        value={{
+          conds,
+          errors,
+          onChange: handleChange,
+          components,
+          onArrayRemove
+        }}
+      >
+        <ZodAnyComponent uiSchema={uiSchema} value={value} schema={objectSchema} />
       </FormContextProvider>
 
       {children ? (
