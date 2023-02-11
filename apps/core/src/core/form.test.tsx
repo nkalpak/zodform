@@ -489,4 +489,26 @@ describe('Form', function () {
 
     expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
   });
+
+  test('renders description on optionals', async function () {
+    const DESCRIPTION = 'DESCRIPTION';
+    const schema = z.object({
+      name: z.string().optional().describe(DESCRIPTION)
+    });
+
+    const screen = render(<Form schema={schema} />);
+
+    expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
+  });
+
+  test('renders description on defaults', async function () {
+    const DESCRIPTION = 'DESCRIPTION';
+    const schema = z.object({
+      name: z.string().default('test').describe(DESCRIPTION)
+    });
+
+    const screen = render(<Form schema={schema} />);
+
+    expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
+  });
 });

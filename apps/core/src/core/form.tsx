@@ -34,6 +34,11 @@ import { PartialDeep } from 'type-fest';
 import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
 import { createContext } from '../utils/create-context';
 import { DateDefault, IDateDefaultProps } from '../components/default/date-default';
+import { mergeParentChildZodProperties } from './merge-parent-child-zod-properties';
+
+function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
+  return schema._def.description;
+}
 
 type ComponentName = string;
 type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
@@ -147,7 +152,7 @@ const ZodStringComponentInner = React.memo(function ZodStringComponentInner({
       onChange={handleChange}
       name={name}
       label={uiSchema?.label ?? name}
-      description={schema.description}
+      description={zodSchemaDescription(schema)}
       errorMessage={errorMessage}
       isRequired={isRequired}
       {...getLeafPropsFromUiSchema(uiSchema)}
@@ -207,7 +212,7 @@ const ZodEnumComponentInner = React.memo(function ZodEnumComponentInner({
       errorMessage={errorMessage}
       label={uiSchema?.label ?? name}
       name={name}
-      description={schema.description}
+      description={zodSchemaDescription(schema)}
       onChange={handleChange}
       value={value}
       isRequired={isRequired}
@@ -277,7 +282,7 @@ const ZodNumberComponentInner = React.memo(function ZodNumberComponentInner({
       onChange={handleChange}
       name={name}
       label={uiSchema?.label ?? name}
-      description={schema.description}
+      description={zodSchemaDescription(schema)}
       errorMessage={errorMessage}
       isRequired={isRequired}
       min={schema.minValue ?? undefined}
@@ -338,7 +343,7 @@ const ZodBooleanComponentInner = React.memo(function ZodBooleanComponentInner({
       onChange={handleChange}
       name={name}
       label={uiSchema?.label ?? name}
-      description={schema.description}
+      description={zodSchemaDescription(schema)}
       errorMessage={errorMessage}
       isRequired={isRequired}
       {...getLeafPropsFromUiSchema(uiSchema)}
@@ -398,7 +403,7 @@ const ZodDateComponentInner = React.memo(function ZodDateComponentInner({
       onChange={handleChange}
       name={name}
       label={uiSchema?.label ?? name}
-      description={schema.description}
+      description={zodSchemaDescription(schema)}
       errorMessage={errorMessage}
       isRequired={isRequired}
       {...getLeafPropsFromUiSchema(uiSchema)}
@@ -488,7 +493,7 @@ function ZodArrayComponent(props: IZodArrayComponentProps) {
 
   return (
     <Component
-      description={schema.description ?? uiProps.description}
+      description={zodSchemaDescription(schema) ?? uiProps.description}
       title={uiProps.title}
       onRemove={(index) => {
         onArrayRemove(componentNameDeserialize(`${name}[${index}]`));
@@ -562,7 +567,7 @@ function ZodObjectComponent({
 
   return (
     <Component
-      description={schema.description ?? uiSchema?.ui?.description}
+      description={zodSchemaDescription(schema) ?? uiSchema?.ui?.description}
       {...R.omit(uiSchema?.ui ?? {}, ['component'])}
     >
       {children}
@@ -661,7 +666,7 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
     return (
       <ZodAnyComponent
         uiSchema={uiSchema}
-        schema={schema._def.innerType}
+        schema={mergeParentChildZodProperties(schema)}
         name={name}
         isRequired={false}
         value={value}
@@ -673,7 +678,7 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
     return (
       <ZodAnyComponent
         uiSchema={uiSchema}
-        schema={schema._def.innerType}
+        schema={mergeParentChildZodProperties(schema)}
         name={name}
         isRequired={isRequired}
         value={value}
