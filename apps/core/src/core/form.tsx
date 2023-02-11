@@ -807,6 +807,7 @@ export interface IFormProps<Schema extends FormSchema> {
   uiSchema?: FormUiSchema<Schema>;
   onSubmit?: (value: zod.infer<Schema>) => void;
   value?: zod.infer<Schema>;
+  defaultValues?: zod.infer<Schema>;
   components?: {
     string?: (props: IStringDefaultProps) => JSX.Element;
     number?: (props: INumberDefaultProps) => JSX.Element;
@@ -1009,6 +1010,7 @@ export function Form<Schema extends FormSchema>({
 
   onSubmit,
   value,
+  defaultValues,
 
   components,
   title,
@@ -1020,7 +1022,7 @@ export function Form<Schema extends FormSchema>({
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
 
   const [state, dispatch] = React.useReducer(formReducer, undefined, () => {
-    const formData = formDefaultValueFromSchema(objectSchema);
+    const formData = defaultValues ?? formDefaultValueFromSchema(objectSchema);
     const conds = resolveNextFormConds(formData, uiSchema ?? {});
     return {
       formData,
