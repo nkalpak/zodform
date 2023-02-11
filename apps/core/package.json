@@ -2,7 +2,7 @@
   "name": "@zodform/core",
   "author": "nkalpak",
   "private": false,
-  "version": "0.0.8",
+  "version": "0.0.9",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "ts:watch": "tsc --watch",
-    "stories": "ladle serve"
+    "stories": "ladle serve",
+    "new-version": "rush build --to @zodform/core && pnpm publish --access public"
   },
   "dependencies": {
     "immer": "^9.0.19",
