@@ -858,6 +858,8 @@ type UiSchemaInner<Schema extends object, RootSchema extends object> = {
 };
 
 export type FormUiSchema<Schema extends FormSchema> = UiSchemaInner<
+  // We want to work with the pure type, undefined/null
+  // doesn't really matter when trying to infer the UI schema
   RequiredDeep<zod.infer<Schema>>,
   zod.infer<Schema>
 >;
