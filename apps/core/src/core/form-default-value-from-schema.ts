@@ -5,6 +5,7 @@ import {
   isZodBoolean,
   isZodDate,
   isZodDefault,
+  isZodEffects,
   isZodEnum,
   isZodNumber,
   isZodObject,
@@ -55,6 +56,10 @@ export function formDefaultValueFromSchema(schema: ZodObject<any>): Record<strin
         }
       }
       return obj;
+    }
+    if (isZodEffects(schema)) {
+      debugger;
+      return iterator(schema._def.schema);
     }
     throw new Error(`Unsupported schema type: ${schema}`);
   }
