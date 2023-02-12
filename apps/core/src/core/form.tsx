@@ -194,8 +194,17 @@ const ZodEnumComponentInner = React.memo(function ZodEnumComponentInner({
   errorMessage
 }: IZodEnumComponentProps & IZodInnerComponentProps) {
   const handleChange = React.useCallback(
-    function handleChange(value?: string) {
-      onChange({
+    function handleChange(value = '') {
+      const isEmpty = value === '';
+
+      if (isEmpty) {
+        return onChange({
+          op: 'remove',
+          path: componentNameDeserialize(name)
+        });
+      }
+
+      return onChange({
         op: 'update',
         value,
         path: componentNameDeserialize(name)
