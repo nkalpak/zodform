@@ -4,8 +4,8 @@ import React from 'react';
 import { z } from 'zod';
 import { components } from '../components/components';
 import { PasswordMantine, TextareaMantine } from '../components/string-mantine';
-import { Form, FormUiSchema } from '@zodform/core';
-import { ObjectMantine } from '../components/object-mantine';
+import { Form, FormUiSchema, IObjectDefaultProps } from '@zodform/core';
+import { ObjectMantine, ObjectMantineRows } from '../components/object-mantine';
 import { MultiChoiceMantine } from '../components/multi-choice-mantine';
 import { EnumMantineRadio } from '../components/enum-mantine';
 import { SliderMantine } from '../components/number-mantine';
@@ -120,23 +120,6 @@ const dayOptions = R.range(1, 32).map((n) => n.toString()) as [string, ...string
 
 const yearOptions = R.range(1980, 2021).map((n) => n.toString()) as [string, ...string[]];
 
-function Row({ children }: { children: React.ReactNode | React.ReactNode[] }) {
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        gap: 8,
-        '& > *': {
-          flex: 1
-        }
-      }}
-    >
-      {children}
-    </Box>
-  );
-}
-
 export function StudentRegistration() {
   const [schema] = React.useState(() =>
     z.object({
@@ -179,6 +162,27 @@ export function StudentRegistration() {
     })
   );
 
+  const AddressComponent = React.useCallback(
+    (props: IObjectDefaultProps) => (
+      <ObjectMantine {...props}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 8,
+
+            '& :first-child, & :last-child': {
+              gridColumn: 'span 2'
+            }
+          }}
+        >
+          {props.children}
+        </Box>
+      </ObjectMantine>
+    ),
+    []
+  );
+
   const [uiSchema] = React.useState<FormUiSchema<typeof schema>>(() => ({
     studentName: {
       firstName: {
@@ -192,17 +196,7 @@ export function StudentRegistration() {
       },
       ui: {
         title: 'Student name',
-        component: (props) => {
-          return (
-            <ObjectMantine {...props}>
-              <Row>
-                {props.children.firstName}
-                {props.children.middleName}
-                {props.children.lastName}
-              </Row>
-            </ObjectMantine>
-          );
-        }
+        component: ObjectMantineRows
       }
     },
 
@@ -218,15 +212,7 @@ export function StudentRegistration() {
       },
       ui: {
         title: 'Birth date',
-        component: (props) => (
-          <ObjectMantine {...props}>
-            <Row>
-              {props.children.day}
-              {props.children.month}
-              {props.children.year}
-            </Row>
-          </ObjectMantine>
-        )
+        component: ObjectMantineRows
       }
     },
 
@@ -237,20 +223,7 @@ export function StudentRegistration() {
     address: {
       ui: {
         title: 'Address',
-        component: (props) => {
-          return (
-            <ObjectMantine {...props}>
-              <Row>
-                {props.children.city}
-                {props.children.street}
-              </Row>
-              <Row>
-                {props.children.state}
-                {props.children.zip}
-              </Row>
-            </ObjectMantine>
-          );
-        }
+        component: AddressComponent
       },
       state: {
         label: 'State'
@@ -361,14 +334,7 @@ export function DonationForm() {
       },
       ui: {
         title: 'Full name',
-        component: (props) => (
-          <ObjectMantine {...props}>
-            <Row>
-              {props.children.firstName}
-              {props.children.lastName}
-            </Row>
-          </ObjectMantine>
-        )
+        component: ObjectMantineRows
       }
     },
 
@@ -422,13 +388,30 @@ export function DonationForm() {
 }
 
 export function ConferenceRegistration() {
+  const PersonComponent = React.useCallback((props: IObjectDefaultProps) => {
+    return (
+      <ObjectMantine {...props}>
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 8
+          }}
+        >
+          {props.children}
+        </Box>
+      </ObjectMantine>
+    );
+  }, []);
+
   const [schema] = React.useState(() =>
     z.object({
       people: z
         .array(
           z.object({
-            firstName: z.string().min(1, 'First name is required'),
-            lastName: z.string().min(1, 'Last name is required'),
+            fullName: z.object({
+              firstName: z.string().min(1, 'First name is required'),
+              lastName: z.string().min(1, 'Last name is required')
+            }),
             email: z.string().email().describe('myname@example.com'),
             phoneNumber: z.string().describe('e.g. "+1 555 555 5555"')
           })
@@ -447,39 +430,18 @@ export function ConferenceRegistration() {
       element: {
         ui: {
           title: 'Attendee',
-          component: (props) => {
-            return (
-              <ObjectMantine {...props}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '12px'
-                    }}
-                  >
-                    {props.children.firstName}
-                    {props.children.lastName}
-                  </Box>
-                  {props.children.email}
-                  {props.children.phoneNumber}
-                </Box>
-              </ObjectMantine>
-            );
+          component: PersonComponent
+        },
+        fullName: {
+          ui: {
+            component: ObjectMantineRows
+          },
+          firstName: {
+            label: 'First name'
+          },
+          lastName: {
+            label: 'Last name'
           }
-        },
-
-        firstName: {
-          label: 'First name'
-        },
-        lastName: {
-          label: 'Last name'
         },
         email: {
           label: 'Email'

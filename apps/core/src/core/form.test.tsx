@@ -220,7 +220,7 @@ describe('Form', function () {
               title: 'Address',
               component: (props) => (
                 <ObjectDefault {...props}>
-                  {props.children.street} {props.children.city} <span data-testid={testId}>h</span>
+                  {props.children} <span data-testid={testId}>h</span>
                 </ObjectDefault>
               )
             }
@@ -266,7 +266,7 @@ describe('Form', function () {
                 title: 'Person',
                 component: (props) => (
                   <ObjectDefault {...props}>
-                    {props.children.age} <span data-testid={personId}>h</span>
+                    {props.children} <span data-testid={personId}>h</span>
                   </ObjectDefault>
                 )
               }
