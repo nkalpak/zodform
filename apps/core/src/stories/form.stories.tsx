@@ -17,7 +17,8 @@ export function ConferenceRegistration() {
             phoneNumber: z.string().describe('e.g. "+1 555 555 5555"')
           })
         )
-        .min(1, 'Please add at least one person'),
+        .min(1, 'Please add at least one person')
+        .optional(),
 
       products: z.array(z.enum(['tShirt', 'coffeeCup'] as const)).min(1, 'Please select a product'),
       amount: z
