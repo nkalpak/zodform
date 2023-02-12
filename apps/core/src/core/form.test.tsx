@@ -511,4 +511,19 @@ describe('Form', function () {
 
     expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
   });
+
+  test('renders leaf with an effect', async function () {
+    const DESCRIPTION = 'DESCRIPTION';
+    const schema = z.object({
+      amount: z
+        .enum(['1', '2', '3'] as const)
+        .transform((x) => parseInt(x))
+        .describe(DESCRIPTION)
+    });
+
+    const screen = render(<Form schema={schema} />);
+
+    expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
+    expect(screen.getByText('amount')).toBeInTheDocument();
+  });
 });

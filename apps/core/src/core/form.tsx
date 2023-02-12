@@ -34,7 +34,7 @@ import { PartialDeep } from 'type-fest';
 import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
 import { createContext } from '../utils/create-context';
 import { DateDefault, IDateDefaultProps } from '../components/default/date-default';
-import { mergeParentChildZodProperties } from './merge-parent-child-zod-properties';
+import { mergeZodOuterInnerType } from './merge-zod-outer-inner-type';
 
 function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
   return schema._def.description;
@@ -208,7 +208,7 @@ const ZodEnumComponentInner = React.memo(function ZodEnumComponentInner({
 
   return (
     <Component
-      options={schema.options}
+      options={schema._def.values}
       errorMessage={errorMessage}
       label={uiSchema?.label ?? name}
       name={name}
@@ -677,7 +677,7 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
     return (
       <ZodAnyComponent
         uiSchema={uiSchema}
-        schema={mergeParentChildZodProperties(schema)}
+        schema={mergeZodOuterInnerType(schema)}
         name={name}
         isRequired={false}
         value={value}
@@ -689,7 +689,7 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
     return (
       <ZodAnyComponent
         uiSchema={uiSchema}
-        schema={mergeParentChildZodProperties(schema)}
+        schema={mergeZodOuterInnerType(schema)}
         name={name}
         isRequired={isRequired}
         value={value}
@@ -702,6 +702,18 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
       <ZodDateComponent
         uiSchema={uiSchema}
         schema={schema}
+        name={name}
+        isRequired={isRequired}
+        value={value}
+      />
+    );
+  }
+
+  if (isZodEffects(schema)) {
+    return (
+      <ZodAnyComponent
+        uiSchema={uiSchema}
+        schema={mergeZodOuterInnerType(schema)}
         name={name}
         isRequired={isRequired}
         value={value}
@@ -957,6 +969,7 @@ function validate(
 ):
   | {
       isValid: true;
+      data: any;
     }
   | {
       isValid: false;
@@ -970,7 +983,7 @@ function validate(
   );
 
   if (parsed.success) {
-    return { isValid: true };
+    return { isValid: true, data: parsed.data };
   } else {
     return {
       isValid: false,
@@ -1101,7 +1114,7 @@ function UncontrolledForm<Schema extends FormSchema>({
         dispatch({
           type: 'submitSuccess'
         });
-        onSubmit?.(value);
+        onSubmit?.(result.data);
       } else {
         dispatch({
           type: 'onError',
@@ -1215,7 +1228,7 @@ function ControlledForm<Schema extends FormSchema>({
     const result = validate(value, schema, uiSchema ?? {});
     handleValidateResult(result);
     if (result.isValid) {
-      onSubmit?.(value);
+      onSubmit?.(result.data);
     }
   }, [handleValidateResult, onSubmit, schema, uiSchema, value]);
 

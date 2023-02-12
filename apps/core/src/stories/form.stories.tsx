@@ -20,6 +20,11 @@ export function ConferenceRegistration() {
         .min(1, 'Please add at least one person'),
 
       products: z.array(z.enum(['tShirt', 'coffeeCup'] as const)).min(1, 'Please select a product'),
+      amount: z
+        .enum(['25000', '50000'] as const)
+        .transform((x) => parseInt(x))
+        .describe('SEK')
+        .default('25000' as const),
       paymentMethod: z.enum(['creditCard', 'payPal'] as const),
 
       paypalNumber: z.string().optional(),
