@@ -25,7 +25,11 @@ export function ConferenceRegistration() {
         .transform((x) => parseInt(x))
         .describe('SEK')
         .default('25000' as const),
-      paymentMethod: z.enum(['creditCard', 'payPal'] as const),
+
+      paymentMethod: z
+        .enum(['creditCard', 'payPal'] as const)
+        .optional()
+        .describe('A method'),
 
       paypalNumber: z.string().optional(),
 

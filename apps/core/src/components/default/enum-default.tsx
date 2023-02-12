@@ -21,7 +21,7 @@ export function EnumDefault({
   return (
     <ComponentLabel label={label}>
       <select value={value} name={name} onChange={(event) => onChange(event.target.value)}>
-        <option value={undefined}>Select</option>
+        <option value="">Select</option>
 
         {options.map((option) => {
           const label = optionLabels?.[option] ?? option;
