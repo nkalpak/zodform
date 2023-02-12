@@ -536,12 +536,13 @@ function ZodObjectComponent({
   const { isVisible } = useComponent(name ?? '');
   const { components } = useFormContext();
 
-  const children = React.useMemo(
-    () =>
-      Object.entries(schema.shape).map(([thisName, thisSchema]) => {
-        const childName = name ? [name, thisName].join('.') : thisName;
+  const children = React.useMemo(() => {
+    const result = Object.entries(schema.shape).map(([thisName, thisSchema]) => {
+      const childName = name ? [name, thisName].join('.') : thisName;
 
-        return (
+      return {
+        name: thisName,
+        component: (
           <ZodAnyComponent
             key={childName}
             name={childName}
@@ -549,10 +550,20 @@ function ZodObjectComponent({
             value={value ? value[thisName] : undefined}
             uiSchema={uiSchema ? uiSchema[thisName] : undefined}
           />
-        );
-      }),
-    [name, schema.shape, uiSchema, value]
-  );
+        )
+      };
+    });
+
+    if (uiSchema?.ui?.layout) {
+      const children: Record<string, React.ReactNode> = {};
+      for (const { name, component } of result) {
+        children[name] = component;
+      }
+      return uiSchema.ui.layout({ children });
+    }
+
+    return result.map(({ component }) => component);
+  }, [name, schema.shape, uiSchema, value]);
 
   if (!isVisible) {
     return null;
@@ -775,7 +786,9 @@ type UiPropertiesObject<Schema extends object, RootSchema extends object> = UiSc
   Schema,
   RootSchema
 > & {
-  ui?: UiPropertiesCompoundInner<Schema, RootSchema>;
+  ui?: UiPropertiesCompoundInner<Schema, RootSchema> & {
+    layout?: (props: { children: Record<keyof Schema, React.ReactNode> }) => JSX.Element;
+  };
 };
 
 /**
