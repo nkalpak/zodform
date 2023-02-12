@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render } from '@testing-library/react';
-import { Form } from './form';
+import { Form, FormUiSchema } from './form';
 import { z } from 'zod';
 import React from 'react';
 import userEvent from '@testing-library/user-event';
@@ -566,5 +566,20 @@ describe('Form', function () {
     const screen = render(<Form schema={schema} />);
 
     expect(screen.getByDisplayValue(DEFAULT)).toBeInTheDocument();
+  });
+
+  test('string array enums ui schema infers to multi choice', async function () {
+    const options: [string, ...string[]] = ['a', 'b', 'c'];
+    const schema = z.object({
+      stuff: z.enum(options)
+    });
+
+    const uiSchema: FormUiSchema<typeof schema> = {
+      stuff: {
+        optionLabels: {
+          address: 'b'
+        }
+      }
+    };
   });
 });

@@ -28,13 +28,14 @@ import { formDefaultValueFromSchema } from './form-default-value-from-schema';
 import { useUncontrolledToControlledWarning } from '../utils/use-uncontrolled-to-controlled-warning';
 import { unset } from '../utils/unset';
 import { IObjectDefaultProps, ObjectDefault } from '../components/default/object-default';
-import { IsNonUndefinedUnion, IsUnion, RequiredDeep } from '../utils/type-utils';
+import { IsNonUndefinedUnion, IsUnion } from '../utils/type-utils';
 import { IMultiChoiceDefaultProps, MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { PartialDeep } from 'type-fest';
 import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
 import { createContext } from '../utils/create-context';
 import { DateDefault, IDateDefaultProps } from '../components/default/date-default';
 import { mergeZodOuterInnerType } from './merge-zod-outer-inner-type';
+import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodObject, ZodOptional } from 'zod';
 
 function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
   return schema._def.description;
@@ -857,12 +858,44 @@ type UiSchemaInner<Schema extends object, RootSchema extends object> = {
     : UiPropertiesBase<Schema[K], RootSchema>;
 };
 
-export type FormUiSchema<Schema extends FormSchema> = UiSchemaInner<
-  // We want to work with the pure type, undefined/null
-  // doesn't really matter when trying to infer the UI schema
-  RequiredDeep<zod.infer<Schema>>,
-  zod.infer<Schema>
->;
+type ResolveArrayUiSchema<Schema extends ZodArray<any>, RootSchema extends object> = Schema extends ZodArray<
+  infer El
+>
+  ? El extends ZodEnum<any>
+    ? UiPropertiesMultiChoice<zod.infer<El>, RootSchema>
+    : UiPropertiesArray<zod.infer<Schema>, RootSchema>
+  : never;
+
+type UiSchemaZodTypeResolver<
+  Schema extends ZodFirstPartySchemaTypes,
+  RootSchema extends object
+> = Schema extends ZodOptional<infer Inner> | ZodDefault<infer Inner>
+  ? UiSchemaZodTypeResolver<Inner, RootSchema>
+  : Schema extends ZodDate
+  ? UiPropertiesBase<zod.infer<Schema>, RootSchema>
+  : Schema extends ZodBoolean
+  ? UiPropertiesBase<zod.infer<Schema>, RootSchema>
+  : Schema extends ZodObject<any>
+  ? UiPropertiesObject<zod.infer<Schema>, RootSchema>
+  : Schema extends ZodArray<any>
+  ? ResolveArrayUiSchema<Schema, RootSchema>
+  : Schema extends ZodEnum<any>
+  ? UiPropertiesEnum<zod.infer<Schema>, RootSchema>
+  : UiPropertiesBase<zod.infer<Schema>, RootSchema>;
+
+type UiSchemaInnerAlternative<
+  Schema extends FormSchema,
+  RootSchema extends object
+> = Schema extends AnyZodObject
+  ? {
+      [K in keyof Schema['shape']]: UiSchemaZodTypeResolver<Schema['shape'][K], RootSchema>;
+    }
+  : Schema extends ZodEffects<infer Inner extends AnyZodObject>
+  ? UiSchemaInnerAlternative<Inner, RootSchema>
+  : never;
+
+export type FormUiSchema<Schema extends FormSchema> = UiSchemaInnerAlternative<Schema, zod.infer<Schema>>;
+
 export type FormValue<Schema extends FormSchema> = PartialDeep<zod.infer<Schema>>;
 export type FormSchema = AnyZodObject | ZodEffects<any>;
 export type FormOnChange<Schema extends FormSchema> = (
