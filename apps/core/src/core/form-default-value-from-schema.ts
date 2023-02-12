@@ -30,7 +30,7 @@ export function formDefaultValueFromSchema(schema: ZodObject<any>): Record<strin
       return undefined;
     }
     if (isZodOptional(schema)) {
-      return undefined;
+      return R.isDefined(schema._def.innerType) ? iterator(schema._def.innerType) : undefined;
     }
     if (isZodDate(schema)) {
       return undefined;

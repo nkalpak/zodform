@@ -1,4 +1,4 @@
-import type { AnyZodObject, ZodFirstPartySchemaTypes, ZodString, ZodEffects } from 'zod';
+import type { AnyZodObject, ZodEffects, ZodFirstPartySchemaTypes, ZodString } from 'zod';
 import * as zod from 'zod';
 import * as R from 'remeda';
 import React from 'react';
@@ -28,7 +28,7 @@ import { formDefaultValueFromSchema } from './form-default-value-from-schema';
 import { useUncontrolledToControlledWarning } from '../utils/use-uncontrolled-to-controlled-warning';
 import { unset } from '../utils/unset';
 import { IObjectDefaultProps, ObjectDefault } from '../components/default/object-default';
-import { IsNonUndefinedUnion } from '../utils/type-utils';
+import { IsNonUndefinedUnion, IsUnion, RequiredDeep } from '../utils/type-utils';
 import { IMultiChoiceDefaultProps, MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { PartialDeep } from 'type-fest';
 import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
@@ -461,6 +461,7 @@ const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComp
   return (
     <Component
       {...uiProps}
+      label={uiProps.label ?? name}
       name={name}
       errorMessage={errorMessage}
       onChange={(newValue) => {
@@ -471,7 +472,7 @@ const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComp
         });
       }}
       value={value}
-      options={schema.element.options}
+      options={schema._def.type.options}
     />
   );
 });
@@ -481,12 +482,13 @@ function ZodArrayComponent(props: IZodArrayComponentProps) {
   const { errors, isVisible } = useComponent(props.name);
 
   const { schema, name, value, uiSchema } = props;
+  const arraySchemaElement = schema._def.type;
 
   if (!isVisible) {
     return null;
   }
 
-  if (isZodEnum(schema.element)) {
+  if (isZodEnum(arraySchemaElement)) {
     return (
       <ZodArrayMultiChoiceComponent
         {...props}
@@ -511,7 +513,7 @@ function ZodArrayComponent(props: IZodArrayComponentProps) {
         onChange({
           op: 'update',
           path: componentNameDeserialize(`${name}[${value?.length ?? 0}]`),
-          value: formDefaultValueFromSchema(schema.element)
+          value: formDefaultValueFromSchema(arraySchemaElement)
         });
       }}
     >
@@ -521,7 +523,7 @@ function ZodArrayComponent(props: IZodArrayComponentProps) {
           <ZodAnyComponent
             key={uniqueName}
             name={uniqueName}
-            schema={schema.element}
+            schema={arraySchemaElement}
             value={item}
             uiSchema={uiProps.element}
           />
@@ -830,7 +832,7 @@ type UiPropertiesArray<Schema extends Array<any>, RootSchema extends object> = (
 type ResolveArrayUiProperties<Schema extends Array<string>, RootSchema extends object> = Schema extends Array<
   infer El extends string
 >
-  ? IsNonUndefinedUnion<El> extends true
+  ? IsUnion<El> extends true
     ? UiPropertiesMultiChoice<El, RootSchema>
     : UiPropertiesArray<Schema, RootSchema>
   : UiPropertiesArray<Schema, RootSchema>;
@@ -850,12 +852,17 @@ type UiSchemaInner<Schema extends object, RootSchema extends object> = {
     ? Schema[K] extends Array<any>
       ? ResolveArrayUiProperties<Schema[K], RootSchema>
       : UiPropertiesObject<Schema[K], RootSchema>
-    : IsNonUndefinedUnion<Schema[K]> extends true
+    : IsUnion<Schema[K]> extends true
     ? ResolveUnionUiProperties<Schema[K], RootSchema>
     : UiPropertiesBase<Schema[K], RootSchema>;
 };
 
-export type FormUiSchema<Schema extends FormSchema> = UiSchemaInner<zod.infer<Schema>, zod.infer<Schema>>;
+export type FormUiSchema<Schema extends FormSchema> = UiSchemaInner<
+  // We want to work with the pure type, undefined/null
+  // doesn't really matter when trying to infer the UI schema
+  RequiredDeep<zod.infer<Schema>>,
+  zod.infer<Schema>
+>;
 export type FormValue<Schema extends FormSchema> = PartialDeep<zod.infer<Schema>>;
 export type FormSchema = AnyZodObject | ZodEffects<any>;
 export type FormOnChange<Schema extends FormSchema> = (

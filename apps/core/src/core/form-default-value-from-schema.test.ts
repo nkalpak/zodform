@@ -100,4 +100,14 @@ describe('formDefaultValueFromSchema', function () {
     const result = formDefaultValueFromSchema(schema);
     expect(result).toEqual({ hobbies: [] });
   });
+
+  test('optional array should handle the min definition', function () {
+    const schema = z.object({
+      stuff: z.array(z.string()).min(1).optional()
+    });
+
+    const result = formDefaultValueFromSchema(schema);
+
+    expect(result).toEqual({ stuff: [undefined] });
+  });
 });
