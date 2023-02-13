@@ -46,17 +46,7 @@ export function ConferenceRegistration() {
       element: {
         ui: {
           title: 'Attendee',
-          component: ({ value, ...props }) => {
-            return (
-              <ObjectDefault {...props}>
-                {props.children}
-                <div>
-                  {value.firstName} {value.lastName}
-                </div>
-              </ObjectDefault>
-            );
-          },
-          layout: ({ children }) => (
+          layout: ({ children, value }) => (
             <div
               style={{
                 display: 'flex',
@@ -68,6 +58,9 @@ export function ConferenceRegistration() {
                 {children.firstName} {children.lastName}
               </div>
               {children.email} {children.phoneNumber}
+              <div>
+                Who? {value.firstName} {value.lastName}
+              </div>
             </div>
           )
         },

@@ -571,7 +571,7 @@ function ZodObjectComponent({
       for (const { name, component } of result) {
         children[name] = component;
       }
-      return uiSchema.ui.layout({ children });
+      return uiSchema.ui.layout({ children, value });
     }
 
     return result.map(({ component }) => component);
@@ -810,7 +810,10 @@ type UiPropertiesObject<Schema extends AnyZodObject, RootSchema extends object> 
   UiSchema<Schema, RootSchema>
 > & {
   ui?: UiPropertiesCompoundInner<RootSchema> & {
-    layout?: (props: { children: Record<keyof zod.infer<Schema>, React.ReactNode> }) => JSX.Element;
+    layout?: (props: {
+      children: Record<keyof zod.infer<Schema>, React.ReactNode>;
+      value: Partial<zod.infer<Schema>>;
+    }) => JSX.Element;
     component?: (
       props: ResolveComponentProps<Schema> & {
         value: Partial<zod.infer<Schema>>;
