@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, expectTypeOf, test, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { Form } from './form';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import { NumberDefault } from '../components/default/number-default';
 import { MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { StringDefault } from '../components/default/string-default';
 import { DateDefault } from '../components/default/date-default';
+import { IEnumDefaultProps } from '../components/default/enum-default';
 
 function renderSimpleArray() {
   const user = userEvent.setup();
@@ -525,6 +526,68 @@ describe('Form', function () {
 
     expect(screen.getByText(DESCRIPTION)).toBeInTheDocument();
     expect(screen.getByText('amount')).toBeInTheDocument();
+  });
+
+  test('renders multi choice with optional', async function () {
+    const schema = z.object({
+      fruits: z.array(z.enum(['apple', 'banana', 'citrus'])).optional()
+    });
+
+    const screen = render(<Form schema={schema} />);
+
+    expect(screen.getByText('fruits')).toBeInTheDocument();
+  });
+
+  test('renders array with min when optional', async function () {
+    const schema = z.object({
+      people: z.array(z.string()).min(1).optional()
+    });
+
+    const TITLE = 'TITLE';
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          people: {
+            title: TITLE
+          }
+        }}
+      />
+    );
+
+    expect(screen.getAllByText(TITLE)).toHaveLength(1);
+  });
+
+  test('renders array with default', async function () {
+    const DEFAULT = 'test';
+    const schema = z.object({
+      people: z.array(z.string()).default([DEFAULT])
+    });
+
+    const screen = render(<Form schema={schema} />);
+
+    expect(screen.getByDisplayValue(DEFAULT)).toBeInTheDocument();
+  });
+
+  test('string enum ui schema type', async function () {
+    const things: [string, ...string[]] = ['a', 'b', 'c'];
+    const schema = z.object({
+      stuff: z.enum(things)
+    });
+
+    render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          stuff: {
+            component: (props) => {
+              expectTypeOf(props).toMatchTypeOf<IEnumDefaultProps>();
+              return <React.Fragment />;
+            }
+          }
+        }}
+      />
+    );
   });
 
   test('renders multi choice with optional', async function () {
