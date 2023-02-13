@@ -2,7 +2,6 @@ import React from 'react';
 import { z } from 'zod';
 import { EnumDefault } from '../components/default/enum-default';
 import { Form, FormUiSchema } from '../core/form';
-import { ObjectDefault } from '../components/default/object-default';
 
 export function ConferenceRegistration() {
   const [liveValidate, setLiveValidate] = React.useState(false);
@@ -46,7 +45,7 @@ export function ConferenceRegistration() {
       element: {
         ui: {
           title: 'Attendee',
-          layout: ({ children, value }) => (
+          layout: ({ children, value, onChange }) => (
             <div
               style={{
                 display: 'flex',
@@ -54,6 +53,18 @@ export function ConferenceRegistration() {
                 gap: 12
               }}
             >
+              <button
+                type="button"
+                onClick={() => {
+                  onChange((old) => ({
+                    ...old,
+                    firstName: 'John',
+                    lastName: 'Doe'
+                  }));
+                }}
+              >
+                Do
+              </button>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 {children.firstName} {children.lastName}
               </div>

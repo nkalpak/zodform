@@ -546,7 +546,20 @@ function ZodObjectComponent({
   name?: string;
 }) {
   const { isVisible } = useComponent(name ?? '');
-  const { components } = useFormContext();
+  const { components, onChange } = useFormContext();
+
+  const handleChange = React.useCallback(
+    (updater: (old: any) => any) => {
+      if (name) {
+        onChange({
+          op: 'update',
+          path: componentNameDeserialize(name),
+          value: updater(value)
+        });
+      }
+    },
+    [name, onChange, value]
+  );
 
   const children = React.useMemo(() => {
     const result = Object.entries(schema.shape).map(([thisName, thisSchema]) => {
@@ -571,11 +584,11 @@ function ZodObjectComponent({
       for (const { name, component } of result) {
         children[name] = component;
       }
-      return uiSchema.ui.layout({ children, value });
+      return uiSchema.ui.layout({ children, value, onChange: handleChange });
     }
 
     return result.map(({ component }) => component);
-  }, [name, schema.shape, uiSchema, value]);
+  }, [handleChange, name, schema.shape, uiSchema, value]);
 
   if (!isVisible) {
     return null;
@@ -590,6 +603,7 @@ function ZodObjectComponent({
 
   return (
     <Component
+      onChange={handleChange}
       value={value}
       description={zodSchemaDescription(schema) ?? uiSchema?.ui?.description}
       {...R.omit(uiSchema?.ui ?? {}, ['component'])}
@@ -806,19 +820,20 @@ export type UiPropertiesCompound<RootSchema extends object> = Omit<
   'cond'
 >;
 
+type UiPropertiesObjectValue<Schema extends AnyZodObject> = {
+  value: Partial<zod.infer<Schema>>;
+  onChange: (updater: (old: Partial<zod.infer<Schema>>) => Partial<zod.infer<Schema>>) => void;
+};
 type UiPropertiesObject<Schema extends AnyZodObject, RootSchema extends object> = Partial<
   UiSchema<Schema, RootSchema>
 > & {
   ui?: UiPropertiesCompoundInner<RootSchema> & {
-    layout?: (props: {
-      children: Record<keyof zod.infer<Schema>, React.ReactNode>;
-      value: Partial<zod.infer<Schema>>;
-    }) => JSX.Element;
-    component?: (
-      props: ResolveComponentProps<Schema> & {
-        value: Partial<zod.infer<Schema>>;
-      }
+    layout?: (
+      props: {
+        children: Record<keyof zod.infer<Schema>, React.ReactNode>;
+      } & UiPropertiesObjectValue<Schema>
     ) => JSX.Element;
+    component?: (props: ResolveComponentProps<Schema> & UiPropertiesObjectValue<Schema>) => JSX.Element;
   };
 };
 
