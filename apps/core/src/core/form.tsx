@@ -590,6 +590,7 @@ function ZodObjectComponent({
 
   return (
     <Component
+      value={value}
       description={zodSchemaDescription(schema) ?? uiSchema?.ui?.description}
       {...R.omit(uiSchema?.ui ?? {}, ['component'])}
     >
@@ -794,23 +795,27 @@ type UiPropertiesMultiChoice<Schema extends string, RootSchema extends object> =
 };
 
 // These are the properties for non-leaf nodes such as array, object
-type UiPropertiesCompoundInner<Schema extends object, RootSchema extends object> = {
+type UiPropertiesCompoundInner<RootSchema extends object> = {
   title?: React.ReactNode;
   description?: React.ReactNode;
   cond?: (data: PartialDeep<RootSchema>) => boolean;
-  component?: (props: ResolveComponentProps<Schema>) => JSX.Element;
 };
 
-export type UiPropertiesCompound<Schema extends object, RootSchema extends object> = Omit<
-  UiPropertiesCompoundInner<Schema, RootSchema>,
-  'cond' | 'component'
+export type UiPropertiesCompound<RootSchema extends object> = Omit<
+  UiPropertiesCompoundInner<RootSchema>,
+  'cond'
 >;
 
 type UiPropertiesObject<Schema extends AnyZodObject, RootSchema extends object> = Partial<
   UiSchema<Schema, RootSchema>
 > & {
-  ui?: UiPropertiesCompoundInner<Schema, RootSchema> & {
+  ui?: UiPropertiesCompoundInner<RootSchema> & {
     layout?: (props: { children: Record<keyof zod.infer<Schema>, React.ReactNode> }) => JSX.Element;
+    component?: (
+      props: ResolveComponentProps<Schema> & {
+        value: Partial<zod.infer<Schema>>;
+      }
+    ) => JSX.Element;
   };
 };
 
@@ -827,7 +832,9 @@ type UiPropertiesArray<Schema extends ZodArray<any>, RootSchema extends object> 
       };
     }
   : { element?: Omit<UiPropertiesBase<zod.infer<Schema>, RootSchema>, 'cond'> }) &
-  UiPropertiesCompoundInner<zod.infer<Schema>, RootSchema>;
+  (UiPropertiesCompoundInner<RootSchema> & {
+    component?: (props: IArrayDefaultProps) => JSX.Element;
+  });
 
 type ResolveArrayUiSchema<Schema extends ZodArray<any>, RootSchema extends object> = Schema extends ZodArray<
   infer El

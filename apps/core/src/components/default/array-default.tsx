@@ -1,7 +1,7 @@
 import React from 'react';
 import { UiPropertiesCompound } from '../../core/form';
 
-export interface IArrayDefaultProps extends UiPropertiesCompound<any, any> {
+export interface IArrayDefaultProps extends UiPropertiesCompound<any> {
   children: React.ReactNode[];
   onAdd: () => void;
   onRemove: (index: number) => void;

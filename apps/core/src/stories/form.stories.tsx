@@ -2,6 +2,7 @@ import React from 'react';
 import { z } from 'zod';
 import { EnumDefault } from '../components/default/enum-default';
 import { Form, FormUiSchema } from '../core/form';
+import { ObjectDefault } from '../components/default/object-default';
 
 export function ConferenceRegistration() {
   const [liveValidate, setLiveValidate] = React.useState(false);
@@ -45,6 +46,16 @@ export function ConferenceRegistration() {
       element: {
         ui: {
           title: 'Attendee',
+          component: ({ value, ...props }) => {
+            return (
+              <ObjectDefault {...props}>
+                {props.children}
+                <div>
+                  {value.firstName} {value.lastName}
+                </div>
+              </ObjectDefault>
+            );
+          },
           layout: ({ children }) => (
             <div
               style={{
