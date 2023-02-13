@@ -9,6 +9,6 @@
     "nextra-theme-docs": "^2.2.14"
   },
   "scripts": {
-    "build": ""
+    "build": "next build"
   }
 }
