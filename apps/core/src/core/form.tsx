@@ -1,5 +1,6 @@
 import type { AnyZodObject, ZodEffects, ZodFirstPartySchemaTypes, ZodString } from 'zod';
 import * as zod from 'zod';
+import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodObject, ZodOptional } from 'zod';
 import * as R from 'remeda';
 import React from 'react';
 import { componentNameDeserialize, componentNameSerialize } from './component-name-deserialize';
@@ -35,7 +36,6 @@ import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
 import { createContext } from '../utils/create-context';
 import { DateDefault, IDateDefaultProps } from '../components/default/date-default';
 import { mergeZodOuterInnerType } from './merge-zod-outer-inner-type';
-import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodObject, ZodOptional } from 'zod';
 
 function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
   return schema._def.description;
@@ -58,7 +58,7 @@ type ChangePayload =
     };
 type OnChange = (data: ChangePayload) => void;
 
-const [useFormContext, FormContextProvider] = createContext<{
+const [useInternalFormContext, InternalFormContextProvider] = createContext<{
   errors?: ErrorsMap;
   components?: Required<IFormProps<any>>['components'];
 
@@ -66,6 +66,16 @@ const [useFormContext, FormContextProvider] = createContext<{
   onArrayRemove: (path: ComponentPath) => void;
   conds: FormConds;
 }>();
+
+const FormContext = React.createContext<{
+  formData: Record<string, any>;
+}>({
+  formData: {}
+});
+
+export function useForm<Schema extends FormSchema>() {
+  return React.useContext(FormContext).formData as FormValue<Schema>;
+}
 
 function isComponentVisible(name: string, conds: FormConds): boolean {
   return conds[name]?.cond ?? true;
@@ -75,7 +85,7 @@ function useComponent(name: string): {
   errors: zod.ZodIssue[];
   isVisible: boolean;
 } {
-  const { errors, conds } = useFormContext();
+  const { errors, conds } = useInternalFormContext();
 
   return React.useMemo(() => {
     return {
@@ -162,7 +172,7 @@ const ZodStringComponentInner = React.memo(function ZodStringComponentInner({
 });
 
 function ZodStringComponent(props: IZodStringComponentProps) {
-  const { onChange, components } = useFormContext();
+  const { onChange, components } = useInternalFormContext();
   const { errors, isVisible } = useComponent(props.name);
 
   if (!isVisible) {
@@ -232,7 +242,7 @@ const ZodEnumComponentInner = React.memo(function ZodEnumComponentInner({
 });
 
 function ZodEnumComponent(props: IZodEnumComponentProps) {
-  const { onChange, components } = useFormContext();
+  const { onChange, components } = useInternalFormContext();
   const { errors, isVisible } = useComponent(props.name);
 
   if (!isVisible) {
@@ -303,7 +313,7 @@ const ZodNumberComponentInner = React.memo(function ZodNumberComponentInner({
 });
 
 function ZodNumberComponent(props: IZodNumberComponentProps) {
-  const { onChange, components } = useFormContext();
+  const { onChange, components } = useInternalFormContext();
   const { errors, isVisible } = useComponent(props.name);
 
   if (!isVisible) {
@@ -362,7 +372,7 @@ const ZodBooleanComponentInner = React.memo(function ZodBooleanComponentInner({
 });
 
 function ZodBooleanComponent(props: IZodBooleanComponentProps) {
-  const { onChange, components } = useFormContext();
+  const { onChange, components } = useInternalFormContext();
   const { errors, isVisible } = useComponent(props.name);
 
   if (!isVisible) {
@@ -422,7 +432,7 @@ const ZodDateComponentInner = React.memo(function ZodDateComponentInner({
 });
 
 function ZodDateComponent(props: IZodDateComponentProps) {
-  const { onChange, components } = useFormContext();
+  const { onChange, components } = useInternalFormContext();
   const { errors, isVisible } = useComponent(props.name);
 
   if (!isVisible) {
@@ -479,7 +489,7 @@ const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComp
 });
 
 function ZodArrayComponent(props: IZodArrayComponentProps) {
-  const { onChange, onArrayRemove, components } = useFormContext();
+  const { onChange, onArrayRemove, components } = useInternalFormContext();
   const { errors, isVisible } = useComponent(props.name);
 
   const { schema, name, value, uiSchema } = props;
@@ -546,9 +556,9 @@ function ZodObjectComponent({
   name?: string;
 }) {
   const { isVisible } = useComponent(name ?? '');
-  const { components } = useFormContext();
+  const { components } = useInternalFormContext();
 
-  const children = React.useMemo(() => {
+  const children = (function () {
     const result = Object.entries(schema.shape).map(([thisName, thisSchema]) => {
       const childName = name ? [name, thisName].join('.') : thisName;
 
@@ -575,7 +585,7 @@ function ZodObjectComponent({
     }
 
     return result.map(({ component }) => component);
-  }, [name, schema.shape, uiSchema, value]);
+  })();
 
   if (!isVisible) {
     return null;
@@ -1192,7 +1202,7 @@ function UncontrolledForm<Schema extends FormSchema>({
     >
       {title}
 
-      <FormContextProvider
+      <InternalFormContextProvider
         value={{
           conds,
           errors,
@@ -1201,8 +1211,10 @@ function UncontrolledForm<Schema extends FormSchema>({
           onArrayRemove
         }}
       >
-        <ZodAnyComponent uiSchema={uiSchema} value={value ?? formData} schema={objectSchema} />
-      </FormContextProvider>
+        <FormContext.Provider value={{ formData }}>
+          <ZodAnyComponent uiSchema={uiSchema} value={value ?? formData} schema={objectSchema} />
+        </FormContext.Provider>
+      </InternalFormContextProvider>
 
       {children ? (
         children({ errors: flattenErrorsToZodIssues(errors) })
@@ -1288,7 +1300,7 @@ function ControlledForm<Schema extends FormSchema>({
     >
       {title}
 
-      <FormContextProvider
+      <InternalFormContextProvider
         value={{
           conds,
           errors,
@@ -1297,8 +1309,14 @@ function ControlledForm<Schema extends FormSchema>({
           onArrayRemove
         }}
       >
-        <ZodAnyComponent uiSchema={uiSchema} value={value} schema={objectSchema} />
-      </FormContextProvider>
+        <FormContext.Provider
+          value={{
+            formData: value ?? {}
+          }}
+        >
+          <ZodAnyComponent uiSchema={uiSchema} value={value} schema={objectSchema} />
+        </FormContext.Provider>
+      </InternalFormContextProvider>
 
       {children ? (
         children({ errors: flattenErrorsToZodIssues(errors) })
