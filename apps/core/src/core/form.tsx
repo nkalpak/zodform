@@ -28,7 +28,7 @@ import { formDefaultValueFromSchema } from './form-default-value-from-schema';
 import { useUncontrolledToControlledWarning } from '../utils/use-uncontrolled-to-controlled-warning';
 import { unset } from '../utils/unset';
 import { IObjectDefaultProps, ObjectDefault } from '../components/default/object-default';
-import { IsNonUndefinedUnion } from '../utils/type-utils';
+import { IsNonUndefinedUnion, IsUnion, RequiredDeep } from '../utils/type-utils';
 import { IMultiChoiceDefaultProps, MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { PartialDeep } from 'type-fest';
 import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
