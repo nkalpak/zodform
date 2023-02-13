@@ -28,7 +28,7 @@ import { formDefaultValueFromSchema } from './form-default-value-from-schema';
 import { useUncontrolledToControlledWarning } from '../utils/use-uncontrolled-to-controlled-warning';
 import { unset } from '../utils/unset';
 import { IObjectDefaultProps, ObjectDefault } from '../components/default/object-default';
-import { IsNonUndefinedUnion, IsUnion } from '../utils/type-utils';
+import { IsNonUndefinedUnion } from '../utils/type-utils';
 import { IMultiChoiceDefaultProps, MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { PartialDeep } from 'type-fest';
 import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
@@ -806,12 +806,11 @@ export type UiPropertiesCompound<Schema extends object, RootSchema extends objec
   'cond' | 'component'
 >;
 
-type UiPropertiesObject<Schema extends object, RootSchema extends object> = UiSchemaInner<
-  Schema,
-  RootSchema
+type UiPropertiesObject<Schema extends AnyZodObject, RootSchema extends object> = Partial<
+  UiSchema<Schema, RootSchema>
 > & {
   ui?: UiPropertiesCompoundInner<Schema, RootSchema> & {
-    layout?: (props: { children: Record<keyof Schema, React.ReactNode> }) => JSX.Element;
+    layout?: (props: { children: Record<keyof zod.infer<Schema>, React.ReactNode> }) => JSX.Element;
   };
 };
 
@@ -819,51 +818,23 @@ type UiPropertiesObject<Schema extends object, RootSchema extends object> = UiSc
  * Arrays should allow for modifying the element type's ui schema too.
  * So, we do that through the `element` property.
  * */
-type UiPropertiesArray<Schema extends Array<any>, RootSchema extends object> = (Schema extends Array<
-  infer El extends object
+type UiPropertiesArray<Schema extends ZodArray<any>, RootSchema extends object> = (Schema extends ZodArray<
+  infer El extends AnyZodObject
 >
   ? {
       element?: Omit<UiPropertiesObject<El, RootSchema>, 'ui'> & {
         ui?: Omit<Required<UiPropertiesObject<El, RootSchema>>['ui'], 'cond'>;
       };
     }
-  : { element?: Omit<UiPropertiesBase<Schema[0], RootSchema>, 'cond'> }) &
-  UiPropertiesCompoundInner<Schema, RootSchema>;
-
-type ResolveArrayUiProperties<Schema extends Array<string>, RootSchema extends object> = Schema extends Array<
-  infer El extends string
->
-  ? IsUnion<El> extends true
-    ? UiPropertiesMultiChoice<El, RootSchema>
-    : UiPropertiesArray<Schema, RootSchema>
-  : UiPropertiesArray<Schema, RootSchema>;
-
-type ResolveUnionUiProperties<Schema, RootSchema extends object> = Schema extends string
-  ? UiPropertiesEnum<Schema, RootSchema>
-  : never;
-
-type UiSchemaInner<Schema extends object, RootSchema extends object> = {
-  // Boolean messes up the `IsNonUndefinedUnion` check, so we need to handle it first
-  // TODO: Figure out how to handle this better
-  [K in keyof Partial<Schema>]: Schema[K] extends Date
-    ? UiPropertiesBase<Schema[K], RootSchema>
-    : Schema[K] extends boolean
-    ? UiPropertiesBase<Schema[K], RootSchema>
-    : Schema[K] extends object
-    ? Schema[K] extends Array<any>
-      ? ResolveArrayUiProperties<Schema[K], RootSchema>
-      : UiPropertiesObject<Schema[K], RootSchema>
-    : IsUnion<Schema[K]> extends true
-    ? ResolveUnionUiProperties<Schema[K], RootSchema>
-    : UiPropertiesBase<Schema[K], RootSchema>;
-};
+  : { element?: Omit<UiPropertiesBase<zod.infer<Schema>, RootSchema>, 'cond'> }) &
+  UiPropertiesCompoundInner<zod.infer<Schema>, RootSchema>;
 
 type ResolveArrayUiSchema<Schema extends ZodArray<any>, RootSchema extends object> = Schema extends ZodArray<
   infer El
 >
   ? El extends ZodEnum<any>
     ? UiPropertiesMultiChoice<zod.infer<El>, RootSchema>
-    : UiPropertiesArray<zod.infer<Schema>, RootSchema>
+    : UiPropertiesArray<Schema, RootSchema>
   : never;
 
 type UiSchemaZodTypeResolver<
@@ -876,25 +847,22 @@ type UiSchemaZodTypeResolver<
   : Schema extends ZodBoolean
   ? UiPropertiesBase<zod.infer<Schema>, RootSchema>
   : Schema extends ZodObject<any>
-  ? UiPropertiesObject<zod.infer<Schema>, RootSchema>
+  ? UiPropertiesObject<Schema, RootSchema>
   : Schema extends ZodArray<any>
   ? ResolveArrayUiSchema<Schema, RootSchema>
   : Schema extends ZodEnum<any>
   ? UiPropertiesEnum<zod.infer<Schema>, RootSchema>
   : UiPropertiesBase<zod.infer<Schema>, RootSchema>;
 
-type UiSchemaInnerAlternative<
-  Schema extends FormSchema,
-  RootSchema extends object
-> = Schema extends AnyZodObject
+type UiSchema<Schema extends FormSchema, RootSchema extends object> = Schema extends AnyZodObject
   ? {
       [K in keyof Schema['shape']]: UiSchemaZodTypeResolver<Schema['shape'][K], RootSchema>;
     }
   : Schema extends ZodEffects<infer Inner extends AnyZodObject>
-  ? UiSchemaInnerAlternative<Inner, RootSchema>
+  ? UiSchema<Inner, RootSchema>
   : never;
 
-export type FormUiSchema<Schema extends FormSchema> = UiSchemaInnerAlternative<Schema, zod.infer<Schema>>;
+export type FormUiSchema<Schema extends FormSchema> = Partial<UiSchema<Schema, zod.infer<Schema>>>;
 
 export type FormValue<Schema extends FormSchema> = PartialDeep<zod.infer<Schema>>;
 export type FormSchema = AnyZodObject | ZodEffects<any>;

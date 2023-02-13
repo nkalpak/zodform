@@ -1,6 +1,6 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, expectTypeOf, test, vi } from 'vitest';
 import { render } from '@testing-library/react';
-import { Form, FormUiSchema } from './form';
+import { Form } from './form';
 import { z } from 'zod';
 import React from 'react';
 import userEvent from '@testing-library/user-event';
@@ -9,6 +9,7 @@ import { NumberDefault } from '../components/default/number-default';
 import { MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { StringDefault } from '../components/default/string-default';
 import { DateDefault } from '../components/default/date-default';
+import { IEnumDefaultProps } from '../components/default/enum-default';
 
 function renderSimpleArray() {
   const user = userEvent.setup();
@@ -568,18 +569,24 @@ describe('Form', function () {
     expect(screen.getByDisplayValue(DEFAULT)).toBeInTheDocument();
   });
 
-  test('string array enums ui schema infers to multi choice', async function () {
-    const options: [string, ...string[]] = ['a', 'b', 'c'];
+  test('string enum ui schema type', async function () {
+    const things: [string, ...string[]] = ['a', 'b', 'c'];
     const schema = z.object({
-      stuff: z.enum(options)
+      stuff: z.enum(things)
     });
 
-    const uiSchema: FormUiSchema<typeof schema> = {
-      stuff: {
-        optionLabels: {
-          address: 'b'
-        }
-      }
-    };
+    render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          stuff: {
+            component: (props) => {
+              expectTypeOf(props).toMatchTypeOf<IEnumDefaultProps>();
+              return <React.Fragment />;
+            }
+          }
+        }}
+      />
+    );
   });
 });
