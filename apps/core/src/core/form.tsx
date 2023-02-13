@@ -562,7 +562,7 @@ function ZodObjectComponent({
   );
 
   const children = React.useMemo(() => {
-    const result = Object.entries(schema.shape).map(([thisName, thisSchema]) => {
+    const result = Object.entries(schema._def.shape()).map(([thisName, thisSchema]) => {
       const childName = name ? [name, thisName].join('.') : thisName;
 
       return {
@@ -588,7 +588,7 @@ function ZodObjectComponent({
     }
 
     return result.map(({ component }) => component);
-  }, [handleChange, name, schema.shape, uiSchema, value]);
+  }, [handleChange, name, schema._def, uiSchema, value]);
 
   if (!isVisible) {
     return null;

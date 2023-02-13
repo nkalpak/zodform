@@ -620,4 +620,30 @@ describe('Form', function () {
       />
     );
   });
+
+  test('renders optional object', async function () {
+    const TITLE = 'TITLE';
+    const schema = z.object({
+      address: z
+        .object({
+          street: z.string()
+        })
+        .optional()
+    });
+
+    const screen = render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          address: {
+            ui: {
+              title: TITLE
+            }
+          }
+        }}
+      />
+    );
+
+    expect(screen.getByText(TITLE)).toBeInTheDocument();
+  });
 });
