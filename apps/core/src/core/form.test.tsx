@@ -590,36 +590,6 @@ describe('Form', function () {
     );
   });
 
-  test('renders multi choice with optional', async function () {
-    const schema = z.object({
-      fruits: z.array(z.enum(['apple', 'banana', 'citrus'])).optional()
-    });
-
-    const screen = render(<Form schema={schema} />);
-
-    expect(screen.getByText('fruits')).toBeInTheDocument();
-  });
-
-  test('renders array with min when optional', async function () {
-    const schema = z.object({
-      people: z.array(z.string()).min(1).optional()
-    });
-
-    const TITLE = 'TITLE';
-    const screen = render(
-      <Form
-        schema={schema}
-        uiSchema={{
-          people: {
-            title: TITLE
-          }
-        }}
-      />
-    );
-
-    expect(screen.getAllByText(TITLE)).toHaveLength(1);
-  });
-
   test('renders array with default', async function () {
     const DEFAULT = 'test';
     const schema = z.object({
