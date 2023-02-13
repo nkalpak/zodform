@@ -28,7 +28,7 @@ import { formDefaultValueFromSchema } from './form-default-value-from-schema';
 import { useUncontrolledToControlledWarning } from '../utils/use-uncontrolled-to-controlled-warning';
 import { unset } from '../utils/unset';
 import { IObjectDefaultProps, ObjectDefault } from '../components/default/object-default';
-import { IsNonUndefinedUnion, IsUnion, RequiredDeep } from '../utils/type-utils';
+import { IsNonUndefinedUnion } from '../utils/type-utils';
 import { IMultiChoiceDefaultProps, MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { PartialDeep } from 'type-fest';
 import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
@@ -840,7 +840,9 @@ type ResolveArrayUiSchema<Schema extends ZodArray<any>, RootSchema extends objec
 type UiSchemaZodTypeResolver<
   Schema extends ZodFirstPartySchemaTypes,
   RootSchema extends object
-> = Schema extends ZodOptional<infer Inner> | ZodDefault<infer Inner>
+> = Schema extends ZodEffects<infer Inner, any, any>
+  ? UiSchemaZodTypeResolver<Inner, RootSchema>
+  : Schema extends ZodOptional<infer Inner> | ZodDefault<infer Inner>
   ? UiSchemaZodTypeResolver<Inner, RootSchema>
   : Schema extends ZodDate
   ? UiPropertiesBase<zod.infer<Schema>, RootSchema>

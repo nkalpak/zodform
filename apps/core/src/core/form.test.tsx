@@ -600,4 +600,24 @@ describe('Form', function () {
 
     expect(screen.getByDisplayValue(DEFAULT)).toBeInTheDocument();
   });
+
+  test('enum transformed to a number ui schema type', async function () {
+    const schema = z.object({
+      amount: z.enum(['1', '2', '3'] as const).transform((x) => parseInt(x))
+    });
+
+    render(
+      <Form
+        schema={schema}
+        uiSchema={{
+          amount: {
+            component: (props) => {
+              expectTypeOf(props).toMatchTypeOf<IEnumDefaultProps>();
+              return <React.Fragment />;
+            }
+          }
+        }}
+      />
+    );
+  });
 });
