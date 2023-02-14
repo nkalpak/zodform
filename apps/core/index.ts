@@ -1,6 +1,13 @@
 import { Form } from './src/core/form';
 
-import type { ComponentPath, FormUiSchema, FormValue } from './src/core/form';
+import type {
+  ComponentPath,
+  FormUiSchema,
+  FormValue,
+  IFormProps,
+  FormSchema,
+  FormOnChange
+} from './src/core/form';
 import type { IArrayDefaultProps } from './src/components/default/array-default';
 import type { IStringDefaultProps } from './src/components/default/string-default';
 import type { IBooleanDefaultProps } from './src/components/default/boolean-default';
@@ -12,6 +19,9 @@ import type { IObjectDefaultProps } from './src/components/default/object-defaul
 export { Form };
 
 export type {
+  IFormProps,
+  FormSchema,
+  FormOnChange,
   IArrayDefaultProps,
   IStringDefaultProps,
   IBooleanDefaultProps,
