@@ -2,12 +2,11 @@ import { Callout } from 'nextra-theme-docs';
 
 ## `schema`
 
-The `schema` prop is the only thing you are required to pass to the `Form` component.
-It is a Zod schema, and it must be a `z.object()`.
+The `schema` prop is the only required prop. It is a Zod schema, and it must be a `z.object()`.
 
-If the only thing you pass to the `Form` is a schema, then the form will be rendered with
-the default components. These are not really the prettiest, as the components are intented
-to be replaced with your own components.
+If you only pass the `schema` to the `Form`, then the form will be rendered with
+the default components. These are not really the prettiest, as the default
+components are intended to be replaced with your own components.
 
 ## `components`
 
@@ -31,7 +30,7 @@ it will render the default.
 ### How to create a component definition
 
 A component definition is a React component which takes the appropriate props for its type.
-Let's say I want to create a component definition for a `string` type. I would need to create
+Let's say I want to create a component definition for the `string` type. To do so, I would need to create
 a component such as the one below:
 
 ```tsx
@@ -82,8 +81,10 @@ the _structure_ of the Zod schema, but it is used for defining UI related proper
 
 <Callout type="info">
   When talking about the UI schema, it is important to keep in mind the two categories of properties that
-  exist: - **Leaf properties** - these are properties which render a single input type. All but the object and
-  array are leaf properties - **Compound properties** - these are properties which contain other properties.
+  exist:
+  - **Leaf properties** - these are properties which render a single input type. All but the object and
+  array are leaf properties
+  - **Compound properties** - these are properties which contain other properties.
   The object and array are compound properties
 </Callout>
 
@@ -91,16 +92,16 @@ the _structure_ of the Zod schema, but it is used for defining UI related proper
 
 The base properties are shared by all _leaf properties_. They are as follows:
 
-- `label` - the label of the property
-- `Component` - component which overrides the component definition for this property
-- `autoFocus` - whether the property should be focused when the form is rendered
-- `cond` - a function which returns a boolean. If the function returns `false`, the property will not be rendered
-- `description` - a description of the property. This will override the schema description, if any
+- `label` - the label of the component
+- `Component` - component which overrides the component definition for this type
+- `autoFocus` - whether the component should be focused when the form is rendered
+- `cond` - a function which returns a boolean. If the function returns `false`, the component will not be rendered
+- `description` - a description of the component. This will override the schema description, if any
 
 ### Object properties
 
-Since the object property is tasked with rendering other properties, its UI schema needs to
-allow defining the UI for its children. So for an object property like this:
+Since the object component is tasked with rendering other components, its UI schema needs to
+allow for customizing the UI of its children, too. So for an object schema like this:
 
 ```ts
 import { z } from 'zod';
@@ -115,23 +116,23 @@ const schema = z.object({
 
 The UI schema would contain the following properties:
 
-- `name` - the UI schema for a string property, which is basically the same as the base properties
-- `age` - same as the `name`
-- `ui` - the UI schema for the object property itself
-  - `title` - the title of the object property
+- `name` - the UI schema for a string component
+- `age` - the UI schema for a number component
+- `ui` - the UI schema for the object component itself
+  - `title` - the title of the object component
   - `Component` - component which overrides the component definition for this property
-  - `Layout` - a component which establishes how the children of the object property are rendered.
+  - `Layout` - a component which establishes how the children of the object are rendered.
     This is useful when you want to render the children in a row, for example, but you don't want
     to override the component definition for the entire object. (including its title, etc.) [See example](https://codesandbox.io/s/zodform-docs-layout-87yror?file=/src/App.tsx)
-  - `cond` - a function which returns a boolean. If the function returns `false`, the property will not be rendered
+  - `cond` - a function which returns a boolean. If the function returns `false`, the component will not be rendered
 
 ### Array properties
 
-The array property is also tasked with rendering other properties, though these properties do not have a name.
-The array is limited to rendering a single type of property, so the UI schema for an array property needs to
-allow defining the UI for its children property type.
+The array component is also tasked with rendering other components, though these components do not have a name.
+The array is limited to rendering a single type of component, so the UI schema for an array needs to
+allow defining the UI for its children's type.
 
-So for an array property like this:
+So for an array schema like this:
 
 ```ts
 import { z } from 'zod';
@@ -146,5 +147,5 @@ The UI schema would contain the following properties:
 - `title` - same as the object
 - `description` - same as the object
 - `cond` - same as the object
-- `element` - the UI schema for the child property type.
-  In this case it is a string property, so it would be the same as the base properties
+- `element` - the UI schema for the child type.
+  In this case it is a string, so it would be the same as the base properties
