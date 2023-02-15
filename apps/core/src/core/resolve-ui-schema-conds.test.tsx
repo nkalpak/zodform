@@ -128,7 +128,7 @@ describe('resolveUiSchemaConds', function () {
           },
           fullName: {
             ui: {
-              component: ObjectMantineRows
+              Component: ObjectMantineRows
             },
             firstName: {
               label: 'First name'
@@ -146,7 +146,7 @@ describe('resolveUiSchemaConds', function () {
         }
       },
       paymentMethod: {
-        component: EnumMantineRadio,
+        Component: EnumMantineRadio,
         label: 'Payment method',
         optionLabels: {
           creditCard: <span>💳 Credit card</span>,

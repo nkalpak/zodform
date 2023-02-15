@@ -38,7 +38,7 @@ export function Login() {
           },
           password: {
             label: 'Password',
-            component: PasswordMantine
+            Component: PasswordMantine
           }
         }}
       >
@@ -83,11 +83,11 @@ export function Register() {
           },
           password: {
             label: 'Password',
-            component: PasswordMantine
+            Component: PasswordMantine
           },
           confirmPassword: {
             label: 'Confirm password',
-            component: PasswordMantine
+            Component: PasswordMantine
           }
         }}
       >
@@ -430,11 +430,11 @@ export function ConferenceRegistration() {
       element: {
         ui: {
           title: 'Attendee',
-          component: PersonComponent
+          Component: PersonComponent
         },
         fullName: {
           ui: {
-            component: ObjectMantineRows
+            Component: ObjectMantineRows
           },
           firstName: {
             label: 'First name'
@@ -459,7 +459,7 @@ export function ConferenceRegistration() {
       }
     },
     paymentMethod: {
-      component: EnumMantineRadio,
+      Component: EnumMantineRadio,
       label: 'Payment method',
       optionLabels: {
         creditCard: <span>💳 Credit card</span>,
