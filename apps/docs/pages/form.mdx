@@ -1,0 +1,150 @@
+import { Callout } from 'nextra-theme-docs';
+
+## `schema`
+
+The `schema` prop is the only thing you are required to pass to the `Form` component.
+It is a Zod schema, and it must be a `z.object()`.
+
+If the only thing you pass to the `Form` is a schema, then the form will be rendered with
+the default components. These are not really the prettiest, as the components are intented
+to be replaced with your own components.
+
+## `components`
+
+The above leads us nicely into the `components`. The `components` prop is an object
+which defines a mapping from a component type to a component definition. The component type is
+one of the following:
+
+- `string` - `z.string()`
+- `number` - `z.number()`
+- `enum` - `z.enum()`
+- `boolean` - `z.boolean()`
+- `object` - `z.object()`
+- `array` - `z.array()`
+- `multiChoice` - `z.array(z.enum())`
+- `date` - `z.date()`
+
+Whenever the `Form` component encounters a schema of the given type, it will render the
+component definition that is mapped to that type. If it doesn't find a component definition,
+it will render the default.
+
+### How to create a component definition
+
+A component definition is a React component which takes the appropriate props for its type.
+Let's say I want to create a component definition for a `string` type. I would need to create
+a component such as the one below:
+
+```tsx
+import { IStringDefaultProps } from '@zodform/core';
+
+function CustomString(props: IStringDefaultProps) {
+  // markup...
+}
+```
+
+All component types have a corresponding interface which defines the props that are passed to
+the component definition. All those interfaces can be imported from `@zodform/core`, and are as follows:
+
+- `string` - `IStringDefaultProps`
+- `number` - `INumberDefaultProps`
+- `enum` - `IEnumDefaultProps`
+- `boolean` - `IBooleanDefaultProps`
+- `object` - `IObjectDefaultProps`
+- `array` - `IArrayDefaultProps`
+- `multiChoice` - `IMultiChoiceDefaultProps`
+- `date` - `IDateDefaultProps`
+
+Once you have created your component definition, you can add it to a `components` object
+and pass that object to the `Form` component:
+
+```tsx
+import { Form } from '@zodform/core';
+import { CustomString } from './custom-string';
+
+const schema = z.object({
+  name: z.string()
+});
+
+const components = {
+  string: CustomString
+} as const;
+
+function MyForm() {
+  return <Form schema={schema} components={components} />;
+}
+```
+
+## `uiSchema`
+
+Since the UI requirements of a form component cannot be satisfied by a Zod schema alone,
+we need to introduce an additional concept: the UI schema. This is a schema which matches
+the _structure_ of the Zod schema, but it is used for defining UI related properties.
+
+<Callout type="info">
+  When talking about the UI schema, it is important to keep in mind the two categories of properties that
+  exist: - Leaf properties - these are properties which render a single input type. All but the object and
+  array are leaf properties - Compound properties - these are properties which contain other properties. The
+  object and array are compound properties
+</Callout>
+
+### Base properties
+
+The base properties are shared by all _leaf properties_. They are as follows:
+
+- `label` - the label of the property
+- `Component` - component which overrides the component definition for this property
+- `autoFocus` - whether the property should be focused when the form is rendered
+- `cond` - a function which returns a boolean. If the function returns `false`, the property will not be rendered
+- `description` - a description of the property. This will override the schema description, if any
+
+### Object properties
+
+Since the object property is tasked with rendering other properties, its UI schema needs to
+allow defining the UI for its children. So for an object property like this:
+
+```ts
+import { z } from 'zod';
+
+const schema = z.object({
+  person: z.object({
+    name: z.string(),
+    age: z.number()
+  })
+});
+```
+
+The UI schema would contain the following properties:
+
+- `name` - the UI schema for a string property, which is basically the same as the base properties
+- `age` - same as the `name`
+- `ui` - the UI schema for the object property itself
+  - `title` - the title of the object property
+  - `Component` - component which overrides the component definition for this property
+  - `Layout` - a component which establishes how the children of the object property are rendered.
+    This is useful when you want to render the children in a row, for example, but you don't want
+    to override the component definition for the entire object. (including its title, etc.) [See example](https://codesandbox.io/s/zodform-docs-layout-87yror?file=/src/App.tsx)
+  - `cond` - a function which returns a boolean. If the function returns `false`, the property will not be rendered
+
+### Array properties
+
+The array property is also tasked with rendering other properties, though these properties do not have a name.
+The array is limited to rendering a single type of property, so the UI schema for an array property needs to
+allow defining the UI for its children property type.
+
+So for an array property like this:
+
+```ts
+import { z } from 'zod';
+
+const schema = z.object({
+  fruits: z.array(z.string())
+});
+```
+
+The UI schema would contain the following properties:
+
+- `title` - same as the object
+- `description` - same as the object
+- `cond` - same as the object
+- `element` - the UI schema for the child property type.
+  In this case it is a string property, so it would be the same as the base properties
