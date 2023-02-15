@@ -38,7 +38,7 @@ function renderSimpleArray() {
           element: {
             label: 'fruits'
           },
-          component: (props) => (
+          Component: (props) => (
             <div>
               {props.children.map((child, index) => (
                 <div key={index}>
@@ -219,7 +219,7 @@ describe('Form', function () {
           address: {
             ui: {
               title: 'Address',
-              component: (props) => (
+              Component: (props) => (
                 <ObjectDefault {...props}>
                   {props.children} <span data-testid={testId}>h</span>
                 </ObjectDefault>
@@ -256,7 +256,7 @@ describe('Form', function () {
             element: {
               age: {
                 label: 'Name',
-                component: (props) => (
+                Component: (props) => (
                   <React.Fragment>
                     <NumberDefault {...props} />
                     <span data-testid={ageId}>h</span>
@@ -265,7 +265,7 @@ describe('Form', function () {
               },
               ui: {
                 title: 'Person',
-                component: (props) => (
+                Component: (props) => (
                   <ObjectDefault {...props}>
                     {props.children} <span data-testid={personId}>h</span>
                   </ObjectDefault>
@@ -333,7 +333,7 @@ describe('Form', function () {
         uiSchema={{
           fruits: {
             label: 'Fruits',
-            component: (props) => (
+            Component: (props) => (
               <React.Fragment>
                 <MultiChoiceDefault {...props} />
                 <span data-testid={testId}>h</span>
@@ -387,7 +387,7 @@ describe('Form', function () {
         schema={schema}
         uiSchema={{
           date: {
-            component: (props) => (
+            Component: (props) => (
               <React.Fragment>
                 <DateDefault {...props} />
                 <span data-testid={testId}>h</span>
@@ -580,7 +580,7 @@ describe('Form', function () {
         schema={schema}
         uiSchema={{
           stuff: {
-            component: (props) => {
+            Component: (props) => {
               expectTypeOf(props).toMatchTypeOf<IEnumDefaultProps>();
               return <React.Fragment />;
             }
@@ -611,7 +611,7 @@ describe('Form', function () {
         schema={schema}
         uiSchema={{
           amount: {
-            component: (props) => {
+            Component: (props) => {
               expectTypeOf(props).toMatchTypeOf<IEnumDefaultProps>();
               return <React.Fragment />;
             }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { z } from 'zod';
 import { EnumDefault } from '../components/default/enum-default';
-import { Form, FormUiSchema } from '../core/form';
+import { Form, FormUiSchema, useForm } from '../core/form';
 
 export function ConferenceRegistration() {
   const [liveValidate, setLiveValidate] = React.useState(false);
@@ -45,35 +45,38 @@ export function ConferenceRegistration() {
       element: {
         ui: {
           title: 'Attendee',
-          layout: ({ children, value, onChange }) => (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  onChange((old) => ({
-                    ...old,
-                    firstName: 'John',
-                    lastName: 'Doe'
-                  }));
+          Layout: ({ children, value }) => {
+            const form = useForm<typeof schema>();
+
+            return (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12
                 }}
               >
-                Do
-              </button>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                {children.firstName} {children.lastName}
+                <button
+                  type="button"
+                  onClick={() => {
+                    form.update((old) => {
+                      old.people![0]!.firstName = 'John';
+                      old.people![0]!.lastName = 'Doe';
+                    });
+                  }}
+                >
+                  Do
+                </button>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  {children.firstName} {children.lastName}
+                </div>
+                {children.email} {children.phoneNumber}
+                <div>
+                  Who? {form.value.amount} {value.lastName}
+                </div>
               </div>
-              {children.email} {children.phoneNumber}
-              <div>
-                Who? {value.firstName} {value.lastName}
-              </div>
-            </div>
-          )
+            );
+          }
         },
         firstName: {
           label: 'First name'

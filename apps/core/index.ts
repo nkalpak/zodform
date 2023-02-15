@@ -1,4 +1,5 @@
-import { Form } from './src/core/form';
+import { Form, useForm } from './src/core/form';
+import { parseArrayIndicesFromName } from './src/core/parse-array-indices-from-name';
 
 import type {
   ComponentPath,
@@ -16,7 +17,7 @@ import type { IMultiChoiceDefaultProps } from './src/components/default/multi-ch
 import type { IEnumDefaultProps } from './src/components/default/enum-default';
 import type { IObjectDefaultProps } from './src/components/default/object-default';
 
-export { Form };
+export { Form, useForm, parseArrayIndicesFromName };
 
 export type {
   IFormProps,
