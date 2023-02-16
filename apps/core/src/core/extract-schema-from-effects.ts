@@ -1,10 +1,9 @@
 import { FormSchema } from './form';
 import { AnyZodObject, ZodEffects } from 'zod';
 
-type _ExtractSchemaFromEffects<Schema extends FormSchema> = _Recurse<InferInnerType<Schema>>;
 export type ExtractSchemaFromEffects<
   Schema extends FormSchema,
-  Extracted = _ExtractSchemaFromEffects<Schema>
+  Extracted = _Recurse<InferInnerType<Schema>>
 > = Extracted extends {
   __rec: infer U;
 }

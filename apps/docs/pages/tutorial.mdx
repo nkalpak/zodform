@@ -1,20 +1,20 @@
 In this tutorial we will build a conference registration form.
 
 The form will have the following requirements:
-- A number of attendees can be added to the form
+1. A number of attendees can be added to the form
     - Each attendee will have a first name, last name and email address, all required
     - The first and last name inputs should be in one row, while the email address should be in another
     - A minimum of one attendee is required
-- A checkbox for acceptance of the conference rules, this must be checked to submit the form
-- There should be three products that may be selected to be purchased
-  - A T-Shirt
-  - A USB Stick
-  - A backpack
-- A payment method field should appear when at least one product is selected
-  - The payment method should be presented as two radio buttons
-  - The payment method should either be a debit card or PayPal
+2. A checkbox for acceptance of the conference rules, this must be checked to submit the form
+3. There should be three products that may be selected to be purchased
+    - A T-Shirt
+    - A USB Stick
+    - A backpack
+4. A payment method field should appear when at least one product is selected
+    - The payment method should be presented as two radio buttons
+    - The payment method should either be a debit card or PayPal
     - If debit card is selected, a card number field should appear and be required
-- Finally, there should be a submit button to submit the form
+5. Finally, there should be a submit button to submit the form
 
 ## Installing the dependencies
 
@@ -28,4 +28,45 @@ And to make the form look a little nicer, we will install the ZodForm Mantine th
 
 ```bash
 pnpm i @zodform/mantine @mantine/core @mantine/hooks @emotion/react @babel/core
+```
+
+## Creating the schema
+
+Let's start from the data model. We will need to create a Zod schema for the form, which will look like this:
+
+```ts
+import { z } from "zod"
+
+// The schema must be an object
+const schema = z
+  .object({
+    // The attendees field is an array of objects
+    attendee: z
+      .array(
+        z.object({
+          // Each attendee has a first name, last name and email address
+          firstName: z.string(),
+          lastName: z.string(),
+          email: z.string().email()
+        })
+      )
+      // There must be at least one attendee.
+      // This will also ensure that the array has one element by default.
+      .min(1),
+
+    // This will create a checkbox which must be checked
+    hasAcceptedRules: z.boolean(),
+
+    /**
+    * An array of enums will create a checkbox group.
+    * The checkbox group is referred to as "multiChoice" in the library.
+    * */
+    products: z.array(z.enum(["tshirt", "usb", "backpack"] as const)),
+
+    // The payment method offers two options, debit or PayPal
+    // Note that it needs to be optional, because it will only appear when a product is selected
+    paymentMethod: z.enum(["paypal", "debit"] as const).optional(),
+    // The card number must also be optional, because it will only appear when the debit option is selected
+    debitNumber: z.string().optional()
+  })
 ```
