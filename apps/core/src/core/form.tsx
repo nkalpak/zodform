@@ -36,6 +36,7 @@ import { createContext } from '../utils/create-context';
 import { DateDefault, IDateDefaultProps } from '../components/default/date-default';
 import { mergeZodOuterInnerType } from './merge-zod-outer-inner-type';
 import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodObject, ZodOptional } from 'zod';
+import { ExtractSchemaFromEffects } from './extract-schema-from-effects';
 
 function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
   return schema._def.description;
@@ -897,13 +898,15 @@ type UiSchemaZodTypeResolver<
   ? UiPropertiesEnum<zod.infer<Schema>, RootSchema>
   : UiPropertiesBase<zod.infer<Schema>, RootSchema>;
 
-type UiSchema<Schema extends FormSchema, RootSchema extends object> = Schema extends AnyZodObject
+type UiSchema<
+  Schema extends FormSchema,
+  RootSchema extends object,
+  ExtractedSchema = ExtractSchemaFromEffects<Schema>
+> = ExtractedSchema extends AnyZodObject
   ? {
-      [K in keyof Schema['shape']]: UiSchemaZodTypeResolver<Schema['shape'][K], RootSchema>;
+      [K in keyof ExtractedSchema['shape']]: UiSchemaZodTypeResolver<ExtractedSchema['shape'][K], RootSchema>;
     }
-  : Schema extends ZodEffects<infer Inner extends AnyZodObject>
-  ? UiSchema<Inner, RootSchema>
-  : never;
+  : ExtractedSchema;
 
 export type FormUiSchema<Schema extends FormSchema> = Partial<UiSchema<Schema, zod.infer<Schema>>>;
 

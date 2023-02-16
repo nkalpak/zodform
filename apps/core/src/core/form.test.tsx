@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, test, vi } from 'vitest';
 import { render } from '@testing-library/react';
-import { Form } from './form';
+import { Form, FormUiSchema } from './form';
 import { z } from 'zod';
 import React from 'react';
 import userEvent from '@testing-library/user-event';
@@ -645,5 +645,22 @@ describe('Form', function () {
     );
 
     expect(screen.getByText(TITLE)).toBeInTheDocument();
+  });
+
+  test('ui schema gets inferred with multiple refines on the schema', function () {
+    const schema = z
+      .object({
+        name: z.string()
+      })
+      .refine(() => true, { message: 'message' })
+      .refine(() => true, { message: 'message' });
+
+    const uiSchema: FormUiSchema<typeof schema> = {
+      name: {
+        label: 'name'
+      }
+    };
+
+    expectTypeOf(uiSchema).not.toMatchTypeOf<never>();
   });
 });

@@ -159,7 +159,6 @@ describe('resolveUiSchemaConds', function () {
     };
 
     const result = resolveUiSchemaConds({
-      // @ts-expect-error Can't fix now TODO
       uiSchema,
       formData: {}
     });

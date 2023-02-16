@@ -2,11 +2,12 @@ import * as R from 'remeda';
 import { ComponentPath, FormUiSchema } from './form';
 import { componentNameDeserialize } from './component-name-deserialize';
 import React from 'react';
+import { AnyZodObject } from 'zod';
 
-function extractCondsFromUiSchema(uiSchema: FormUiSchema<any>) {
+function extractCondsFromUiSchema(uiSchema: FormUiSchema<AnyZodObject>) {
   const conds: Record<string, (formData: any) => boolean> = {};
 
-  function traverse(uiSchema: FormUiSchema<any>, path: ComponentPath = []): void {
+  function traverse(uiSchema: FormUiSchema<AnyZodObject>, path: ComponentPath = []): void {
     for (const key in uiSchema) {
       const value = uiSchema[key];
 
