@@ -1,0 +1,31 @@
+In this tutorial we will build a conference registration form.
+
+The form will have the following requirements:
+- A number of attendees can be added to the form
+    - Each attendee will have a first name, last name and email address, all required
+    - The first and last name inputs should be in one row, while the email address should be in another
+    - A minimum of one attendee is required
+- A checkbox for acceptance of the conference rules, this must be checked to submit the form
+- There should be three products that may be selected to be purchased
+  - A T-Shirt
+  - A USB Stick
+  - A backpack
+- A payment method field should appear when at least one product is selected
+  - The payment method should be presented as two radio buttons
+  - The payment method should either be a debit card or PayPal
+    - If debit card is selected, a card number field should appear and be required
+- Finally, there should be a submit button to submit the form
+
+## Installing the dependencies
+
+First, let's install the ZodForm core dependencies:
+
+```bash
+pnpm i @zodform/core zod
+```
+
+And to make the form look a little nicer, we will install the ZodForm Mantine theme and it's dependencies:
+
+```bash
+pnpm i @zodform/mantine @mantine/core @mantine/hooks @emotion/react @babel/core
+```

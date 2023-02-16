@@ -1,6 +1,8 @@
 {
   "index": "Overview",
   "quickstart": "Quickstart",
+  "tutorial": "Tutorial",
   "examples": "Examples",
-  "themes": "Themes"
+  "themes": "Themes",
+  "in-depth": "In depth"
 }
