@@ -1,4 +1,4 @@
-import {Callout} from "nextra-theme-docs";
+import { Callout } from "nextra-theme-docs";
 
 In this tutorial we will be making a conference registration form using ZodForm.
 
@@ -516,6 +516,39 @@ export function App() {
       components={components}
       uiSchema={uiSchema}
     />
+  );
+}
+```
+
+## Adding a submit button
+
+The form will by default render a submit button. This button will be the default browser button,
+so we will probably want to override it with our own button.
+
+```tsx {5, 22}
+import { Form, FormUiSchema } from "@zodform/core";
+import { components, EnumMantineRadio } from "@zodform/mantine";
+import { z } from "zod"
+import React from "react";
+import { Box, Button } from "@mantine/core";
+
+const schema = z.object({
+  // ...
+});
+
+const uiSchema: FormUiSchema<typeof schema> = {
+  // ...
+};
+
+export function App() {
+  return (
+    <Form
+      schema={schema}
+      components={components}
+      uiSchema={uiSchema}
+    >
+      {() => <Button type="submit">Submit</Button>}
+    </Form>
   );
 }
 ```
