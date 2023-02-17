@@ -1,4 +1,6 @@
-In this tutorial we will build a conference registration form.
+import {Callout} from "nextra-theme-docs";
+
+In this tutorial we will be making a conference registration form using ZodForm.
 
 The form will have the following requirements:
 1. A number of attendees can be added to the form
@@ -17,6 +19,13 @@ The form will have the following requirements:
 5. Finally, there should be a submit button to submit the form
 
 ## Installing the dependencies
+
+### CodeSandbox
+
+If you want to follow along in a CodeSandbox, you can fork [this template](https://codesandbox.io/s/zodform-conference-tutorial-template-unon41)
+with all the dependencies already installed.
+
+### Custom
 
 First, let's install the ZodForm core dependencies:
 
@@ -68,5 +77,445 @@ const schema = z
     paymentMethod: z.enum(["paypal", "debit"] as const).optional(),
     // The card number must also be optional, because it will only appear when the debit option is selected
     debitNumber: z.string().optional()
+  });
+```
+
+### Refining the schema
+
+There are two requirements that we don't yet have in our schema:
+1. The payment method should be required when at least one product is selected
+2. The card number should be required when the debit option is selected
+
+The way to do this in Zod is using a [refine](https://zod.dev/?id=refine) function on the schema.
+
+```ts {22-45}
+import { z } from "zod"
+
+const schema = z
+  .object({
+    attendee: z
+      .array(
+        z.object({
+          firstName: z.string(),
+          lastName: z.string(),
+          email: z.string().email()
+        })
+      )
+      .min(1),
+
+    hasAcceptedRules: z.boolean().optional(),
+
+    products: z.array(z.enum(["tshirt", "usb", "backpack"] as const)),
+
+    paymentMethod: z.enum(["paypal", "debit"] as const),
+    debitNumber: z.string().optional()
   })
+  .refine(
+    (data) => {
+      if (data.paymentMethod === "debit") {
+        return data.debitNumber != null;
+      }
+      return true;
+    },
+    {
+      message: "Please enter your card number",
+      path: ["debitNumber"]
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.products.length > 0) {
+        return data.paymentMethod != null;
+      }
+      return true;
+    },
+    {
+      message: "Please select a payment method",
+      path: ["paymentMethod"]
+    }
+  );
+```
+
+## Creating the form
+
+Now that we have the schema completed, we can pass it into the `Form` component to render it.
+
+```tsx {11}
+import { Form } from "@zodform/core";
+import { z } from "zod"
+
+const schema = z.object({
+  // ...
+});
+
+export function App() {
+  return (
+    <Form
+      schema={schema}
+    />
+  );
+}
+```
+
+We not have a form on the screen! Let's add a theme to make it look nicer.
+
+### Adding the Mantine theme
+
+A theme is a set of components that the library will use to
+render the different types of fields (string, number, boolean, etc).
+
+A theme is defined using the `components` prop, and the `@zodform/mantine` package
+comes with a pre-defined `components` object that we need to pass into the `Form`.
+
+```tsx {2, 13}
+import { Form } from "@zodform/core";
+import { components } from "@zodform/mantine";
+import { z } from "zod"
+
+const schema = z.object({
+  // ...
+});
+
+export function App() {
+  return (
+    <Form
+      schema={schema}
+      components={components}
+    />
+  );
+}
+```
+
+## Adding a UI schema
+
+The responsibility of the Zod schema is to define the data model. It defines which properties
+exist, what type they are, and what constraints they have. The Zod schema is not concerned with *how* those
+properties are displayed to the user, for that we need a UI schema.
+
+Let's start simple, with a UI schema that will specify the labels of the fields.
+
+```tsx {1, 9, 65}
+import { Form, FormUiSchema } from "@zodform/core";
+import { components } from "@zodform/mantine";
+import { z } from "zod"
+
+const schema = z.object({
+  // ...
+});
+
+const uiSchema: FormUiSchema<typeof schema> = {
+  /**
+    * The attendee field is an array, and array fields render a list of elements.
+    * Arrays are constrained to render one type of element, and we can customize
+    * the UI for that element using the `element` property on the array's UI schema.
+    * */
+  attendee: {
+    /**
+      * The attendee's element is an object. The UI schema for an object allows
+      * specifying the UI for each of its properties.
+      * */
+    element: {
+      email: {
+        label: "Email"
+      },
+      firstName: {
+        label: "First name"
+      },
+      lastName: {
+        label: "Last name"
+      }
+    }
+  },
+
+  hasAcceptedRules: {
+    label: "I accept the rules of the conference"
+  },
+
+  products: {
+    label: "Products",
+    // The `optionLabels` allows us to customize the labels for the enums
+    optionLabels: {
+      backpack: "Backpack - $10",
+      usb: "Usb - $2",
+      tshirt: "T-Shirt - $4"
+    }
+  },
+
+  paymentMethod: {
+    label: "Payment method",
+    optionLabels: {
+      debit: "Debit Card",
+      paypal: "PayPal"
+    }
+  },
+
+  debitNumber: {
+    label: "Card number"
+  }
+};
+
+export function App() {
+  return (
+    <Form
+      schema={schema}
+      components={components}
+      uiSchema={uiSchema}
+    />
+  );
+}
+```
+
+In the requirements, it is specified that the payment method shouldn't be visible until
+a product is selected. Right now the payment method is always visible, let's fix that!
+
+### Conditionally rendering fields
+
+The UI schema for every field has a `cond` property. This property is a function that takes
+in the current form data and returns a boolean. If the boolean is `true`, the field will be
+displayed, if it's `false`, the field will be hidden.
+
+```tsx {38-40, 49}
+import { Form, FormUiSchema } from "@zodform/core";
+import { components } from "@zodform/mantine";
+import { z } from "zod"
+
+const schema = z.object({
+  // ...
+});
+
+const uiSchema: FormUiSchema<typeof schema> = {
+  attendee: {
+    element: {
+      email: {
+        label: "Email"
+      },
+      firstName: {
+        label: "First name"
+      },
+      lastName: {
+        label: "Last name"
+      }
+    }
+  },
+
+  hasAcceptedRules: {
+    label: "I accept the rules of the conference"
+  },
+
+  products: {
+    label: "Products",
+    optionLabels: {
+      backpack: "Backpack - $10",
+      usb: "Usb - $2",
+      tshirt: "T-Shirt - $4"
+    }
+  },
+
+  paymentMethod: {
+    cond: (data) => {
+      return (data.products?.length ?? 0) > 0;
+    },
+    label: "Payment method",
+    optionLabels: {
+      debit: "Debit Card",
+      paypal: "PayPal"
+    }
+  },
+
+  debitNumber: {
+    cond: (data) => data.paymentMethod === "debit",
+    label: "Card number"
+  }
+};
+
+export function App() {
+  return (
+    <Form
+      schema={schema}
+      components={components}
+      uiSchema={uiSchema}
+    />
+  );
+}
+```
+
+<Callout type='info'>
+  Note that the type of the data which `cond` takes expects that all data could be `undefined`.
+  This is because `cond` is called while the user is filling out the form, and not all data is available yet.
+</Callout>
+
+Now try selecting a product, and you'll see that the payment method field appears!
+Also, when selecting a debit card, you should see the card number field.
+
+### Customizing the component for a field
+
+The payment method field currently renders as a select component. This is because the `paymentMethod`
+is an enum, and by default, the Mantine theme will render enums as selects. The requirements state
+that the payment method should be rendered as a radio group, so let's change that.
+
+```tsx {2, 41}
+import { Form, FormUiSchema } from "@zodform/core";
+import { components, EnumMantineRadio } from "@zodform/mantine";
+import { z } from "zod"
+
+const schema = z.object({
+  // ...
+});
+
+const uiSchema: FormUiSchema<typeof schema> = {
+  attendee: {
+    element: {
+      email: {
+        label: "Email"
+      },
+      firstName: {
+        label: "First name"
+      },
+      lastName: {
+        label: "Last name"
+      }
+    }
+  },
+
+  hasAcceptedRules: {
+    label: "I accept the rules of the conference"
+  },
+
+  products: {
+    label: "Products",
+    optionLabels: {
+      backpack: "Backpack - $10",
+      usb: "Usb - $2",
+      tshirt: "T-Shirt - $4"
+    }
+  },
+
+  paymentMethod: {
+    cond: (data) => {
+      return (data.products?.length ?? 0) > 0;
+    },
+    Component: EnumMantineRadio,
+    label: "Payment method",
+    optionLabels: {
+      debit: "Debit Card",
+      paypal: "PayPal"
+    }
+  },
+
+  debitNumber: {
+    cond: (data) => data.paymentMethod === "debit",
+    label: "Card number"
+  }
+};
+
+export function App() {
+  return (
+    <Form
+      schema={schema}
+      components={components}
+      uiSchema={uiSchema}
+    />
+  );
+}
+```
+
+Each field has a `Component` property, which allows us to override the component that is used to render
+the field. In this case, we're using the `EnumMantineRadio` component, which renders enums as radio groups.
+
+### Customizing the layout of object fields
+
+Since object fields are made up of multiple fields, we may need to define how those fields
+are laid out inside the object field. For this reason, the object's UI schema has a `Layout`
+property, which receives a `children` prop that is a record where the keys are the names
+of the fields, and the values are the components which render in place of those fields.
+
+```tsx {4-5, 19-36}
+import { Form, FormUiSchema } from "@zodform/core";
+import { components, EnumMantineRadio } from "@zodform/mantine";
+import { z } from "zod"
+import React from "react";
+import { Box } from "@mantine/core";
+
+const schema = z.object({
+  // ...
+});
+
+const uiSchema: FormUiSchema<typeof schema> = {
+  attendee: {
+    element: {
+      /**
+        * To define the UI schema for the object itself, we use the `ui` property.
+        * The `ui` property exists to differentiate between the object's UI schema,
+        * and the UI schemas for the object's fields.
+        * */
+      ui: {
+        Layout: ({ children }) => (
+          <React.Fragment>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 16,
+                marginBottom: 16
+              }}
+            >
+              {children.firstName} {children.lastName}
+            </Box>
+
+            {children.email}
+          </React.Fragment>
+        )
+      },
+      email: {
+        label: "Email"
+      },
+      firstName: {
+        label: "First name"
+      },
+      lastName: {
+        label: "Last name"
+      }
+    }
+  },
+
+  hasAcceptedRules: {
+    label: "I accept the rules of the conference"
+  },
+
+  products: {
+    label: "Products",
+    optionLabels: {
+      backpack: "Backpack - $10",
+      usb: "Usb - $2",
+      tshirt: "T-Shirt - $4"
+    }
+  },
+
+  paymentMethod: {
+    cond: (data) => {
+      return (data.products?.length ?? 0) > 0;
+    },
+    Component: EnumMantineRadio,
+    label: "Payment method",
+    optionLabels: {
+      debit: "Debit Card",
+      paypal: "PayPal"
+    }
+  },
+
+  debitNumber: {
+    cond: (data) => data.paymentMethod === "debit",
+    label: "Card number"
+  }
+};
+
+export function App() {
+  return (
+    <Form
+      schema={schema}
+      components={components}
+      uiSchema={uiSchema}
+    />
+  );
+}
 ```
