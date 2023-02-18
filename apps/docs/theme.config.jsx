@@ -9,5 +9,16 @@ export default {
     };
   },
   editLink: false,
-  docsRepositoryBase: 'https://github.com/nkalpak/zodform'
+  docsRepositoryBase: 'https://github.com/nkalpak/zodform',
+  footer: {
+    text: (
+      <span>
+        MIT {new Date().getFullYear()} ©{' '}
+        <a href="https://github.com/nkalpak/zodform" target="_blank">
+          ZodForm
+        </a>
+        .
+      </span>
+    )
+  }
 };
