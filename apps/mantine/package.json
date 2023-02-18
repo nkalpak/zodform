@@ -2,7 +2,7 @@
   "name": "@zodform/mantine",
   "author": "nkalpak",
   "private": false,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -35,7 +35,7 @@
     "@emotion/react": "^11.10.5",
     "@mantine/core": "^5.10.2",
     "@mantine/hooks": "^5.10.2",
-    "@zodform/core": "^0.0.1",
+    "@zodform/core": "^0.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

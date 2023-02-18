@@ -1,0 +1,17 @@
+{
+  "name": "@zodform/core",
+  "entries": [
+    {
+      "version": "0.1.0",
+      "tag": "@zodform/core_v0.1.0",
+      "date": "Sat, 18 Feb 2023 09:43:47 GMT",
+      "comments": {
+        "minor": [
+          {
+            "comment": "Change optionLabels type to accept strings as values"
+          }
+        ]
+      }
+    }
+  ]
+}
