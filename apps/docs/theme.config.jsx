@@ -7,6 +7,7 @@ export default {
     return {
       titleTemplate: '%s - ZodForm'
     };
-  }
-  // ...
+  },
+  editLink: false,
+  docsRepositoryBase: 'https://github.com/nkalpak/zodform'
 };

@@ -2,20 +2,20 @@ import { Callout } from "nextra-theme-docs";
 
 In this tutorial we will be making a conference registration form using ZodForm.
 
-The form will have the following requirements:
+The form has the following requirements:
 1. A number of attendees can be added to the form
     - Each attendee will have a first name, last name and email address, all required
     - The first and last name inputs should be in one row, while the email address should be in another
     - A minimum of one attendee is required
 2. A checkbox for acceptance of the conference rules, this must be checked to submit the form
-3. There should be three products that may be selected to be purchased
+3. There should be three products that may be selected for purchase
     - A T-Shirt
     - A USB Stick
     - A backpack
 4. A payment method field should appear when at least one product is selected
     - The payment method should be presented as two radio buttons
-    - The payment method should either be a debit card or PayPal
-    - If debit card is selected, a card number field should appear and be required
+    - The payment method should have two options: Debit or PayPal
+    - If debit is selected, a card number field should appear and be required
 5. Finally, there should be a submit button to submit the form
 
 ## Installing the dependencies
@@ -41,7 +41,7 @@ pnpm i @zodform/mantine @mantine/core @mantine/hooks @emotion/react @babel/core
 
 ## Creating the schema
 
-Let's start from the data model. We will need to create a Zod schema for the form, which will look like this:
+Let's start from the data model. We'll need to create a schema for the form:
 
 ```ts
 import { z } from "zod"
@@ -50,7 +50,7 @@ import { z } from "zod"
 const schema = z
   .object({
     // The attendees field is an array of objects
-    attendee: z
+    attendees: z
       .array(
         z.object({
           // Each attendee has a first name, last name and email address
@@ -67,7 +67,7 @@ const schema = z
     hasAcceptedRules: z.boolean(),
 
     /**
-    * An array of enums will create a checkbox group.
+    * An array of enums will render as a checkbox group.
     * The checkbox group is referred to as "multiChoice" in the library.
     * */
     products: z.array(z.enum(["tshirt", "usb", "backpack"] as const)),
@@ -82,18 +82,18 @@ const schema = z
 
 ### Refining the schema
 
-There are two requirements that we don't yet have in our schema:
+There are two requirements that our schema doesn't yet implement:
 1. The payment method should be required when at least one product is selected
 2. The card number should be required when the debit option is selected
 
-The way to do this in Zod is using a [refine](https://zod.dev/?id=refine) function on the schema.
+The way to implement this in Zod is using a [refine](https://zod.dev/?id=refine) function on the schema.
 
 ```ts {22-45}
 import { z } from "zod"
 
 const schema = z
   .object({
-    attendee: z
+    attendees: z
       .array(
         z.object({
           firstName: z.string(),
@@ -138,9 +138,9 @@ const schema = z
 
 ## Creating the form
 
-Now that we have the schema completed, we can pass it into the `Form` component to render it.
+Now that we have the schema completed, we can render it using the `Form` component.
 
-```tsx {11}
+```tsx {1, 11}
 import { Form } from "@zodform/core";
 import { z } from "zod"
 
@@ -157,7 +157,7 @@ export function App() {
 }
 ```
 
-We not have a form on the screen! Let's add a theme to make it look nicer.
+We now have a form on the screen! Let's add a theme to make it look nicer.
 
 ### Adding the Mantine theme
 
@@ -192,7 +192,7 @@ The responsibility of the Zod schema is to define the data model. It defines whi
 exist, what type they are, and what constraints they have. The Zod schema is not concerned with *how* those
 properties are displayed to the user, for that we need a UI schema.
 
-Let's start simple, with a UI schema that will specify the labels of the fields.
+Let's start simple, with a UI schema that will specify the labels for the fields.
 
 ```tsx {1, 9, 65}
 import { Form, FormUiSchema } from "@zodform/core";
@@ -205,14 +205,14 @@ const schema = z.object({
 
 const uiSchema: FormUiSchema<typeof schema> = {
   /**
-    * The attendee field is an array, and array fields render a list of elements.
+    * The attendees field is an array, and array fields render a list of elements.
     * Arrays are constrained to render one type of element, and we can customize
     * the UI for that element using the `element` property on the array's UI schema.
     * */
-  attendee: {
+  attendees: {
     /**
-      * The attendee's element is an object. The UI schema for an object allows
-      * specifying the UI for each of its properties.
+      * The attendees' element is an object. The UI schema for an object allows
+      * specifying the UI schema for each of its properties.
       * */
     element: {
       email: {
@@ -266,13 +266,13 @@ export function App() {
 ```
 
 In the requirements, it is specified that the payment method shouldn't be visible until
-a product is selected. Right now the payment method is always visible, let's fix that!
+a product is selected. Right now the payment method is *always* visible, let's fix that!
 
 ### Conditionally rendering fields
 
 The UI schema for every field has a `cond` property. This property is a function that takes
 in the current form data and returns a boolean. If the boolean is `true`, the field will be
-displayed, if it's `false`, the field will be hidden.
+displayed, otherwise it will be hidden.
 
 ```tsx {38-40, 49}
 import { Form, FormUiSchema } from "@zodform/core";
@@ -284,7 +284,7 @@ const schema = z.object({
 });
 
 const uiSchema: FormUiSchema<typeof schema> = {
-  attendee: {
+  attendees: {
     element: {
       email: {
         label: "Email"
@@ -340,12 +340,14 @@ export function App() {
 ```
 
 <Callout type='info'>
-  Note that the type of the data which `cond` takes expects that all data could be `undefined`.
-  This is because `cond` is called while the user is filling out the form, and not all data is available yet.
+  Keep in mind that the `data` argument passed to `cond` expects
+  that all data could potentially be undefined.
+  This is because `cond` is called during the form-filling process,
+  and some data may not be available at the time it is called.
 </Callout>
 
-Now try selecting a product, and you'll see that the payment method field appears!
-Also, when selecting a debit card, you should see the card number field.
+Try it out - select a product, and you'll see that the payment method field appears!
+And, if you select a debit card, the card number field will pop up as well.
 
 ### Customizing the component for a field
 
@@ -363,7 +365,7 @@ const schema = z.object({
 });
 
 const uiSchema: FormUiSchema<typeof schema> = {
-  attendee: {
+  attendees: {
     element: {
       email: {
         label: "Email"
@@ -427,7 +429,7 @@ the field. In this case, we're using the `EnumMantineRadio` component, which ren
 Since object fields are made up of multiple fields, we may need to define how those fields
 are laid out inside the object field. For this reason, the object's UI schema has a `Layout`
 property, which receives a `children` prop that is a record where the keys are the names
-of the fields, and the values are the components which render in place of those fields.
+of the fields, and the values are the React nodes to render.
 
 ```tsx {4-5, 19-36}
 import { Form, FormUiSchema } from "@zodform/core";
@@ -441,12 +443,12 @@ const schema = z.object({
 });
 
 const uiSchema: FormUiSchema<typeof schema> = {
-  attendee: {
+  attendees: {
     element: {
       /**
         * To define the UI schema for the object itself, we use the `ui` property.
         * The `ui` property exists to differentiate between the object's UI schema,
-        * and the UI schemas for the object's fields.
+        * and the UI schemas for the object's children.
         * */
       ui: {
         Layout: ({ children }) => (
