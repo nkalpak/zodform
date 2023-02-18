@@ -5,7 +5,7 @@ import { ComponentLabel } from '../component-label';
 
 export interface IEnumDefaultProps extends IComponentProps<string | undefined> {
   options: string[];
-  optionLabels?: Record<string, React.ReactNode>;
+  optionLabels?: Record<string, string>;
 }
 
 export function EnumDefault({

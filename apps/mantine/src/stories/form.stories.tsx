@@ -367,8 +367,8 @@ export function DonationForm() {
       component: EnumMantineRadio,
       label: 'Payment method',
       optionLabels: {
-        creditCard: <span>💳 Credit card</span>,
-        payPal: <span>🐧 PayPal</span>
+        creditCard: '💳 Credit card',
+        payPal: '🐧 PayPal'
       }
     }
   }));
@@ -462,8 +462,8 @@ export function ConferenceRegistration() {
       Component: EnumMantineRadio,
       label: 'Payment method',
       optionLabels: {
-        creditCard: <span>💳 Credit card</span>,
-        payPal: <span>🐧 PayPal</span>
+        creditCard: '💳 Credit card',
+        payPal: '🐧 PayPal'
       }
     },
     paypalNumber: {

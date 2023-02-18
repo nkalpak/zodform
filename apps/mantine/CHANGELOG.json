@@ -1,0 +1,25 @@
+{
+  "name": "@zodform/mantine",
+  "entries": [
+    {
+      "version": "0.0.4",
+      "tag": "@zodform/mantine_v0.0.4",
+      "date": "Sat, 18 Feb 2023 09:43:47 GMT",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Fix optionLabels not being used in EnumMantine"
+          }
+        ],
+        "dependency": [
+          {
+            "comment": "Updating dependency \"@zodform/core\" to `0.1.0`"
+          },
+          {
+            "comment": "Updating dependency \"@zodform/core\" from `^0.0.1` to `^0.1.0`"
+          }
+        ]
+      }
+    }
+  ]
+}

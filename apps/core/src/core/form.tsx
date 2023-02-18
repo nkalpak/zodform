@@ -814,7 +814,7 @@ type UiPropertiesEnum<Schema extends string, RootSchema extends object> = Omit<
   'Component'
 > & {
   Component?: (props: IEnumDefaultProps) => JSX.Element;
-  optionLabels?: Record<Schema, React.ReactNode>;
+  optionLabels?: Record<Schema, string>;
 };
 
 type UiPropertiesMultiChoice<Schema extends string, RootSchema extends object> = Pick<

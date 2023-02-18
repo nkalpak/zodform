@@ -11,7 +11,8 @@ export function EnumMantine({
   options,
   isRequired,
   defaultValue,
-  autoFocus
+  autoFocus,
+  optionLabels
 }: IEnumDefaultProps) {
   return (
     <Select
@@ -26,7 +27,7 @@ export function EnumMantine({
       error={errorMessage}
       data={options.map((option) => ({
         value: option,
-        label: option
+        label: optionLabels?.[option] ?? option
       }))}
     />
   );
