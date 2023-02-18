@@ -9,6 +9,7 @@ export default {
     };
   },
   editLink: false,
+  darkMode: false,
   docsRepositoryBase: 'https://github.com/nkalpak/zodform',
   footer: {
     text: (
