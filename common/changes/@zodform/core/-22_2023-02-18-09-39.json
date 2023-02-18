@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@zodform/core",
+      "comment": "Change optionLabels type to accept strings as values",
+      "type": "minor"
+    }
+  ],
+  "packageName": "@zodform/core"
+}

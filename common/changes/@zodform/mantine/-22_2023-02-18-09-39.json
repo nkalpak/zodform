@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@zodform/mantine",
+      "comment": "Fix optionLabels not being used in EnumMantine",
+      "type": "patch"
+    }
+  ],
+  "packageName": "@zodform/mantine"
+}
