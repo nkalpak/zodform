@@ -5,7 +5,6 @@ import { resolveUiSchemaConds } from './resolve-ui-schema-conds';
 import { PartialDeep } from 'type-fest';
 import { ObjectMantineRows } from '../../../mantine/src/components/object-mantine';
 import { EnumMantineRadio } from '../../../mantine/src/components/enum-mantine';
-import React from 'react';
 
 type CondFormData<Schema extends ZodType> = PartialDeep<z.infer<Schema>>;
 
@@ -149,8 +148,8 @@ describe('resolveUiSchemaConds', function () {
         Component: EnumMantineRadio,
         label: 'Payment method',
         optionLabels: {
-          creditCard: <span>💳 Credit card</span>,
-          payPal: <span>🐧 PayPal</span>
+          creditCard: '💳 Credit card',
+          payPal: '🐧 PayPal'
         }
       },
       paypalNumber: {
