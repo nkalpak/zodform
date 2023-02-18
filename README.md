@@ -2,7 +2,7 @@
 
 [See docs](https://zodform.vercel.app/)
 
-# Installation
+## Installation
 
 This repo is a [Rush](https://rushjs.io/) monorepo, so you'll need to install `@microsoft/rush` globally:
 
@@ -16,7 +16,7 @@ Once you have Rush installed, you can install the dependencies:
 rush update
 ```
 
-## Repos
+### Repos
 
 - `@zodform/core` - the logic for rendering components from a schema
 - `@zodform/docs` - the docs site
