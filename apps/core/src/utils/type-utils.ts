@@ -1,7 +1,3 @@
-import { UnionToIntersection } from 'type-fest';
-
-export type IsUnion<T> = [T] extends [UnionToIntersection<T>] ? false : true;
-export type IsNonUndefinedUnion<T> = IsUnion<Exclude<T, undefined | null>> extends true ? true : false;
 export type AnyFunction = (...args: any[]) => any;
 
 // Date is actually an object, but we don't want to recurse into it

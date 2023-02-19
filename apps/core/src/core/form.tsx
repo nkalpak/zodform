@@ -28,15 +28,15 @@ import { formDefaultValueFromSchema } from './form-default-value-from-schema';
 import { useUncontrolledToControlledWarning } from '../utils/use-uncontrolled-to-controlled-warning';
 import { unset } from '../utils/unset';
 import { IObjectDefaultProps, ObjectDefault } from '../components/default/object-default';
-import { IsNonUndefinedUnion } from '../utils/type-utils';
 import { IMultiChoiceDefaultProps, MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { PartialDeep } from 'type-fest';
 import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
 import { createContext } from '../utils/create-context';
 import { DateDefault, IDateDefaultProps } from '../components/default/date-default';
 import { mergeZodOuterInnerType } from './merge-zod-outer-inner-type';
-import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodObject, ZodOptional } from 'zod';
+import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodNumber, ZodObject, ZodOptional } from 'zod';
 import { ExtractSchemaFromEffects } from './extract-schema-from-effects';
+import { IComponentProps } from '../components/types';
 
 function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
   return schema._def.description;
@@ -106,9 +106,9 @@ function useComponent(name: string): {
  * (string, number, boolean, enum, etc.)
  * */
 function getLeafPropsFromUiSchema(
-  // We don't care about the type of "component", since we'll omit it anyways
-  uiProps?: Omit<UiPropertiesBase<any, any>, 'Component'> & { Component?: any }
-): UiPropertiesLeaf<any> {
+  // We don't care about the type of "component", since we'll omit it anyway
+  uiProps?: Omit<UiPropertiesBaseNew<ZodFirstPartySchemaTypes, any>, 'Component'> & { Component?: any }
+) {
   return R.omit(uiProps ?? {}, ['Component', 'cond']);
 }
 
@@ -127,7 +127,7 @@ interface IZodInnerComponentProps {
 }
 
 interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString, string> {
-  uiSchema?: UiPropertiesBase<string, any>;
+  uiSchema?: UiPropertiesBaseNew<ZodString, any>;
 }
 
 const ZodStringComponentInner = React.memo(function ZodStringComponentInner({
@@ -266,7 +266,7 @@ function ZodEnumComponent(props: IZodEnumComponentProps) {
 }
 
 interface IZodNumberComponentProps extends IZodLeafComponentProps<zod.ZodNumber, number> {
-  uiSchema?: UiPropertiesBase<number, any>;
+  uiSchema?: UiPropertiesBaseNew<ZodNumber, any>;
 }
 
 const ZodNumberComponentInner = React.memo(function ZodNumberComponentInner({
@@ -336,7 +336,7 @@ function ZodNumberComponent(props: IZodNumberComponentProps) {
   );
 }
 interface IZodBooleanComponentProps extends IZodLeafComponentProps<zod.ZodBoolean, boolean> {
-  uiSchema?: UiPropertiesBase<boolean, any>;
+  uiSchema?: UiPropertiesBaseNew<ZodBoolean, any>;
 }
 
 const ZodBooleanComponentInner = React.memo(function ZodBooleanComponentInner({
@@ -396,7 +396,7 @@ function ZodBooleanComponent(props: IZodBooleanComponentProps) {
 }
 
 interface IZodDateComponentProps extends IZodLeafComponentProps<zod.ZodDate, Date> {
-  uiSchema?: UiPropertiesBase<Date, any>;
+  uiSchema?: UiPropertiesBaseNew<ZodDate, any>;
 }
 
 const ZodDateComponentInner = React.memo(function ZodDateComponentInner({
@@ -459,7 +459,7 @@ interface IZodArrayComponentProps extends IZodLeafComponentProps<ZodAnyArray, an
   minLength?: number;
   maxLength?: number;
   exactLength?: number;
-  uiSchema?: UiPropertiesArray<any, any> | UiPropertiesMultiChoice<string, any>;
+  uiSchema?: UiPropertiesArray<any, any> | UiPropertiesMultiChoice<ZodEnum<any>, any>;
 }
 
 const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComponent({
@@ -472,7 +472,7 @@ const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComp
   components,
   errorMessage
 }: IZodArrayComponentProps & IZodInnerComponentProps) {
-  const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<string, any>;
+  const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<ZodEnum<any>, any>;
   const Component = uiProps.Component ?? components?.multiChoice ?? MultiChoiceDefault;
 
   return (
@@ -767,59 +767,41 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
   return null;
 });
 
-type ResolveComponentProps<Value> = Value extends Date
-  ? IDateDefaultProps
-  : Value extends boolean
-  ? IBooleanDefaultProps
-  : Value extends Array<any>
-  ? IArrayDefaultProps
-  : IsNonUndefinedUnion<Value> extends true
-  ? IMultiChoiceDefaultProps
-  : Value extends string
+type ResolveComponentPropsFromSchema<Schema> = Schema extends ZodString
   ? IStringDefaultProps
-  : Value extends number
+  : Schema extends ZodNumber
   ? INumberDefaultProps
-  : Value extends object
-  ? IObjectDefaultProps
+  : Schema extends ZodBoolean
+  ? IBooleanDefaultProps
+  : Schema extends ZodDate
+  ? IDateDefaultProps
+  : Schema extends ZodObject<any>
+  ? IObjectDefaultProps & UiPropertiesObjectValue<Schema>
+  : Schema extends ZodEnum<any>
+  ? IEnumDefaultProps
+  : Schema extends ZodArray<infer ItemSchema>
+  ? ItemSchema extends ZodEnum<any>
+    ? IMultiChoiceDefaultProps
+    : IArrayDefaultProps
   : never;
 
-type UiPropertiesBase<Value, RootSchema extends object> = {
+type UiPropertiesBaseNew<Schema, RootSchema extends object> = {
   label?: React.ReactNode;
-  Component?: (props: ResolveComponentProps<Value | undefined>) => JSX.Element;
-  autoFocus?: boolean;
+  Component?: (props: ResolveComponentPropsFromSchema<Schema>) => JSX.Element;
   cond?: (data: PartialDeep<RootSchema>) => boolean;
   description?: React.ReactNode;
-} & (Value extends boolean
-  ? UiPropertiesBoolean
-  : Value extends string
-  ? UiPropertiesString
-  : Value extends number
-  ? UiPropertiesNumber
-  : Value extends Date
-  ? UiPropertiesDate
-  : object);
-
-type UiPropertiesNumber = object;
-
-type UiPropertiesString = object;
-
-type UiPropertiesBoolean = object;
-
-type UiPropertiesDate = object;
-
-export type UiPropertiesLeaf<Value> = Omit<UiPropertiesBase<Value, any>, 'Component' | 'cond'>;
-
-type UiPropertiesEnum<Schema extends string, RootSchema extends object> = Omit<
-  UiPropertiesBase<Schema, RootSchema>,
-  'Component'
-> & {
-  Component?: (props: IEnumDefaultProps) => JSX.Element;
-  optionLabels?: Record<Schema, string>;
 };
 
-type UiPropertiesMultiChoice<Schema extends string, RootSchema extends object> = Pick<
+type UiPropertiesEnum<Schema extends ZodEnum<any>, RootSchema extends object> = UiPropertiesBaseNew<
+  Schema,
+  RootSchema
+> & {
+  optionLabels?: Record<zod.infer<Schema>, string>;
+};
+
+type UiPropertiesMultiChoice<Schema extends ZodEnum<any>, RootSchema extends object> = Omit<
   UiPropertiesEnum<Schema, RootSchema>,
-  'optionLabels' | 'label' | 'cond'
+  'Component'
 > & {
   Component?: (props: IMultiChoiceDefaultProps) => JSX.Element;
 };
@@ -850,7 +832,7 @@ type UiPropertiesObject<Schema extends AnyZodObject, RootSchema extends object> 
         children: Record<keyof zod.infer<Schema>, React.ReactNode>;
       } & UiPropertiesObjectValue<Schema>
     ) => JSX.Element;
-    Component?: (props: ResolveComponentProps<Schema> & UiPropertiesObjectValue<Schema>) => JSX.Element;
+    Component?: (props: ResolveComponentPropsFromSchema<Schema>) => JSX.Element;
   };
 };
 
@@ -866,7 +848,7 @@ type UiPropertiesArray<Schema extends ZodArray<any>, RootSchema extends object> 
         ui?: Omit<Required<UiPropertiesObject<El, RootSchema>>['ui'], 'cond'>;
       };
     }
-  : { element?: Omit<UiPropertiesBase<zod.infer<Schema>, RootSchema>, 'cond'> }) &
+  : { element?: Omit<UiPropertiesBaseNew<Schema, RootSchema>, 'cond'> }) &
   (UiPropertiesCompoundInner<RootSchema> & {
     Component?: (props: IArrayDefaultProps) => JSX.Element;
   });
@@ -875,9 +857,11 @@ type ResolveArrayUiSchema<Schema extends ZodArray<any>, RootSchema extends objec
   infer El
 >
   ? El extends ZodEnum<any>
-    ? UiPropertiesMultiChoice<zod.infer<El>, RootSchema>
+    ? UiPropertiesMultiChoice<El, RootSchema>
     : UiPropertiesArray<Schema, RootSchema>
   : never;
+
+type OmitComponentProps<T extends IComponentProps<any>> = Omit<T, keyof IComponentProps<any>>;
 
 type UiSchemaZodTypeResolver<
   Schema extends ZodFirstPartySchemaTypes,
@@ -887,16 +871,20 @@ type UiSchemaZodTypeResolver<
   : Schema extends ZodOptional<infer Inner> | ZodDefault<infer Inner>
   ? UiSchemaZodTypeResolver<Inner, RootSchema>
   : Schema extends ZodDate
-  ? UiPropertiesBase<zod.infer<Schema>, RootSchema>
+  ? UiPropertiesBaseNew<Schema, RootSchema> & OmitComponentProps<IDateDefaultProps>
   : Schema extends ZodBoolean
-  ? UiPropertiesBase<zod.infer<Schema>, RootSchema>
+  ? UiPropertiesBaseNew<Schema, RootSchema> & OmitComponentProps<IBooleanDefaultProps>
   : Schema extends ZodObject<any>
-  ? UiPropertiesObject<Schema, RootSchema>
+  ? UiPropertiesObject<Schema, RootSchema> & Omit<IObjectDefaultProps, 'children'>
   : Schema extends ZodArray<any>
-  ? ResolveArrayUiSchema<Schema, RootSchema>
+  ? ResolveArrayUiSchema<Schema, RootSchema> & Omit<IArrayDefaultProps, 'onAdd' | 'onRemove' | 'children'>
   : Schema extends ZodEnum<any>
-  ? UiPropertiesEnum<zod.infer<Schema>, RootSchema>
-  : UiPropertiesBase<zod.infer<Schema>, RootSchema>;
+  ? UiPropertiesEnum<Schema, RootSchema> & Omit<OmitComponentProps<IEnumDefaultProps>, 'options'>
+  : Schema extends ZodString
+  ? UiPropertiesBaseNew<Schema, RootSchema> & OmitComponentProps<IStringDefaultProps>
+  : Schema extends ZodNumber
+  ? UiPropertiesBaseNew<Schema, RootSchema> & OmitComponentProps<INumberDefaultProps>
+  : UiPropertiesBaseNew<Schema, RootSchema>;
 
 type UiSchema<
   Schema extends FormSchema,
