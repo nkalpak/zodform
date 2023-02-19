@@ -4,8 +4,8 @@ import { ErrorOrDescription } from './error-or-description';
 import { ComponentLabel } from '../component-label';
 
 export interface INumberDefaultProps extends IComponentProps<number | undefined> {
-  min: number | undefined;
-  max: number | undefined;
+  min?: number;
+  max?: number;
 }
 
 export function NumberDefault({
