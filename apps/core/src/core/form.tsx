@@ -1,5 +1,6 @@
 import type { AnyZodObject, ZodEffects, ZodFirstPartySchemaTypes, ZodString } from 'zod';
 import * as zod from 'zod';
+import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodNumber, ZodObject, ZodOptional } from 'zod';
 import * as R from 'remeda';
 import React from 'react';
 import { componentNameDeserialize, componentNameSerialize } from './component-name-deserialize';
@@ -34,12 +35,11 @@ import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
 import { createContext } from '../utils/create-context';
 import { DateDefault, IDateDefaultProps } from '../components/default/date-default';
 import { mergeZodOuterInnerType } from './merge-zod-outer-inner-type';
-import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodNumber, ZodObject, ZodOptional } from 'zod';
 import { ExtractSchemaFromEffects } from './extract-schema-from-effects';
 import { IComponentProps } from '../components/types';
 import * as Rhf from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useController } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
   return schema._def.description;
@@ -550,7 +550,7 @@ interface IZodArrayComponentProps extends IZodLeafComponentProps<ZodAnyArray, an
   uiSchema?: UiPropertiesArray<any, any> | UiPropertiesMultiChoice<ZodEnum<any>, any>;
 }
 
-const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComponent({
+const ZodArrayMultiChoiceComponentInner = React.memo(function ZodArrayMultiChoiceComponent({
   schema,
   name,
   value = [],
@@ -582,7 +582,42 @@ const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComp
   );
 });
 
-function ZodFieldArrayComponent(props: IZodArrayComponentProps) {
+function ZodArrayMultiChoiceComponent(props: IZodArrayComponentProps) {
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const { control } = Rhf.useFormContext();
+  const { fieldState, field } = useController({
+    name: props.name,
+    control
+  });
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <ZodArrayMultiChoiceComponentInner
+      onChange={(data) => {
+        if (data.op === 'update') {
+          field.onChange(data.value);
+        } else {
+          field.onChange(undefined);
+        }
+      }}
+      components={components}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={field.name}
+      value={field.value}
+    />
+  );
+}
+
+function ZodArrayFieldComponent(props: IZodArrayComponentProps) {
   const { components } = useInternalFormContext();
   const { schema, uiSchema, value, name } = props;
   const arraySchemaElement = schema._def.type;
@@ -626,28 +661,18 @@ function ZodFieldArrayComponent(props: IZodArrayComponentProps) {
 }
 
 function ZodArrayComponent(props: IZodArrayComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
-
+  const { isVisible } = useComponent(props.name);
   const { schema } = props;
-  const arraySchemaElement = schema._def.type;
 
   if (!isVisible) {
     return null;
   }
 
-  if (isZodEnum(arraySchemaElement)) {
-    return (
-      <ZodArrayMultiChoiceComponent
-        {...props}
-        onChange={onChange}
-        components={components}
-        errorMessage={R.first(errors)?.message}
-      />
-    );
+  if (isZodEnum(schema._def.type)) {
+    return <ZodArrayMultiChoiceComponent {...props} />;
   }
 
-  return <ZodFieldArrayComponent {...props} />;
+  return <ZodArrayFieldComponent {...props} />;
 }
 
 function ZodObjectComponent({
