@@ -1068,22 +1068,27 @@ function UncontrolledForm<Schema extends FormSchema>({
   uiSchema,
 
   onSubmit,
-  value,
   defaultValues,
 
   components,
   title,
 
-  children,
-  onErrorsChange
+  children
 }: IFormProps<Schema>) {
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
+  const defaultValue = React.useMemo(
+    () => defaultValues ?? formDefaultValueFromSchema(objectSchema),
+    [defaultValues, objectSchema]
+  );
+
   const formMethods = Rhf.useForm({
     resolver: zodResolver(objectSchema),
-    defaultValues: defaultValues ?? formDefaultValueFromSchema(objectSchema)
+    defaultValues: defaultValue
   });
 
-  const [conds, setConds] = React.useState<FormConds>({});
+  const [conds, setConds] = React.useState<FormConds>(() => {
+    return resolveNextFormConds(defaultValue, uiSchema ?? {});
+  });
 
   formMethods.watch((value) => {
     setConds(resolveNextFormConds(value, uiSchema ?? {}));
