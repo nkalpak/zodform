@@ -4,8 +4,6 @@ import { EnumDefault } from '../components/default/enum-default';
 import { Form, FormUiSchema } from '../core/form';
 
 export function ConferenceRegistration() {
-  const [liveValidate, setLiveValidate] = React.useState(false);
-
   const [schema] = React.useState(() =>
     z.object({
       people: z
@@ -108,15 +106,10 @@ export function ConferenceRegistration() {
       }}
     >
       <Form
-        liveValidate={liveValidate}
         onSubmit={console.log}
         title={<h1>Conference registration</h1>}
         schema={schema}
         uiSchema={uiSchema}
-        onErrorsChange={(errors) => {
-          const isInvalid = Object.keys(errors).length > 0;
-          setLiveValidate(isInvalid);
-        }}
       >
         {() => {
           return <button type="submit">Submit</button>;
@@ -168,7 +161,7 @@ export function Register() {
               {errors.length > 0 && (
                 <ul>
                   {errors.map((error) => (
-                    <li key={error.path.join('')}>{error.message}</li>
+                    <li key={error.name}>{error.message}</li>
                   ))}
                 </ul>
               )}

@@ -36,6 +36,7 @@ import { ExtractSchemaFromEffects } from './extract-schema-from-effects';
 import { IComponentProps } from '../components/types';
 import * as Rhf from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { IFormError, mapRhfErrors } from './form-errors';
 
 function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
   return schema._def.description;
@@ -944,13 +945,14 @@ export type FormOnChange<Schema extends FormSchema> = (
   updater: (oldValue: FormValue<Schema>) => FormValue<Schema>
 ) => void;
 
-type FormChildren = (props: { errors: zod.ZodIssue[] }) => JSX.Element;
+type FormChildren = (props: { errors: IFormError[] }) => JSX.Element;
 type FormConds = Record<string, CondResult>;
 
 export interface IFormProps<Schema extends FormSchema> {
   schema: Schema;
   uiSchema?: FormUiSchema<Schema>;
   onSubmit?: (value: zod.infer<Schema>) => void;
+  onError?: (errors: IFormError[]) => void;
   onChange?: FormOnChange<Schema>;
   value?: FormValue<Schema>;
   defaultValues?: zod.infer<Schema>;
@@ -967,7 +969,6 @@ export interface IFormProps<Schema extends FormSchema> {
   title?: React.ReactNode;
   children?: FormChildren;
   liveValidate?: boolean;
-  onErrorsChange?: (errors: zod.ZodIssue[]) => void;
 }
 
 /**
@@ -1012,6 +1013,7 @@ function UncontrolledForm<Schema extends FormSchema>({
   uiSchema,
 
   onSubmit,
+  onError,
   defaultValues,
 
   components,
@@ -1044,16 +1046,16 @@ function UncontrolledForm<Schema extends FormSchema>({
         display: 'grid',
         gap: 32
       }}
-      onSubmit={(event) => {
-        event.preventDefault();
+      onSubmit={(e) => {
         formMethods.handleSubmit(
           (data) => {
             onSubmit?.(data);
           },
           (errors) => {
-            console.log('error', errors);
+            // @ts-expect-error Tests cover this
+            onError?.(mapRhfErrors(errors));
           }
-        )(event);
+        )(e);
       }}
     >
       {title}
@@ -1070,8 +1072,8 @@ function UncontrolledForm<Schema extends FormSchema>({
       </Rhf.FormProvider>
 
       {children ? (
-        // TODO: pass errors
-        children({ errors: [] })
+        // @ts-expect-error Tests cover this
+        children({ errors: mapRhfErrors(formMethods.formState.errors) })
       ) : (
         <button type="submit">Submit</button>
       )}
