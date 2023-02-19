@@ -18,31 +18,10 @@ const TEMPLATE_DESCRIPTIONS: Record<z.infer<typeof templateSchema>, string> = {
 };
 
 const schema = z.object({
-  template: templateSchema,
   description: z.string().min(1, 'The description must not be empty')
 });
 
 const uiSchema: FormUiSchema<typeof schema> = {
-  template: {
-    label: 'Template',
-    Component: (props) => {
-      const form = useForm<typeof schema>();
-
-      return (
-        <EnumDefault
-          {...props}
-          onChange={(value) => {
-            form.update((old) => {
-              if (value) {
-                old.description = TEMPLATE_DESCRIPTIONS[value as z.infer<typeof templateSchema>];
-              }
-            });
-            props.onChange(value);
-          }}
-        />
-      );
-    }
-  },
   description: {
     label: 'Description'
   }
@@ -56,7 +35,7 @@ export function BusinessDescription() {
         margin: 'auto'
       }}
     >
-      <Form schema={schema} uiSchema={uiSchema} />
+      <Form onSubmit={console.log} schema={schema} uiSchema={uiSchema} />
     </div>
   );
 }

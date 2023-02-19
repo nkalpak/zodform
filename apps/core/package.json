@@ -48,7 +48,9 @@
     "vite": "^4.1.0",
     "vitest": "^0.28.2",
     "vite-plugin-dts": "^1.7.2",
-    "@types/testing-library__jest-dom": "^5.14.5"
+    "@types/testing-library__jest-dom": "^5.14.5",
+    "react-hook-form": "^7.43.1",
+    "@hookform/resolvers": "^2.9.11"
   },
   "peerDependencies": {
     "react": "^18.2.0",

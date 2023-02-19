@@ -3,10 +3,6 @@ import { z } from 'zod';
 import { EnumDefault } from '../components/default/enum-default';
 import { Form, FormUiSchema, useForm } from '../core/form';
 
-interface IStringDefaultProps {
-  bla: string;
-}
-
 export function ConferenceRegistration() {
   const [liveValidate, setLiveValidate] = React.useState(false);
 

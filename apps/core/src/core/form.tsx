@@ -37,6 +37,9 @@ import { mergeZodOuterInnerType } from './merge-zod-outer-inner-type';
 import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodNumber, ZodObject, ZodOptional } from 'zod';
 import { ExtractSchemaFromEffects } from './extract-schema-from-effects';
 import { IComponentProps } from '../components/types';
+import * as Rhf from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useController } from 'react-hook-form';
 
 function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
   return schema._def.description;
@@ -178,8 +181,14 @@ const ZodStringComponentInner = React.memo(function ZodStringComponentInner({
 });
 
 function ZodStringComponent(props: IZodStringComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const { control } = Rhf.useFormContext();
+  const { fieldState, field } = Rhf.useController({
+    name: props.name,
+    control
+  });
 
   if (!isVisible) {
     return null;
@@ -187,10 +196,21 @@ function ZodStringComponent(props: IZodStringComponentProps) {
 
   return (
     <ZodStringComponentInner
-      {...props}
-      errorMessage={R.first(errors)?.message}
-      onChange={onChange}
+      onChange={(data) => {
+        if (data.op === 'update') {
+          field.onChange(data.value);
+        } else {
+          field.onChange(undefined);
+        }
+      }}
       components={components}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={field.name}
+      value={field.value}
     />
   );
 }
@@ -248,8 +268,14 @@ const ZodEnumComponentInner = React.memo(function ZodEnumComponentInner({
 });
 
 function ZodEnumComponent(props: IZodEnumComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const { control } = Rhf.useFormContext();
+  const { fieldState, field } = useController({
+    name: props.name,
+    control
+  });
 
   if (!isVisible) {
     return null;
@@ -257,10 +283,21 @@ function ZodEnumComponent(props: IZodEnumComponentProps) {
 
   return (
     <ZodEnumComponentInner
-      {...props}
+      onChange={(data) => {
+        if (data.op === 'update') {
+          field.onChange(data.value);
+        } else {
+          field.onChange(undefined);
+        }
+      }}
       components={components}
-      onChange={onChange}
-      errorMessage={R.first(errors)?.message}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={field.name}
+      value={field.value}
     />
   );
 }
@@ -438,8 +475,14 @@ const ZodDateComponentInner = React.memo(function ZodDateComponentInner({
 });
 
 function ZodDateComponent(props: IZodDateComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const { control } = Rhf.useFormContext();
+  const { fieldState, field } = useController({
+    name: props.name,
+    control
+  });
 
   if (!isVisible) {
     return null;
@@ -447,10 +490,21 @@ function ZodDateComponent(props: IZodDateComponentProps) {
 
   return (
     <ZodDateComponentInner
-      {...props}
+      onChange={(data) => {
+        if (data.op === 'update') {
+          field.onChange(data.value);
+        } else {
+          field.onChange(undefined);
+        }
+      }}
       components={components}
-      errorMessage={R.first(errors)?.message}
-      onChange={onChange}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={field.name}
+      value={field.value}
     />
   );
 }
@@ -1165,6 +1219,9 @@ function UncontrolledForm<Schema extends FormSchema>({
   onErrorsChange
 }: IFormProps<Schema>) {
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
+  const formMethods = Rhf.useForm({
+    resolver: zodResolver(objectSchema)
+  });
 
   const [state, dispatch] = React.useReducer(formReducer, undefined, () => {
     const formData = defaultValues ?? formDefaultValueFromSchema(objectSchema);
@@ -1175,7 +1232,13 @@ function UncontrolledForm<Schema extends FormSchema>({
       errors: STABLE_NO_ERRORS
     };
   });
-  const { formData, conds, errors } = state!;
+  const { formData, errors } = state!;
+
+  const [conds, setConds] = React.useState<FormConds>({});
+
+  formMethods.watch((value) => {
+    setConds(resolveNextFormConds(value, uiSchema ?? {}));
+  });
 
   const handleSubmit = React.useCallback(
     (value: typeof formData) => {
@@ -1247,6 +1310,11 @@ function UncontrolledForm<Schema extends FormSchema>({
     onErrorsChange?.(flattenErrorsToZodIssues(errors));
   }, [errors, onErrorsChange]);
 
+  const rhfValue = formMethods.watch();
+  console.log(rhfValue);
+  console.log(formMethods.formState.errors);
+  console.log('-'.repeat(80));
+
   return (
     <form
       style={{
@@ -1256,6 +1324,14 @@ function UncontrolledForm<Schema extends FormSchema>({
       onSubmit={(event) => {
         event.preventDefault();
         handleSubmit(formData);
+        formMethods.handleSubmit(
+          (data) => {
+            console.log('submit', data);
+          },
+          (errors) => {
+            console.log('error', errors);
+          }
+        )(event);
       }}
     >
       {title}
@@ -1270,7 +1346,9 @@ function UncontrolledForm<Schema extends FormSchema>({
         }}
       >
         <FormContext.Provider value={{ value: formData, update: updateForm }}>
-          <ZodAnyComponent uiSchema={uiSchema} value={value ?? formData} schema={objectSchema} />
+          <Rhf.FormProvider {...formMethods}>
+            <ZodAnyComponent uiSchema={uiSchema} value={value ?? formData} schema={objectSchema} />
+          </Rhf.FormProvider>
         </FormContext.Provider>
       </FormContextProvider>
 
