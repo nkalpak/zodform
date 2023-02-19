@@ -548,11 +548,54 @@ const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComp
   );
 });
 
+function ZodFieldArrayComponent(props: IZodArrayComponentProps) {
+  const { components } = useInternalFormContext();
+  const { schema, uiSchema, value, name } = props;
+  const arraySchemaElement = schema._def.type;
+
+  const { control } = Rhf.useFormContext();
+  const fieldArray = Rhf.useFieldArray({
+    control,
+    name: props.name
+  });
+
+  const uiProps = (uiSchema ?? {}) as UiPropertiesArray<any, any>;
+  const Component = uiProps.Component ?? components?.array ?? ArrayDefault;
+
+  return (
+    <Component
+      description={zodSchemaDescription(schema) ?? uiProps.description}
+      title={uiProps.title}
+      onRemove={(index) => {
+        fieldArray.remove(index);
+      }}
+      onAdd={() => {
+        fieldArray.append(formDefaultValueFromSchema(arraySchemaElement));
+      }}
+    >
+      {fieldArray.fields.map((field, index) => {
+        const uniqueName = componentNameSerialize([name, index]);
+
+        return (
+          <ZodAnyComponent
+            key={field.id}
+            name={uniqueName}
+            schema={arraySchemaElement}
+            // TODO: Remove this prop entirely
+            value={value}
+            uiSchema={uiProps.element}
+          />
+        );
+      })}
+    </Component>
+  );
+}
+
 function ZodArrayComponent(props: IZodArrayComponentProps) {
-  const { onChange, onArrayRemove, components } = useInternalFormContext();
+  const { onChange, components } = useInternalFormContext();
   const { errors, isVisible } = useComponent(props.name);
 
-  const { schema, name, value, uiSchema } = props;
+  const { schema } = props;
   const arraySchemaElement = schema._def.type;
 
   if (!isVisible) {
@@ -570,38 +613,7 @@ function ZodArrayComponent(props: IZodArrayComponentProps) {
     );
   }
 
-  const uiProps = (uiSchema ?? {}) as UiPropertiesArray<any, any>;
-  const Component = uiProps.Component ?? components?.array ?? ArrayDefault;
-
-  return (
-    <Component
-      description={zodSchemaDescription(schema) ?? uiProps.description}
-      title={uiProps.title}
-      onRemove={(index) => {
-        onArrayRemove(componentNameDeserialize(`${name}[${index}]`));
-      }}
-      onAdd={() => {
-        onChange({
-          op: 'update',
-          path: componentNameDeserialize(`${name}[${value?.length ?? 0}]`),
-          value: formDefaultValueFromSchema(arraySchemaElement)
-        });
-      }}
-    >
-      {value?.map((item, index) => {
-        const uniqueName = `${name}[${index}]`;
-        return (
-          <ZodAnyComponent
-            key={uniqueName}
-            name={uniqueName}
-            schema={arraySchemaElement}
-            value={item}
-            uiSchema={uiProps.element}
-          />
-        );
-      }) ?? []}
-    </Component>
-  );
+  return <ZodFieldArrayComponent {...props} />;
 }
 
 function ZodObjectComponent({
@@ -1220,7 +1232,8 @@ function UncontrolledForm<Schema extends FormSchema>({
 }: IFormProps<Schema>) {
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
   const formMethods = Rhf.useForm({
-    resolver: zodResolver(objectSchema)
+    resolver: zodResolver(objectSchema),
+    defaultValues: defaultValues ?? formDefaultValueFromSchema(objectSchema)
   });
 
   const [state, dispatch] = React.useReducer(formReducer, undefined, () => {
@@ -1312,7 +1325,6 @@ function UncontrolledForm<Schema extends FormSchema>({
 
   const rhfValue = formMethods.watch();
   console.log(rhfValue);
-  console.log(formMethods.formState.errors);
   console.log('-'.repeat(80));
 
   return (
