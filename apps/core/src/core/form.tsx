@@ -88,6 +88,34 @@ function getLeafPropsFromUiSchema(
   return R.omit(uiProps ?? {}, ['Component', 'cond']);
 }
 
+function useRegisterComponent({ name }: { name: string }) {
+  const { control } = Rhf.useFormContext();
+  const { fieldState, field, formState } = Rhf.useController({
+    name: name,
+    control
+  });
+
+  const { onChange } = field;
+
+  const handleChange = React.useCallback(
+    (data: ChangePayload) => {
+      if (data.op === 'update') {
+        onChange(data.value);
+      } else {
+        onChange(undefined);
+      }
+    },
+    [onChange]
+  );
+
+  return {
+    field,
+    fieldState,
+    formState,
+    handleChange
+  };
+}
+
 interface IZodLeafComponentProps<Schema extends ZodFirstPartySchemaTypes> {
   schema: Schema;
   name: string;
@@ -157,25 +185,11 @@ function ZodStringComponent(props: IZodStringComponentProps) {
   const { components } = useInternalFormContext();
   const { isVisible } = useComponent(props.name);
 
-  const { control } = Rhf.useFormContext();
   const {
     fieldState,
-    field: { onChange, name, value }
-  } = Rhf.useController({
-    name: props.name,
-    control
-  });
-
-  const handleChange = React.useCallback(
-    (data: ChangePayload) => {
-      if (data.op === 'update') {
-        onChange(data.value);
-      } else {
-        onChange(undefined);
-      }
-    },
-    [onChange]
-  );
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
@@ -252,25 +266,11 @@ function ZodEnumComponent(props: IZodEnumComponentProps) {
   const { components } = useInternalFormContext();
   const { isVisible } = useComponent(props.name);
 
-  const { control } = Rhf.useFormContext();
   const {
     fieldState,
-    field: { onChange, name, value }
-  } = Rhf.useController({
-    name: props.name,
-    control
-  });
-
-  const handleChange = React.useCallback(
-    (data: ChangePayload) => {
-      if (data.op === 'update') {
-        onChange(data.value);
-      } else {
-        onChange(undefined);
-      }
-    },
-    [onChange]
-  );
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
@@ -348,25 +348,11 @@ function ZodNumberComponent(props: IZodNumberComponentProps) {
   const { components } = useInternalFormContext();
   const { isVisible } = useComponent(props.name);
 
-  const { control } = Rhf.useFormContext();
   const {
     fieldState,
-    field: { onChange, name, value }
-  } = Rhf.useController({
-    name: props.name,
-    control
-  });
-
-  const handleChange = React.useCallback(
-    (data: ChangePayload) => {
-      if (data.op === 'update') {
-        onChange(data.value);
-      } else {
-        onChange(undefined);
-      }
-    },
-    [onChange]
-  );
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
@@ -432,25 +418,11 @@ function ZodBooleanComponent(props: IZodBooleanComponentProps) {
   const { components } = useInternalFormContext();
   const { isVisible } = useComponent(props.name);
 
-  const { control } = Rhf.useFormContext();
   const {
     fieldState,
-    field: { onChange, name, value }
-  } = Rhf.useController({
-    name: props.name,
-    control
-  });
-
-  const handleChange = React.useCallback(
-    (data: ChangePayload) => {
-      if (data.op === 'update') {
-        onChange(data.value);
-      } else {
-        onChange(undefined);
-      }
-    },
-    [onChange]
-  );
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
@@ -517,25 +489,11 @@ function ZodDateComponent(props: IZodDateComponentProps) {
   const { components } = useInternalFormContext();
   const { isVisible } = useComponent(props.name);
 
-  const { control } = Rhf.useFormContext();
   const {
     fieldState,
-    field: { onChange, name, value }
-  } = Rhf.useController({
-    name: props.name,
-    control
-  });
-
-  const handleChange = React.useCallback(
-    (data: ChangePayload) => {
-      if (data.op === 'update') {
-        onChange(data.value);
-      } else {
-        onChange(undefined);
-      }
-    },
-    [onChange]
-  );
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
@@ -599,25 +557,11 @@ function ZodArrayMultiChoiceComponent(props: IZodArrayComponentProps) {
   const { components } = useInternalFormContext();
   const { isVisible } = useComponent(props.name);
 
-  const { control } = Rhf.useFormContext();
   const {
     fieldState,
-    field: { onChange, name, value }
-  } = Rhf.useController({
-    name: props.name,
-    control
-  });
-
-  const handleChange = React.useCallback(
-    (data: ChangePayload) => {
-      if (data.op === 'update') {
-        onChange(data.value);
-      } else {
-        onChange(undefined);
-      }
-    },
-    [onChange]
-  );
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
