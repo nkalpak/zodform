@@ -63,7 +63,6 @@ type ChangePayload =
 type OnChange = (data: ChangePayload) => void;
 
 const [useInternalFormContext, FormContextProvider] = createContext<{
-  errors?: ErrorsMap;
   components?: Required<IFormProps<any>>['components'];
   conds: FormConds;
 }>();
@@ -73,17 +72,15 @@ function isComponentVisible(name: string, conds: FormConds): boolean {
 }
 
 function useComponent(name: string): {
-  errors: zod.ZodIssue[];
   isVisible: boolean;
 } {
-  const { errors, conds } = useInternalFormContext();
+  const { conds } = useInternalFormContext();
 
   return React.useMemo(() => {
     return {
-      errors: errors?.[name] ?? [],
       isVisible: isComponentVisible(name, conds)
     };
-  }, [conds, errors, name]);
+  }, [conds, name]);
 }
 
 /**
@@ -1285,7 +1282,7 @@ function UncontrolledForm<Schema extends FormSchema>({
       errors: STABLE_NO_ERRORS
     };
   });
-  const { formData, errors } = state!;
+  const { formData } = state!;
 
   const [conds, setConds] = React.useState<FormConds>({});
 
@@ -1313,10 +1310,6 @@ function UncontrolledForm<Schema extends FormSchema>({
     },
     [onSubmit, schema, uiSchema]
   );
-
-  React.useEffect(() => {
-    onErrorsChange?.(flattenErrorsToZodIssues(errors));
-  }, [errors, onErrorsChange]);
 
   const rhfValue = formMethods.watch();
   console.log(rhfValue);
@@ -1346,7 +1339,6 @@ function UncontrolledForm<Schema extends FormSchema>({
       <FormContextProvider
         value={{
           conds,
-          errors,
           components
         }}
       >
@@ -1356,7 +1348,8 @@ function UncontrolledForm<Schema extends FormSchema>({
       </FormContextProvider>
 
       {children ? (
-        children({ errors: flattenErrorsToZodIssues(errors) })
+        // TODO: pass errors
+        children({ errors: [] })
       ) : (
         <button type="submit">Submit</button>
       )}
@@ -1375,7 +1368,6 @@ function ControlledForm<Schema extends FormSchema>({
   children,
   onSubmit
 }: IFormProps<Schema>) {
-  const [errors, setErrors] = React.useState<ErrorsMap>(STABLE_NO_ERRORS);
   const [conds, setConds] = React.useState<FormConds>(resolveNextFormConds(value, uiSchema ?? {}));
 
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
@@ -1383,10 +1375,8 @@ function ControlledForm<Schema extends FormSchema>({
   const handleValidateResult = React.useCallback(
     (result: ReturnType<typeof validate>) => {
       if (result.isValid) {
-        setErrors(STABLE_NO_ERRORS);
         onErrorsChange?.([]);
       } else {
-        setErrors(result.errors);
         onErrorsChange?.(flattenErrorsToZodIssues(result.errors));
       }
     },
@@ -1427,7 +1417,6 @@ function ControlledForm<Schema extends FormSchema>({
       <FormContextProvider
         value={{
           conds,
-          errors,
           components
         }}
       >
@@ -1435,7 +1424,8 @@ function ControlledForm<Schema extends FormSchema>({
       </FormContextProvider>
 
       {children ? (
-        children({ errors: flattenErrorsToZodIssues(errors) })
+        // TODO: pass errors
+        children({ errors: [] })
       ) : (
         <button type="submit">Submit</button>
       )}
