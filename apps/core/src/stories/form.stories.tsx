@@ -1,7 +1,7 @@
 import React from 'react';
 import { z } from 'zod';
 import { EnumDefault } from '../components/default/enum-default';
-import { Form, FormUiSchema, useForm } from '../core/form';
+import { Form, FormUiSchema } from '../core/form';
 
 export function ConferenceRegistration() {
   const [liveValidate, setLiveValidate] = React.useState(false);
@@ -46,8 +46,6 @@ export function ConferenceRegistration() {
         ui: {
           title: 'Attendee',
           Layout: ({ children, value }) => {
-            const form = useForm<typeof schema>();
-
             return (
               <div
                 style={{
@@ -56,24 +54,11 @@ export function ConferenceRegistration() {
                   gap: 12
                 }}
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    form.update((old) => {
-                      old.people![0]!.firstName = 'John';
-                      old.people![0]!.lastName = 'Doe';
-                    });
-                  }}
-                >
-                  Do
-                </button>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   {children.firstName} {children.lastName}
                 </div>
                 {children.email} {children.phoneNumber}
-                <div>
-                  Who? {form.value.amount} {value.lastName}
-                </div>
+                <div>Who? {value.lastName}</div>
               </div>
             );
           }

@@ -68,21 +68,6 @@ const [useInternalFormContext, FormContextProvider] = createContext<{
   conds: FormConds;
 }>();
 
-const FormContext = React.createContext<{
-  value: any;
-  update: (updater: (value: any) => void) => void;
-}>({
-  value: {},
-  update: R.noop
-});
-
-export function useForm<Schema extends FormSchema>(): {
-  value: FormValue<Schema>;
-  update: (updater: (value: FormValue<Schema>) => void) => void;
-} {
-  return React.useContext(FormContext);
-}
-
 function isComponentVisible(name: string, conds: FormConds): boolean {
   return conds[name]?.cond ?? true;
 }
@@ -1283,7 +1268,6 @@ function UncontrolledForm<Schema extends FormSchema>({
   title,
 
   children,
-  liveValidate = false,
   onErrorsChange
 }: IFormProps<Schema>) {
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
@@ -1330,22 +1314,6 @@ function UncontrolledForm<Schema extends FormSchema>({
     [onSubmit, schema, uiSchema]
   );
 
-  const updateForm = React.useCallback(
-    (updater: (old: any) => void) => {
-      const newData = produce(formData, updater);
-      dispatch({
-        type: 'set',
-        payload: {
-          value: newData,
-          schema,
-          uiSchema: uiSchema ?? {},
-          liveValidate
-        }
-      });
-    },
-    [formData, liveValidate, schema, uiSchema]
-  );
-
   React.useEffect(() => {
     onErrorsChange?.(flattenErrorsToZodIssues(errors));
   }, [errors, onErrorsChange]);
@@ -1382,11 +1350,9 @@ function UncontrolledForm<Schema extends FormSchema>({
           components
         }}
       >
-        <FormContext.Provider value={{ value: formData, update: updateForm }}>
-          <Rhf.FormProvider {...formMethods}>
-            <ZodAnyComponent uiSchema={uiSchema} value={value ?? formData} schema={objectSchema} />
-          </Rhf.FormProvider>
-        </FormContext.Provider>
+        <Rhf.FormProvider {...formMethods}>
+          <ZodAnyComponent uiSchema={uiSchema} value={value ?? formData} schema={objectSchema} />
+        </Rhf.FormProvider>
       </FormContextProvider>
 
       {children ? (
@@ -1402,7 +1368,6 @@ function ControlledForm<Schema extends FormSchema>({
   schema,
   value,
   components,
-  onChange,
   onErrorsChange,
   uiSchema,
   liveValidate,
@@ -1436,18 +1401,6 @@ function ControlledForm<Schema extends FormSchema>({
     }
   }, [handleValidateResult, onSubmit, schema, uiSchema, value]);
 
-  const handleUpdate = React.useCallback(
-    (updater: (value: any) => void) => {
-      onChange?.((oldValue) => {
-        const res: any = produce(oldValue, (draft: any) => {
-          updater(draft);
-        });
-        return res;
-      });
-    },
-    [onChange]
-  );
-
   React.useEffect(() => {
     if (liveValidate) {
       handleValidateResult(validate(value, schema, uiSchema ?? {}));
@@ -1478,9 +1431,7 @@ function ControlledForm<Schema extends FormSchema>({
           components
         }}
       >
-        <FormContext.Provider value={{ value, update: handleUpdate }}>
-          <ZodAnyComponent uiSchema={uiSchema} value={value} schema={objectSchema} />
-        </FormContext.Provider>
+        <ZodAnyComponent uiSchema={uiSchema} value={value} schema={objectSchema} />
       </FormContextProvider>
 
       {children ? (
