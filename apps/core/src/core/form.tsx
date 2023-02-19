@@ -159,10 +159,24 @@ function ZodStringComponent(props: IZodStringComponentProps) {
   const { isVisible } = useComponent(props.name);
 
   const { control } = Rhf.useFormContext();
-  const { fieldState, field } = Rhf.useController({
+  const {
+    fieldState,
+    field: { onChange, name, value }
+  } = Rhf.useController({
     name: props.name,
     control
   });
+
+  const handleChange = React.useCallback(
+    (data: ChangePayload) => {
+      if (data.op === 'update') {
+        onChange(data.value);
+      } else {
+        onChange(undefined);
+      }
+    },
+    [onChange]
+  );
 
   if (!isVisible) {
     return null;
@@ -170,21 +184,15 @@ function ZodStringComponent(props: IZodStringComponentProps) {
 
   return (
     <ZodStringComponentInner
-      onChange={(data) => {
-        if (data.op === 'update') {
-          field.onChange(data.value);
-        } else {
-          field.onChange(undefined);
-        }
-      }}
+      onChange={handleChange}
       components={components}
       errorMessage={fieldState.error?.message}
       schema={props.schema}
       uiSchema={props.uiSchema}
       isRequired={props.isRequired}
       description={props.description}
-      name={field.name}
-      value={field.value}
+      name={name}
+      value={value}
     />
   );
 }
@@ -246,10 +254,24 @@ function ZodEnumComponent(props: IZodEnumComponentProps) {
   const { isVisible } = useComponent(props.name);
 
   const { control } = Rhf.useFormContext();
-  const { fieldState, field } = useController({
+  const {
+    fieldState,
+    field: { onChange, name, value }
+  } = Rhf.useController({
     name: props.name,
     control
   });
+
+  const handleChange = React.useCallback(
+    (data: ChangePayload) => {
+      if (data.op === 'update') {
+        onChange(data.value);
+      } else {
+        onChange(undefined);
+      }
+    },
+    [onChange]
+  );
 
   if (!isVisible) {
     return null;
@@ -257,21 +279,15 @@ function ZodEnumComponent(props: IZodEnumComponentProps) {
 
   return (
     <ZodEnumComponentInner
-      onChange={(data) => {
-        if (data.op === 'update') {
-          field.onChange(data.value);
-        } else {
-          field.onChange(undefined);
-        }
-      }}
+      onChange={handleChange}
       components={components}
       errorMessage={fieldState.error?.message}
       schema={props.schema}
       uiSchema={props.uiSchema}
       isRequired={props.isRequired}
       description={props.description}
-      name={field.name}
-      value={field.value}
+      name={name}
+      value={value}
     />
   );
 }
@@ -334,10 +350,24 @@ function ZodNumberComponent(props: IZodNumberComponentProps) {
   const { isVisible } = useComponent(props.name);
 
   const { control } = Rhf.useFormContext();
-  const { fieldState, field } = Rhf.useController({
+  const {
+    fieldState,
+    field: { onChange, name, value }
+  } = Rhf.useController({
     name: props.name,
     control
   });
+
+  const handleChange = React.useCallback(
+    (data: ChangePayload) => {
+      if (data.op === 'update') {
+        onChange(data.value);
+      } else {
+        onChange(undefined);
+      }
+    },
+    [onChange]
+  );
 
   if (!isVisible) {
     return null;
@@ -345,21 +375,15 @@ function ZodNumberComponent(props: IZodNumberComponentProps) {
 
   return (
     <ZodNumberComponentInner
-      onChange={(data) => {
-        if (data.op === 'update') {
-          field.onChange(data.value);
-        } else {
-          field.onChange(undefined);
-        }
-      }}
+      onChange={handleChange}
       components={components}
       errorMessage={fieldState.error?.message}
       schema={props.schema}
       uiSchema={props.uiSchema}
       isRequired={props.isRequired}
       description={props.description}
-      name={field.name}
-      value={field.value}
+      name={name}
+      value={value}
     />
   );
 }
@@ -410,10 +434,24 @@ function ZodBooleanComponent(props: IZodBooleanComponentProps) {
   const { isVisible } = useComponent(props.name);
 
   const { control } = Rhf.useFormContext();
-  const { fieldState, field } = Rhf.useController({
+  const {
+    fieldState,
+    field: { onChange, name, value }
+  } = Rhf.useController({
     name: props.name,
     control
   });
+
+  const handleChange = React.useCallback(
+    (data: ChangePayload) => {
+      if (data.op === 'update') {
+        onChange(data.value);
+      } else {
+        onChange(undefined);
+      }
+    },
+    [onChange]
+  );
 
   if (!isVisible) {
     return null;
@@ -421,21 +459,15 @@ function ZodBooleanComponent(props: IZodBooleanComponentProps) {
 
   return (
     <ZodBooleanComponentInner
-      onChange={(data) => {
-        if (data.op === 'update') {
-          field.onChange(data.value);
-        } else {
-          field.onChange(undefined);
-        }
-      }}
+      onChange={handleChange}
       components={components}
       errorMessage={fieldState.error?.message}
       schema={props.schema}
       uiSchema={props.uiSchema}
       isRequired={props.isRequired}
       description={props.description}
-      name={field.name}
-      value={field.value}
+      name={name}
+      value={value}
     />
   );
 }
@@ -487,10 +519,24 @@ function ZodDateComponent(props: IZodDateComponentProps) {
   const { isVisible } = useComponent(props.name);
 
   const { control } = Rhf.useFormContext();
-  const { fieldState, field } = useController({
+  const {
+    fieldState,
+    field: { onChange, name, value }
+  } = Rhf.useController({
     name: props.name,
     control
   });
+
+  const handleChange = React.useCallback(
+    (data: ChangePayload) => {
+      if (data.op === 'update') {
+        onChange(data.value);
+      } else {
+        onChange(undefined);
+      }
+    },
+    [onChange]
+  );
 
   if (!isVisible) {
     return null;
@@ -498,21 +544,15 @@ function ZodDateComponent(props: IZodDateComponentProps) {
 
   return (
     <ZodDateComponentInner
-      onChange={(data) => {
-        if (data.op === 'update') {
-          field.onChange(data.value);
-        } else {
-          field.onChange(undefined);
-        }
-      }}
+      onChange={handleChange}
       components={components}
       errorMessage={fieldState.error?.message}
       schema={props.schema}
       uiSchema={props.uiSchema}
       isRequired={props.isRequired}
       description={props.description}
-      name={field.name}
-      value={field.value}
+      name={name}
+      value={value}
     />
   );
 }
@@ -561,10 +601,24 @@ function ZodArrayMultiChoiceComponent(props: IZodArrayComponentProps) {
   const { isVisible } = useComponent(props.name);
 
   const { control } = Rhf.useFormContext();
-  const { fieldState, field } = useController({
+  const {
+    fieldState,
+    field: { onChange, name, value }
+  } = Rhf.useController({
     name: props.name,
     control
   });
+
+  const handleChange = React.useCallback(
+    (data: ChangePayload) => {
+      if (data.op === 'update') {
+        onChange(data.value);
+      } else {
+        onChange(undefined);
+      }
+    },
+    [onChange]
+  );
 
   if (!isVisible) {
     return null;
@@ -572,21 +626,15 @@ function ZodArrayMultiChoiceComponent(props: IZodArrayComponentProps) {
 
   return (
     <ZodArrayMultiChoiceComponentInner
-      onChange={(data) => {
-        if (data.op === 'update') {
-          field.onChange(data.value);
-        } else {
-          field.onChange(undefined);
-        }
-      }}
+      onChange={handleChange}
       components={components}
       errorMessage={fieldState.error?.message}
       schema={props.schema}
       uiSchema={props.uiSchema}
       isRequired={props.isRequired}
       description={props.description}
-      name={field.name}
-      value={field.value}
+      name={name}
+      value={value}
     />
   );
 }
