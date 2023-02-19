@@ -67,7 +67,6 @@ const [useInternalFormContext, FormContextProvider] = createContext<{
   components?: Required<IFormProps<any>>['components'];
 
   onChange: OnChange;
-  onArrayRemove: (path: ComponentPath) => void;
   conds: FormConds;
 }>();
 
@@ -1348,20 +1347,6 @@ function UncontrolledForm<Schema extends FormSchema>({
     [liveValidate, schema, uiSchema]
   );
 
-  const onArrayRemove = React.useCallback(
-    (path: ComponentPath) => {
-      dispatch({
-        type: 'arrayRemove',
-        payload: {
-          path,
-          schema,
-          liveValidate
-        }
-      });
-    },
-    [liveValidate, schema]
-  );
-
   const updateForm = React.useCallback(
     (updater: (old: any) => void) => {
       const newData = produce(formData, updater);
@@ -1412,8 +1397,7 @@ function UncontrolledForm<Schema extends FormSchema>({
           conds,
           errors,
           onChange: handleChange,
-          components,
-          onArrayRemove
+          components
         }}
       >
         <FormContext.Provider value={{ value: formData, update: updateForm }}>
@@ -1477,13 +1461,6 @@ function ControlledForm<Schema extends FormSchema>({
     [onChange]
   );
 
-  const onArrayRemove = React.useCallback(
-    (path: ComponentPath) => {
-      onChange?.((oldValue) => formArrayRemove(oldValue, path));
-    },
-    [onChange]
-  );
-
   const handleUpdate = React.useCallback(
     (updater: (value: any) => void) => {
       onChange?.((oldValue) => {
@@ -1524,8 +1501,7 @@ function ControlledForm<Schema extends FormSchema>({
           conds,
           errors,
           onChange: handleChange,
-          components,
-          onArrayRemove
+          components
         }}
       >
         <FormContext.Provider value={{ value, update: handleUpdate }}>
