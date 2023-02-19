@@ -9,8 +9,6 @@ import { EnumDefault, IEnumDefaultProps } from '../components/default/enum-defau
 import { INumberDefaultProps, NumberDefault } from '../components/default/number-default';
 import { ArrayDefault, IArrayDefaultProps } from '../components/default/array-default';
 import { BooleanDefault, IBooleanDefaultProps } from '../components/default/boolean-default';
-import set from 'lodash.set';
-import produce from 'immer';
 import {
   isZodArray,
   isZodBoolean,
@@ -27,7 +25,6 @@ import {
 } from './schema-type-resolvers';
 import { formDefaultValueFromSchema } from './form-default-value-from-schema';
 import { useUncontrolledToControlledWarning } from '../utils/use-uncontrolled-to-controlled-warning';
-import { unset } from '../utils/unset';
 import { IObjectDefaultProps, ObjectDefault } from '../components/default/object-default';
 import { IMultiChoiceDefaultProps, MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { PartialDeep } from 'type-fest';
@@ -45,8 +42,6 @@ function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
   return schema._def.description;
 }
 
-type ComponentName = string;
-type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
 export type ComponentPath = (string | number)[];
 
 type ChangeOp = 'update' | 'remove';
@@ -1011,188 +1006,6 @@ function resolveNextFormConds(formData: any, uiSchema: FormUiSchema<any>) {
   return Object.fromEntries(conds.map((cond) => [componentNameSerialize(cond.path), cond]));
 }
 
-function getNextFormDataFromConds({
-  formData,
-  uiSchema
-}: {
-  formData: Record<string, any>;
-  uiSchema: FormUiSchema<any>;
-}) {
-  const conds = resolveUiSchemaConds({
-    uiSchema,
-    formData
-  });
-  return produce(formData, (draft) => {
-    conds.forEach(({ cond, path }) => {
-      if (!cond) {
-        unset(draft, path);
-      }
-    });
-  });
-}
-
-type IFormReducerBasePayload<T> = T & {
-  schema: FormSchema;
-};
-
-type IFormReducerAction =
-  | {
-      type: 'onChange';
-      payload: IFormReducerBasePayload<{
-        uiSchema: FormUiSchema<any>;
-        event: ChangePayload;
-        liveValidate?: boolean;
-      }>;
-    }
-  | {
-      type: 'arrayRemove';
-      payload: IFormReducerBasePayload<{
-        path: ComponentPath;
-        liveValidate?: boolean;
-      }>;
-    }
-  | {
-      type: 'onError';
-      payload: {
-        errors: ErrorsMap;
-      };
-    }
-  | {
-      type: 'submitSuccess';
-    }
-  | {
-      type: 'set';
-      payload: IFormReducerBasePayload<{
-        value: any;
-        liveValidate?: boolean;
-        uiSchema: FormUiSchema<any>;
-      }>;
-    };
-
-interface IFormReducerState {
-  formData: Record<string, any>;
-  conds: FormConds;
-  errors: ErrorsMap;
-}
-
-function validate(
-  value: any,
-  schema: FormSchema,
-  uiSchema?: FormUiSchema<any>
-):
-  | {
-      isValid: true;
-      data: any;
-    }
-  | {
-      isValid: false;
-      errors: ErrorsMap;
-    } {
-  const parsed = schema.safeParse(
-    getNextFormDataFromConds({
-      formData: value,
-      uiSchema: uiSchema ?? {}
-    })
-  );
-
-  if (parsed.success) {
-    return { isValid: true, data: parsed.data };
-  } else {
-    return {
-      isValid: false,
-      errors: R.groupBy(parsed.error.errors, (item) => componentNameSerialize(item.path))
-    };
-  }
-}
-
-const STABLE_NO_ERRORS = {};
-
-function formNextValue(prev: any, event: ChangePayload): any {
-  return produce(prev, (draft: any) => {
-    if (event.op === 'update') {
-      set(draft, event.path, event.value);
-    } else {
-      unset(draft, event.path, {
-        arrayBehavior: 'setToUndefined'
-      });
-    }
-  });
-}
-
-function formArrayRemove(prev: any, path: ComponentPath): any {
-  return produce(prev, (draft: any) => {
-    unset(draft, path, {
-      arrayBehavior: 'delete'
-    });
-  });
-}
-
-function formReducer(
-  state: IFormReducerState = {
-    formData: {},
-    conds: {},
-    errors: STABLE_NO_ERRORS
-  },
-  action: IFormReducerAction
-) {
-  if (action.type === 'onChange') {
-    const { uiSchema, event, liveValidate } = action.payload;
-
-    const nextFormData = formNextValue(state.formData, event);
-
-    const result = liveValidate ? validate(nextFormData, action.payload.schema, uiSchema) : undefined;
-
-    return {
-      ...state,
-      conds: resolveNextFormConds(nextFormData, uiSchema),
-      formData: nextFormData,
-      errors: result ? (result.isValid ? STABLE_NO_ERRORS : result.errors) : state.errors
-    };
-  }
-
-  if (action.type === 'arrayRemove') {
-    const nextFormData = formArrayRemove(state.formData, action.payload.path);
-
-    const result = action.payload.liveValidate ? validate(nextFormData, action.payload.schema) : undefined;
-
-    return {
-      ...state,
-      formData: nextFormData,
-      errors: result ? (result.isValid ? STABLE_NO_ERRORS : result.errors) : state.errors
-    };
-  }
-
-  if (action.type === 'onError') {
-    return {
-      ...state,
-      errors: action.payload.errors
-    };
-  }
-
-  if (action.type === 'submitSuccess') {
-    return {
-      ...state,
-      errors: STABLE_NO_ERRORS
-    };
-  }
-
-  if (action.type === 'set') {
-    const { uiSchema, value, schema, liveValidate } = action.payload;
-    const result = liveValidate ? validate(value, schema, uiSchema) : undefined;
-
-    return {
-      ...state,
-      conds: resolveNextFormConds(value, uiSchema),
-      formData: value,
-      errors: result ? (result.isValid ? STABLE_NO_ERRORS : result.errors) : state.errors
-    };
-  }
-}
-
-function flattenErrorsToZodIssues(errors: ErrorsMap): zod.ZodIssue[] {
-  return R.pipe(errors, R.values, R.flatten());
-}
-
 export function Form<Schema extends FormSchema>(props: IFormProps<Schema>) {
   useUncontrolledToControlledWarning(props.value);
 
@@ -1200,7 +1013,7 @@ export function Form<Schema extends FormSchema>(props: IFormProps<Schema>) {
     return <UncontrolledForm {...props} />;
   }
 
-  return <ControlledForm {...props} />;
+  throw new Error('Controlled form not implemented yet');
 }
 
 function UncontrolledForm<Schema extends FormSchema>({
@@ -1223,47 +1036,11 @@ function UncontrolledForm<Schema extends FormSchema>({
     defaultValues: defaultValues ?? formDefaultValueFromSchema(objectSchema)
   });
 
-  const [state, dispatch] = React.useReducer(formReducer, undefined, () => {
-    const formData = defaultValues ?? formDefaultValueFromSchema(objectSchema);
-    const conds = resolveNextFormConds(formData, uiSchema ?? {});
-    return {
-      formData,
-      conds,
-      errors: STABLE_NO_ERRORS
-    };
-  });
-  const { formData } = state!;
-
   const [conds, setConds] = React.useState<FormConds>({});
 
   formMethods.watch((value) => {
     setConds(resolveNextFormConds(value, uiSchema ?? {}));
   });
-
-  const handleSubmit = React.useCallback(
-    (value: typeof formData) => {
-      const result = validate(value, schema, uiSchema ?? {});
-
-      if (result.isValid) {
-        dispatch({
-          type: 'submitSuccess'
-        });
-        onSubmit?.(result.data);
-      } else {
-        dispatch({
-          type: 'onError',
-          payload: {
-            errors: result.errors
-          }
-        });
-      }
-    },
-    [onSubmit, schema, uiSchema]
-  );
-
-  const rhfValue = formMethods.watch();
-  console.log(rhfValue);
-  console.log('-'.repeat(80));
 
   return (
     <form
@@ -1273,10 +1050,9 @@ function UncontrolledForm<Schema extends FormSchema>({
       }}
       onSubmit={(event) => {
         event.preventDefault();
-        handleSubmit(formData);
         formMethods.handleSubmit(
           (data) => {
-            console.log('submit', data);
+            onSubmit?.(data);
           },
           (errors) => {
             console.log('error', errors);
@@ -1286,92 +1062,16 @@ function UncontrolledForm<Schema extends FormSchema>({
     >
       {title}
 
-      <FormContextProvider
-        value={{
-          conds,
-          components
-        }}
-      >
-        <Rhf.FormProvider {...formMethods}>
+      <Rhf.FormProvider {...formMethods}>
+        <FormContextProvider
+          value={{
+            conds,
+            components
+          }}
+        >
           <ZodAnyComponent uiSchema={uiSchema} schema={objectSchema} />
-        </Rhf.FormProvider>
-      </FormContextProvider>
-
-      {children ? (
-        // TODO: pass errors
-        children({ errors: [] })
-      ) : (
-        <button type="submit">Submit</button>
-      )}
-    </form>
-  );
-}
-
-function ControlledForm<Schema extends FormSchema>({
-  schema,
-  value,
-  components,
-  onErrorsChange,
-  uiSchema,
-  liveValidate,
-  title,
-  children,
-  onSubmit
-}: IFormProps<Schema>) {
-  const [conds, setConds] = React.useState<FormConds>(resolveNextFormConds(value, uiSchema ?? {}));
-
-  const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
-
-  const handleValidateResult = React.useCallback(
-    (result: ReturnType<typeof validate>) => {
-      if (result.isValid) {
-        onErrorsChange?.([]);
-      } else {
-        onErrorsChange?.(flattenErrorsToZodIssues(result.errors));
-      }
-    },
-    [onErrorsChange]
-  );
-
-  const handleSubmit = React.useCallback(() => {
-    const result = validate(value, schema, uiSchema ?? {});
-    handleValidateResult(result);
-    if (result.isValid) {
-      onSubmit?.(result.data);
-    }
-  }, [handleValidateResult, onSubmit, schema, uiSchema, value]);
-
-  React.useEffect(() => {
-    if (liveValidate) {
-      handleValidateResult(validate(value, schema, uiSchema ?? {}));
-    }
-  }, [handleValidateResult, liveValidate, schema, uiSchema, value]);
-
-  React.useEffect(() => {
-    setConds(resolveNextFormConds(value, uiSchema ?? {}));
-  }, [uiSchema, value]);
-
-  return (
-    <form
-      style={{
-        display: 'grid',
-        gap: 32
-      }}
-      onSubmit={(event) => {
-        event.preventDefault();
-        handleSubmit();
-      }}
-    >
-      {title}
-
-      <FormContextProvider
-        value={{
-          conds,
-          components
-        }}
-      >
-        <ZodAnyComponent uiSchema={uiSchema} schema={objectSchema} />
-      </FormContextProvider>
+        </FormContextProvider>
+      </Rhf.FormProvider>
 
       {children ? (
         // TODO: pass errors
