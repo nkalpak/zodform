@@ -36,7 +36,9 @@ export function ConferenceRegistration() {
 
       isAccepting: z.boolean(),
       age: z.number(),
-      future: z.date()
+      future: z.date(),
+
+      stuffs: z.array(z.string()).min(1)
     })
   );
 

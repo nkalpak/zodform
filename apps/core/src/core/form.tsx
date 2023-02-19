@@ -35,7 +35,6 @@ import { mergeZodOuterInnerType } from './merge-zod-outer-inner-type';
 import { ExtractSchemaFromEffects } from './extract-schema-from-effects';
 import { IComponentProps } from '../components/types';
 import * as Rhf from 'react-hook-form';
-import { useController } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
@@ -644,11 +643,8 @@ function ZodArrayFieldComponent(props: IZodArrayComponentProps) {
   const { schema, uiSchema, name } = props;
   const arraySchemaElement = schema._def.type;
 
-  const { control } = Rhf.useFormContext();
-  const fieldArray = Rhf.useFieldArray({
-    control,
-    name: props.name
-  });
+  const { watch, setValue } = Rhf.useFormContext();
+  const value: any[] = watch(name);
 
   const uiProps = (uiSchema ?? {}) as UiPropertiesArray<any, any>;
   const Component = uiProps.Component ?? components?.array ?? ArrayDefault;
@@ -658,18 +654,21 @@ function ZodArrayFieldComponent(props: IZodArrayComponentProps) {
       description={zodSchemaDescription(schema) ?? uiProps.description}
       title={uiProps.title}
       onRemove={(index) => {
-        fieldArray.remove(index);
+        const newValue = value.filter((_, i) => i !== index);
+        setValue(name, newValue);
       }}
       onAdd={() => {
-        fieldArray.append(formDefaultValueFromSchema(arraySchemaElement));
+        const def = formDefaultValueFromSchema(arraySchemaElement);
+        const newValue = [...value, def];
+        setValue(name, newValue);
       }}
     >
-      {fieldArray.fields.map((field, index) => {
+      {value.map((field, index) => {
         const uniqueName = componentNameSerialize([name, index]);
 
         return (
           <ZodAnyComponent
-            key={field.id}
+            key={uniqueName}
             name={uniqueName}
             schema={arraySchemaElement}
             uiSchema={uiProps.element}
