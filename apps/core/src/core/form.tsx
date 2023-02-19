@@ -356,8 +356,14 @@ const ZodNumberComponentInner = React.memo(function ZodNumberComponentInner({
 });
 
 function ZodNumberComponent(props: IZodNumberComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const { control } = Rhf.useFormContext();
+  const { fieldState, field } = Rhf.useController({
+    name: props.name,
+    control
+  });
 
   if (!isVisible) {
     return null;
@@ -365,10 +371,21 @@ function ZodNumberComponent(props: IZodNumberComponentProps) {
 
   return (
     <ZodNumberComponentInner
-      {...props}
-      errorMessage={R.first(errors)?.message}
-      onChange={onChange}
+      onChange={(data) => {
+        if (data.op === 'update') {
+          field.onChange(data.value);
+        } else {
+          field.onChange(undefined);
+        }
+      }}
       components={components}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={field.name}
+      value={field.value}
     />
   );
 }
@@ -415,8 +432,14 @@ const ZodBooleanComponentInner = React.memo(function ZodBooleanComponentInner({
 });
 
 function ZodBooleanComponent(props: IZodBooleanComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const { control } = Rhf.useFormContext();
+  const { fieldState, field } = Rhf.useController({
+    name: props.name,
+    control
+  });
 
   if (!isVisible) {
     return null;
@@ -424,10 +447,21 @@ function ZodBooleanComponent(props: IZodBooleanComponentProps) {
 
   return (
     <ZodBooleanComponentInner
-      {...props}
+      onChange={(data) => {
+        if (data.op === 'update') {
+          field.onChange(data.value);
+        } else {
+          field.onChange(undefined);
+        }
+      }}
       components={components}
-      errorMessage={R.first(errors)?.message}
-      onChange={onChange}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={field.name}
+      value={field.value}
     />
   );
 }
