@@ -65,8 +65,6 @@ type OnChange = (data: ChangePayload) => void;
 const [useInternalFormContext, FormContextProvider] = createContext<{
   errors?: ErrorsMap;
   components?: Required<IFormProps<any>>['components'];
-
-  onChange: OnChange;
   conds: FormConds;
 }>();
 
@@ -686,19 +684,19 @@ function ZodObjectComponent({
   name?: string;
 }) {
   const { isVisible } = useComponent(name ?? '');
-  const { components, onChange } = useInternalFormContext();
+  const { components } = useInternalFormContext();
+
+  const { setValue, getValues } = Rhf.useFormContext();
 
   const handleChange = React.useCallback(
     (updater: (old: any) => any) => {
       if (name) {
-        onChange({
-          op: 'update',
-          path: componentNameDeserialize(name),
-          value: updater(value)
-        });
+        const old = getValues(name);
+        const newValue = updater(old);
+        setValue(name, newValue);
       }
     },
-    [name, onChange, value]
+    [name, setValue, getValues]
   );
 
   const children = (function () {
@@ -1332,21 +1330,6 @@ function UncontrolledForm<Schema extends FormSchema>({
     [onSubmit, schema, uiSchema]
   );
 
-  const handleChange: OnChange = React.useCallback(
-    (event) => {
-      dispatch({
-        type: 'onChange',
-        payload: {
-          event,
-          uiSchema: uiSchema ?? {},
-          schema,
-          liveValidate
-        }
-      });
-    },
-    [liveValidate, schema, uiSchema]
-  );
-
   const updateForm = React.useCallback(
     (updater: (old: any) => void) => {
       const newData = produce(formData, updater);
@@ -1396,7 +1379,6 @@ function UncontrolledForm<Schema extends FormSchema>({
         value={{
           conds,
           errors,
-          onChange: handleChange,
           components
         }}
       >
@@ -1454,13 +1436,6 @@ function ControlledForm<Schema extends FormSchema>({
     }
   }, [handleValidateResult, onSubmit, schema, uiSchema, value]);
 
-  const handleChange: OnChange = React.useCallback(
-    (event) => {
-      onChange?.((oldValue) => formNextValue(oldValue, event));
-    },
-    [onChange]
-  );
-
   const handleUpdate = React.useCallback(
     (updater: (value: any) => void) => {
       onChange?.((oldValue) => {
@@ -1500,7 +1475,6 @@ function ControlledForm<Schema extends FormSchema>({
         value={{
           conds,
           errors,
-          onChange: handleChange,
           components
         }}
       >
