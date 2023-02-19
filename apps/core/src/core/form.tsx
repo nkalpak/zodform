@@ -1,5 +1,6 @@
 import type { AnyZodObject, ZodEffects, ZodFirstPartySchemaTypes, ZodString } from 'zod';
 import * as zod from 'zod';
+import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodNumber, ZodObject, ZodOptional } from 'zod';
 import * as R from 'remeda';
 import React from 'react';
 import { componentNameDeserialize, componentNameSerialize } from './component-name-deserialize';
@@ -8,8 +9,6 @@ import { EnumDefault, IEnumDefaultProps } from '../components/default/enum-defau
 import { INumberDefaultProps, NumberDefault } from '../components/default/number-default';
 import { ArrayDefault, IArrayDefaultProps } from '../components/default/array-default';
 import { BooleanDefault, IBooleanDefaultProps } from '../components/default/boolean-default';
-import set from 'lodash.set';
-import produce from 'immer';
 import {
   isZodArray,
   isZodBoolean,
@@ -26,7 +25,6 @@ import {
 } from './schema-type-resolvers';
 import { formDefaultValueFromSchema } from './form-default-value-from-schema';
 import { useUncontrolledToControlledWarning } from '../utils/use-uncontrolled-to-controlled-warning';
-import { unset } from '../utils/unset';
 import { IObjectDefaultProps, ObjectDefault } from '../components/default/object-default';
 import { IMultiChoiceDefaultProps, MultiChoiceDefault } from '../components/default/multi-choice-default';
 import { PartialDeep } from 'type-fest';
@@ -34,16 +32,16 @@ import { CondResult, resolveUiSchemaConds } from './resolve-ui-schema-conds';
 import { createContext } from '../utils/create-context';
 import { DateDefault, IDateDefaultProps } from '../components/default/date-default';
 import { mergeZodOuterInnerType } from './merge-zod-outer-inner-type';
-import { ZodArray, ZodBoolean, ZodDate, ZodDefault, ZodEnum, ZodNumber, ZodObject, ZodOptional } from 'zod';
 import { ExtractSchemaFromEffects } from './extract-schema-from-effects';
 import { IComponentProps } from '../components/types';
+import * as Rhf from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { IFormError, mapRhfErrors } from './form-errors';
 
 function zodSchemaDescription(schema: ZodFirstPartySchemaTypes) {
   return schema._def.description;
 }
 
-type ComponentName = string;
-type ErrorsMap = Record<ComponentName, zod.ZodIssue[]>;
 export type ComponentPath = (string | number)[];
 
 type ChangeOp = 'update' | 'remove';
@@ -60,45 +58,24 @@ type ChangePayload =
 type OnChange = (data: ChangePayload) => void;
 
 const [useInternalFormContext, FormContextProvider] = createContext<{
-  errors?: ErrorsMap;
   components?: Required<IFormProps<any>>['components'];
-
-  onChange: OnChange;
-  onArrayRemove: (path: ComponentPath) => void;
   conds: FormConds;
 }>();
-
-const FormContext = React.createContext<{
-  value: any;
-  update: (updater: (value: any) => void) => void;
-}>({
-  value: {},
-  update: R.noop
-});
-
-export function useForm<Schema extends FormSchema>(): {
-  value: FormValue<Schema>;
-  update: (updater: (value: FormValue<Schema>) => void) => void;
-} {
-  return React.useContext(FormContext);
-}
 
 function isComponentVisible(name: string, conds: FormConds): boolean {
   return conds[name]?.cond ?? true;
 }
 
 function useComponent(name: string): {
-  errors: zod.ZodIssue[];
   isVisible: boolean;
 } {
-  const { errors, conds } = useInternalFormContext();
+  const { conds } = useInternalFormContext();
 
   return React.useMemo(() => {
     return {
-      errors: errors?.[name] ?? [],
       isVisible: isComponentVisible(name, conds)
     };
-  }, [conds, errors, name]);
+  }, [conds, name]);
 }
 
 /**
@@ -112,21 +89,49 @@ function getLeafPropsFromUiSchema(
   return R.omit(uiProps ?? {}, ['Component', 'cond']);
 }
 
-interface IZodLeafComponentProps<Schema extends ZodFirstPartySchemaTypes, Value> {
+function useRegisterComponent({ name }: { name: string }) {
+  const { control } = Rhf.useFormContext();
+  const { fieldState, field, formState } = Rhf.useController({
+    name: name,
+    control
+  });
+
+  const { onChange } = field;
+
+  const handleChange = React.useCallback(
+    (data: ChangePayload) => {
+      if (data.op === 'update') {
+        onChange(data.value);
+      } else {
+        onChange(undefined);
+      }
+    },
+    [onChange]
+  );
+
+  return {
+    field,
+    fieldState,
+    formState,
+    handleChange
+  };
+}
+
+interface IZodLeafComponentProps<Schema extends ZodFirstPartySchemaTypes> {
   schema: Schema;
   name: string;
   description?: React.ReactNode;
   isRequired: boolean;
-  value?: Value;
 }
 
-interface IZodInnerComponentProps {
+interface IZodInnerComponentProps<Value> {
   onChange: OnChange;
   components: IFormProps<any>['components'];
   errorMessage?: string;
+  value?: Value;
 }
 
-interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString, string> {
+interface IZodStringComponentProps extends IZodLeafComponentProps<ZodString> {
   uiSchema?: UiPropertiesBaseNew<ZodString, any>;
 }
 
@@ -140,7 +145,7 @@ const ZodStringComponentInner = React.memo(function ZodStringComponentInner({
   onChange,
   components,
   errorMessage
-}: IZodStringComponentProps & IZodInnerComponentProps) {
+}: IZodStringComponentProps & IZodInnerComponentProps<string>) {
   const handleChange = React.useCallback(
     function handleChange(value = '') {
       const isEmpty = value === '';
@@ -178,8 +183,14 @@ const ZodStringComponentInner = React.memo(function ZodStringComponentInner({
 });
 
 function ZodStringComponent(props: IZodStringComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const {
+    fieldState,
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
@@ -187,15 +198,20 @@ function ZodStringComponent(props: IZodStringComponentProps) {
 
   return (
     <ZodStringComponentInner
-      {...props}
-      errorMessage={R.first(errors)?.message}
-      onChange={onChange}
+      onChange={handleChange}
       components={components}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={name}
+      value={value}
     />
   );
 }
 
-interface IZodEnumComponentProps extends IZodLeafComponentProps<ZodAnyEnum, string> {
+interface IZodEnumComponentProps extends IZodLeafComponentProps<ZodAnyEnum> {
   uiSchema?: UiPropertiesEnum<any, any>;
 }
 
@@ -209,7 +225,7 @@ const ZodEnumComponentInner = React.memo(function ZodEnumComponentInner({
   components,
   onChange,
   errorMessage
-}: IZodEnumComponentProps & IZodInnerComponentProps) {
+}: IZodEnumComponentProps & IZodInnerComponentProps<string>) {
   const handleChange = React.useCallback(
     function handleChange(value = '') {
       const isEmpty = value === '';
@@ -248,8 +264,14 @@ const ZodEnumComponentInner = React.memo(function ZodEnumComponentInner({
 });
 
 function ZodEnumComponent(props: IZodEnumComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const {
+    fieldState,
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
@@ -257,15 +279,20 @@ function ZodEnumComponent(props: IZodEnumComponentProps) {
 
   return (
     <ZodEnumComponentInner
-      {...props}
+      onChange={handleChange}
       components={components}
-      onChange={onChange}
-      errorMessage={R.first(errors)?.message}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={name}
+      value={value}
     />
   );
 }
 
-interface IZodNumberComponentProps extends IZodLeafComponentProps<zod.ZodNumber, number> {
+interface IZodNumberComponentProps extends IZodLeafComponentProps<zod.ZodNumber> {
   uiSchema?: UiPropertiesBaseNew<ZodNumber, any>;
 }
 
@@ -279,7 +306,7 @@ const ZodNumberComponentInner = React.memo(function ZodNumberComponentInner({
   onChange,
   components,
   errorMessage
-}: IZodNumberComponentProps & IZodInnerComponentProps) {
+}: IZodNumberComponentProps & IZodInnerComponentProps<number>) {
   const handleChange = React.useCallback(
     function handleChange(value?: number) {
       const isEmpty = R.isNil(value) || Number.isNaN(value);
@@ -319,8 +346,14 @@ const ZodNumberComponentInner = React.memo(function ZodNumberComponentInner({
 });
 
 function ZodNumberComponent(props: IZodNumberComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const {
+    fieldState,
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
@@ -328,14 +361,19 @@ function ZodNumberComponent(props: IZodNumberComponentProps) {
 
   return (
     <ZodNumberComponentInner
-      {...props}
-      errorMessage={R.first(errors)?.message}
-      onChange={onChange}
+      onChange={handleChange}
       components={components}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={name}
+      value={value}
     />
   );
 }
-interface IZodBooleanComponentProps extends IZodLeafComponentProps<zod.ZodBoolean, boolean> {
+interface IZodBooleanComponentProps extends IZodLeafComponentProps<zod.ZodBoolean> {
   uiSchema?: UiPropertiesBaseNew<ZodBoolean, any>;
 }
 
@@ -349,7 +387,7 @@ const ZodBooleanComponentInner = React.memo(function ZodBooleanComponentInner({
   onChange,
   components,
   errorMessage
-}: IZodBooleanComponentProps & IZodInnerComponentProps) {
+}: IZodBooleanComponentProps & IZodInnerComponentProps<boolean>) {
   const handleChange = React.useCallback(
     function handleChange(value: boolean) {
       onChange({
@@ -378,8 +416,14 @@ const ZodBooleanComponentInner = React.memo(function ZodBooleanComponentInner({
 });
 
 function ZodBooleanComponent(props: IZodBooleanComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const {
+    fieldState,
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
@@ -387,15 +431,20 @@ function ZodBooleanComponent(props: IZodBooleanComponentProps) {
 
   return (
     <ZodBooleanComponentInner
-      {...props}
+      onChange={handleChange}
       components={components}
-      errorMessage={R.first(errors)?.message}
-      onChange={onChange}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={name}
+      value={value}
     />
   );
 }
 
-interface IZodDateComponentProps extends IZodLeafComponentProps<zod.ZodDate, Date> {
+interface IZodDateComponentProps extends IZodLeafComponentProps<zod.ZodDate> {
   uiSchema?: UiPropertiesBaseNew<ZodDate, any>;
 }
 
@@ -409,7 +458,7 @@ const ZodDateComponentInner = React.memo(function ZodDateComponentInner({
   onChange,
   components,
   errorMessage
-}: IZodDateComponentProps & IZodInnerComponentProps) {
+}: IZodDateComponentProps & IZodInnerComponentProps<Date>) {
   const handleChange = React.useCallback(
     function handleChange(value: Date | undefined) {
       onChange({
@@ -438,8 +487,14 @@ const ZodDateComponentInner = React.memo(function ZodDateComponentInner({
 });
 
 function ZodDateComponent(props: IZodDateComponentProps) {
-  const { onChange, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
+
+  const {
+    fieldState,
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
@@ -447,22 +502,27 @@ function ZodDateComponent(props: IZodDateComponentProps) {
 
   return (
     <ZodDateComponentInner
-      {...props}
+      onChange={handleChange}
       components={components}
-      errorMessage={R.first(errors)?.message}
-      onChange={onChange}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={name}
+      value={value}
     />
   );
 }
 
-interface IZodArrayComponentProps extends IZodLeafComponentProps<ZodAnyArray, any[]> {
+interface IZodArrayComponentProps extends IZodLeafComponentProps<ZodAnyArray> {
   minLength?: number;
   maxLength?: number;
   exactLength?: number;
   uiSchema?: UiPropertiesArray<any, any> | UiPropertiesMultiChoice<ZodEnum<any>, any>;
 }
 
-const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComponent({
+const ZodArrayMultiChoiceComponentInner = React.memo(function ZodArrayMultiChoiceComponent({
   schema,
   name,
   value = [],
@@ -471,7 +531,7 @@ const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComp
   onChange,
   components,
   errorMessage
-}: IZodArrayComponentProps & IZodInnerComponentProps) {
+}: IZodArrayComponentProps & IZodInnerComponentProps<any[]>) {
   const uiProps = (uiSchema ?? {}) as UiPropertiesMultiChoice<ZodEnum<any>, any>;
   const Component = uiProps.Component ?? components?.multiChoice ?? MultiChoiceDefault;
 
@@ -494,27 +554,42 @@ const ZodArrayMultiChoiceComponent = React.memo(function ZodArrayMultiChoiceComp
   );
 });
 
-function ZodArrayComponent(props: IZodArrayComponentProps) {
-  const { onChange, onArrayRemove, components } = useInternalFormContext();
-  const { errors, isVisible } = useComponent(props.name);
+function ZodArrayMultiChoiceComponent(props: IZodArrayComponentProps) {
+  const { components } = useInternalFormContext();
+  const { isVisible } = useComponent(props.name);
 
-  const { schema, name, value, uiSchema } = props;
-  const arraySchemaElement = schema._def.type;
+  const {
+    fieldState,
+    field: { name, value },
+    handleChange
+  } = useRegisterComponent({ name: props.name });
 
   if (!isVisible) {
     return null;
   }
 
-  if (isZodEnum(arraySchemaElement)) {
-    return (
-      <ZodArrayMultiChoiceComponent
-        {...props}
-        onChange={onChange}
-        components={components}
-        errorMessage={R.first(errors)?.message}
-      />
-    );
-  }
+  return (
+    <ZodArrayMultiChoiceComponentInner
+      onChange={handleChange}
+      components={components}
+      errorMessage={fieldState.error?.message}
+      schema={props.schema}
+      uiSchema={props.uiSchema}
+      isRequired={props.isRequired}
+      description={props.description}
+      name={name}
+      value={value}
+    />
+  );
+}
+
+function ZodArrayFieldComponent(props: IZodArrayComponentProps) {
+  const { components } = useInternalFormContext();
+  const { schema, uiSchema, name } = props;
+  const arraySchemaElement = schema._def.type;
+
+  const { watch, setValue } = Rhf.useFormContext();
+  const value: any[] = watch(name);
 
   const uiProps = (uiSchema ?? {}) as UiPropertiesArray<any, any>;
   const Component = uiProps.Component ?? components?.array ?? ArrayDefault;
@@ -524,57 +599,69 @@ function ZodArrayComponent(props: IZodArrayComponentProps) {
       description={zodSchemaDescription(schema) ?? uiProps.description}
       title={uiProps.title}
       onRemove={(index) => {
-        onArrayRemove(componentNameDeserialize(`${name}[${index}]`));
+        const newValue = value.filter((_, i) => i !== index);
+        setValue(name, newValue);
       }}
       onAdd={() => {
-        onChange({
-          op: 'update',
-          path: componentNameDeserialize(`${name}[${value?.length ?? 0}]`),
-          value: formDefaultValueFromSchema(arraySchemaElement)
-        });
+        const def = formDefaultValueFromSchema(arraySchemaElement);
+        const newValue = [...value, def];
+        setValue(name, newValue);
       }}
     >
-      {value?.map((item, index) => {
-        const uniqueName = `${name}[${index}]`;
+      {value.map((field, index) => {
+        const uniqueName = componentNameSerialize([name, index]);
+
         return (
           <ZodAnyComponent
             key={uniqueName}
             name={uniqueName}
             schema={arraySchemaElement}
-            value={item}
             uiSchema={uiProps.element}
           />
         );
-      }) ?? []}
+      })}
     </Component>
   );
 }
 
+function ZodArrayComponent(props: IZodArrayComponentProps) {
+  const { isVisible } = useComponent(props.name);
+  const { schema } = props;
+
+  if (!isVisible) {
+    return null;
+  }
+
+  if (isZodEnum(schema._def.type)) {
+    return <ZodArrayMultiChoiceComponent {...props} />;
+  }
+
+  return <ZodArrayFieldComponent {...props} />;
+}
+
 function ZodObjectComponent({
-  value,
   schema,
   name,
   uiSchema
 }: {
-  value: any;
   schema: AnyZodObject;
   uiSchema?: UiPropertiesObject<any, any>;
   name?: string;
 }) {
   const { isVisible } = useComponent(name ?? '');
-  const { components, onChange } = useInternalFormContext();
+  const { components } = useInternalFormContext();
+
+  const { setValue, getValues } = Rhf.useFormContext();
 
   const handleChange = React.useCallback(
     (updater: (old: any) => any) => {
       if (name) {
-        onChange({
-          op: 'update',
-          path: componentNameDeserialize(name),
-          value: updater(value)
-        });
+        const old = getValues(name);
+        const newValue = updater(old);
+        setValue(name, newValue);
       }
     },
-    [name, onChange, value]
+    [name, setValue, getValues]
   );
 
   const children = (function () {
@@ -588,19 +675,19 @@ function ZodObjectComponent({
             key={childName}
             name={childName}
             schema={thisSchema as ZodFirstPartySchemaTypes}
-            value={value ? value[thisName] : undefined}
             uiSchema={uiSchema ? uiSchema[thisName] : undefined}
           />
         )
       };
     });
 
-    if (uiSchema?.ui?.Layout) {
+    // TODO: Should we be checking for name here?
+    if (uiSchema?.ui?.Layout && R.isDefined(name)) {
       const children: Record<string, React.ReactNode> = {};
       for (const { name, component } of result) {
         children[name] = component;
       }
-      return uiSchema.ui.Layout({ children, value, onChange: handleChange });
+      return uiSchema.ui.Layout({ children, value: getValues(name), onChange: handleChange });
     }
 
     return result.map(({ component }) => component);
@@ -619,8 +706,8 @@ function ZodObjectComponent({
 
   return (
     <Component
+      value={getValues(name)}
       onChange={handleChange}
-      value={value}
       description={zodSchemaDescription(schema) ?? uiSchema?.ui?.description}
       {...R.omit(uiSchema?.ui ?? {}, ['Component'])}
     >
@@ -633,17 +720,15 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
   schema,
   name,
   isRequired = true,
-  value,
   uiSchema
 }: {
   schema: ZodFirstPartySchemaTypes;
   name?: string;
   isRequired?: boolean;
-  value?: any;
   uiSchema?: any;
 }) {
   if (isZodObject(schema)) {
-    return <ZodObjectComponent uiSchema={uiSchema} value={value} schema={schema} name={name} />;
+    return <ZodObjectComponent uiSchema={uiSchema} schema={schema} name={name} />;
   }
 
   if (R.isNil(name)) {
@@ -651,39 +736,15 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
   }
 
   if (isZodString(schema)) {
-    return (
-      <ZodStringComponent
-        uiSchema={uiSchema}
-        schema={schema}
-        name={name}
-        isRequired={isRequired}
-        value={value}
-      />
-    );
+    return <ZodStringComponent uiSchema={uiSchema} schema={schema} name={name} isRequired={isRequired} />;
   }
 
   if (isZodEnum(schema)) {
-    return (
-      <ZodEnumComponent
-        uiSchema={uiSchema}
-        value={value}
-        schema={schema}
-        name={name}
-        isRequired={isRequired}
-      />
-    );
+    return <ZodEnumComponent uiSchema={uiSchema} schema={schema} name={name} isRequired={isRequired} />;
   }
 
   if (isZodBoolean(schema)) {
-    return (
-      <ZodBooleanComponent
-        uiSchema={uiSchema}
-        schema={schema}
-        name={name}
-        isRequired={isRequired}
-        value={value}
-      />
-    );
+    return <ZodBooleanComponent uiSchema={uiSchema} schema={schema} name={name} isRequired={isRequired} />;
   }
 
   if (isZodArray(schema)) {
@@ -699,21 +760,12 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
         maxLength={maxLength?.value}
         minLength={minLength?.value}
         description={description}
-        value={value}
       />
     );
   }
 
   if (isZodNumber(schema)) {
-    return (
-      <ZodNumberComponent
-        uiSchema={uiSchema}
-        schema={schema}
-        name={name}
-        isRequired={isRequired}
-        value={value}
-      />
-    );
+    return <ZodNumberComponent uiSchema={uiSchema} schema={schema} name={name} isRequired={isRequired} />;
   }
 
   if (isZodOptional(schema)) {
@@ -723,7 +775,6 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
         schema={mergeZodOuterInnerType(schema)}
         name={name}
         isRequired={false}
-        value={value}
       />
     );
   }
@@ -735,21 +786,12 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
         schema={mergeZodOuterInnerType(schema)}
         name={name}
         isRequired={isRequired}
-        value={value}
       />
     );
   }
 
   if (isZodDate(schema)) {
-    return (
-      <ZodDateComponent
-        uiSchema={uiSchema}
-        schema={schema}
-        name={name}
-        isRequired={isRequired}
-        value={value}
-      />
-    );
+    return <ZodDateComponent uiSchema={uiSchema} schema={schema} name={name} isRequired={isRequired} />;
   }
 
   if (isZodEffects(schema)) {
@@ -759,7 +801,6 @@ const ZodAnyComponent = React.memo(function ZodAnyComponent({
         schema={mergeZodOuterInnerType(schema)}
         name={name}
         isRequired={isRequired}
-        value={value}
       />
     );
   }
@@ -832,7 +873,7 @@ type UiPropertiesObject<Schema extends AnyZodObject, RootSchema extends object> 
         children: Record<keyof zod.infer<Schema>, React.ReactNode>;
       } & UiPropertiesObjectValue<Schema>
     ) => JSX.Element;
-    Component?: (props: ResolveComponentPropsFromSchema<Schema>) => JSX.Element;
+    Component?: (props: IObjectDefaultProps & UiPropertiesObjectValue<Schema>) => JSX.Element;
   };
 };
 
@@ -904,13 +945,14 @@ export type FormOnChange<Schema extends FormSchema> = (
   updater: (oldValue: FormValue<Schema>) => FormValue<Schema>
 ) => void;
 
-type FormChildren = (props: { errors: zod.ZodIssue[] }) => JSX.Element;
+type FormChildren = (props: { errors: IFormError[] }) => JSX.Element;
 type FormConds = Record<string, CondResult>;
 
 export interface IFormProps<Schema extends FormSchema> {
   schema: Schema;
   uiSchema?: FormUiSchema<Schema>;
   onSubmit?: (value: zod.infer<Schema>) => void;
+  onError?: (errors: IFormError[]) => void;
   onChange?: FormOnChange<Schema>;
   value?: FormValue<Schema>;
   defaultValues?: zod.infer<Schema>;
@@ -927,7 +969,6 @@ export interface IFormProps<Schema extends FormSchema> {
   title?: React.ReactNode;
   children?: FormChildren;
   liveValidate?: boolean;
-  onErrorsChange?: (errors: zod.ZodIssue[]) => void;
 }
 
 /**
@@ -957,188 +998,6 @@ function resolveNextFormConds(formData: any, uiSchema: FormUiSchema<any>) {
   return Object.fromEntries(conds.map((cond) => [componentNameSerialize(cond.path), cond]));
 }
 
-function getNextFormDataFromConds({
-  formData,
-  uiSchema
-}: {
-  formData: Record<string, any>;
-  uiSchema: FormUiSchema<any>;
-}) {
-  const conds = resolveUiSchemaConds({
-    uiSchema,
-    formData
-  });
-  return produce(formData, (draft) => {
-    conds.forEach(({ cond, path }) => {
-      if (!cond) {
-        unset(draft, path);
-      }
-    });
-  });
-}
-
-type IFormReducerBasePayload<T> = T & {
-  schema: FormSchema;
-};
-
-type IFormReducerAction =
-  | {
-      type: 'onChange';
-      payload: IFormReducerBasePayload<{
-        uiSchema: FormUiSchema<any>;
-        event: ChangePayload;
-        liveValidate?: boolean;
-      }>;
-    }
-  | {
-      type: 'arrayRemove';
-      payload: IFormReducerBasePayload<{
-        path: ComponentPath;
-        liveValidate?: boolean;
-      }>;
-    }
-  | {
-      type: 'onError';
-      payload: {
-        errors: ErrorsMap;
-      };
-    }
-  | {
-      type: 'submitSuccess';
-    }
-  | {
-      type: 'set';
-      payload: IFormReducerBasePayload<{
-        value: any;
-        liveValidate?: boolean;
-        uiSchema: FormUiSchema<any>;
-      }>;
-    };
-
-interface IFormReducerState {
-  formData: Record<string, any>;
-  conds: FormConds;
-  errors: ErrorsMap;
-}
-
-function validate(
-  value: any,
-  schema: FormSchema,
-  uiSchema?: FormUiSchema<any>
-):
-  | {
-      isValid: true;
-      data: any;
-    }
-  | {
-      isValid: false;
-      errors: ErrorsMap;
-    } {
-  const parsed = schema.safeParse(
-    getNextFormDataFromConds({
-      formData: value,
-      uiSchema: uiSchema ?? {}
-    })
-  );
-
-  if (parsed.success) {
-    return { isValid: true, data: parsed.data };
-  } else {
-    return {
-      isValid: false,
-      errors: R.groupBy(parsed.error.errors, (item) => componentNameSerialize(item.path))
-    };
-  }
-}
-
-const STABLE_NO_ERRORS = {};
-
-function formNextValue(prev: any, event: ChangePayload): any {
-  return produce(prev, (draft: any) => {
-    if (event.op === 'update') {
-      set(draft, event.path, event.value);
-    } else {
-      unset(draft, event.path, {
-        arrayBehavior: 'setToUndefined'
-      });
-    }
-  });
-}
-
-function formArrayRemove(prev: any, path: ComponentPath): any {
-  return produce(prev, (draft: any) => {
-    unset(draft, path, {
-      arrayBehavior: 'delete'
-    });
-  });
-}
-
-function formReducer(
-  state: IFormReducerState = {
-    formData: {},
-    conds: {},
-    errors: STABLE_NO_ERRORS
-  },
-  action: IFormReducerAction
-) {
-  if (action.type === 'onChange') {
-    const { uiSchema, event, liveValidate } = action.payload;
-
-    const nextFormData = formNextValue(state.formData, event);
-
-    const result = liveValidate ? validate(nextFormData, action.payload.schema, uiSchema) : undefined;
-
-    return {
-      ...state,
-      conds: resolveNextFormConds(nextFormData, uiSchema),
-      formData: nextFormData,
-      errors: result ? (result.isValid ? STABLE_NO_ERRORS : result.errors) : state.errors
-    };
-  }
-
-  if (action.type === 'arrayRemove') {
-    const nextFormData = formArrayRemove(state.formData, action.payload.path);
-
-    const result = action.payload.liveValidate ? validate(nextFormData, action.payload.schema) : undefined;
-
-    return {
-      ...state,
-      formData: nextFormData,
-      errors: result ? (result.isValid ? STABLE_NO_ERRORS : result.errors) : state.errors
-    };
-  }
-
-  if (action.type === 'onError') {
-    return {
-      ...state,
-      errors: action.payload.errors
-    };
-  }
-
-  if (action.type === 'submitSuccess') {
-    return {
-      ...state,
-      errors: STABLE_NO_ERRORS
-    };
-  }
-
-  if (action.type === 'set') {
-    const { uiSchema, value, schema, liveValidate } = action.payload;
-    const result = liveValidate ? validate(value, schema, uiSchema) : undefined;
-
-    return {
-      ...state,
-      conds: resolveNextFormConds(value, uiSchema),
-      formData: value,
-      errors: result ? (result.isValid ? STABLE_NO_ERRORS : result.errors) : state.errors
-    };
-  }
-}
-
-function flattenErrorsToZodIssues(errors: ErrorsMap): zod.ZodIssue[] {
-  return R.pipe(errors, R.values, R.flatten());
-}
-
 export function Form<Schema extends FormSchema>(props: IFormProps<Schema>) {
   useUncontrolledToControlledWarning(props.value);
 
@@ -1146,7 +1005,7 @@ export function Form<Schema extends FormSchema>(props: IFormProps<Schema>) {
     return <UncontrolledForm {...props} />;
   }
 
-  return <ControlledForm {...props} />;
+  throw new Error('Controlled form not implemented yet');
 }
 
 function UncontrolledForm<Schema extends FormSchema>({
@@ -1154,208 +1013,32 @@ function UncontrolledForm<Schema extends FormSchema>({
   uiSchema,
 
   onSubmit,
-  value,
+  onError,
   defaultValues,
 
   components,
   title,
 
-  children,
-  liveValidate = false,
-  onErrorsChange
+  children
 }: IFormProps<Schema>) {
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
+  const defaultValue = React.useMemo(
+    () => defaultValues ?? formDefaultValueFromSchema(objectSchema),
+    [defaultValues, objectSchema]
+  );
 
-  const [state, dispatch] = React.useReducer(formReducer, undefined, () => {
-    const formData = defaultValues ?? formDefaultValueFromSchema(objectSchema);
-    const conds = resolveNextFormConds(formData, uiSchema ?? {});
-    return {
-      formData,
-      conds,
-      errors: STABLE_NO_ERRORS
-    };
+  const formMethods = Rhf.useForm({
+    resolver: zodResolver(objectSchema),
+    defaultValues: defaultValue
   });
-  const { formData, conds, errors } = state!;
 
-  const handleSubmit = React.useCallback(
-    (value: typeof formData) => {
-      const result = validate(value, schema, uiSchema ?? {});
+  const [conds, setConds] = React.useState<FormConds>(() => {
+    return resolveNextFormConds(defaultValue, uiSchema ?? {});
+  });
 
-      if (result.isValid) {
-        dispatch({
-          type: 'submitSuccess'
-        });
-        onSubmit?.(result.data);
-      } else {
-        dispatch({
-          type: 'onError',
-          payload: {
-            errors: result.errors
-          }
-        });
-      }
-    },
-    [onSubmit, schema, uiSchema]
-  );
-
-  const handleChange: OnChange = React.useCallback(
-    (event) => {
-      dispatch({
-        type: 'onChange',
-        payload: {
-          event,
-          uiSchema: uiSchema ?? {},
-          schema,
-          liveValidate
-        }
-      });
-    },
-    [liveValidate, schema, uiSchema]
-  );
-
-  const onArrayRemove = React.useCallback(
-    (path: ComponentPath) => {
-      dispatch({
-        type: 'arrayRemove',
-        payload: {
-          path,
-          schema,
-          liveValidate
-        }
-      });
-    },
-    [liveValidate, schema]
-  );
-
-  const updateForm = React.useCallback(
-    (updater: (old: any) => void) => {
-      const newData = produce(formData, updater);
-      dispatch({
-        type: 'set',
-        payload: {
-          value: newData,
-          schema,
-          uiSchema: uiSchema ?? {},
-          liveValidate
-        }
-      });
-    },
-    [formData, liveValidate, schema, uiSchema]
-  );
-
-  React.useEffect(() => {
-    onErrorsChange?.(flattenErrorsToZodIssues(errors));
-  }, [errors, onErrorsChange]);
-
-  return (
-    <form
-      style={{
-        display: 'grid',
-        gap: 32
-      }}
-      onSubmit={(event) => {
-        event.preventDefault();
-        handleSubmit(formData);
-      }}
-    >
-      {title}
-
-      <FormContextProvider
-        value={{
-          conds,
-          errors,
-          onChange: handleChange,
-          components,
-          onArrayRemove
-        }}
-      >
-        <FormContext.Provider value={{ value: formData, update: updateForm }}>
-          <ZodAnyComponent uiSchema={uiSchema} value={value ?? formData} schema={objectSchema} />
-        </FormContext.Provider>
-      </FormContextProvider>
-
-      {children ? (
-        children({ errors: flattenErrorsToZodIssues(errors) })
-      ) : (
-        <button type="submit">Submit</button>
-      )}
-    </form>
-  );
-}
-
-function ControlledForm<Schema extends FormSchema>({
-  schema,
-  value,
-  components,
-  onChange,
-  onErrorsChange,
-  uiSchema,
-  liveValidate,
-  title,
-  children,
-  onSubmit
-}: IFormProps<Schema>) {
-  const [errors, setErrors] = React.useState<ErrorsMap>(STABLE_NO_ERRORS);
-  const [conds, setConds] = React.useState<FormConds>(resolveNextFormConds(value, uiSchema ?? {}));
-
-  const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
-
-  const handleValidateResult = React.useCallback(
-    (result: ReturnType<typeof validate>) => {
-      if (result.isValid) {
-        setErrors(STABLE_NO_ERRORS);
-        onErrorsChange?.([]);
-      } else {
-        setErrors(result.errors);
-        onErrorsChange?.(flattenErrorsToZodIssues(result.errors));
-      }
-    },
-    [onErrorsChange]
-  );
-
-  const handleSubmit = React.useCallback(() => {
-    const result = validate(value, schema, uiSchema ?? {});
-    handleValidateResult(result);
-    if (result.isValid) {
-      onSubmit?.(result.data);
-    }
-  }, [handleValidateResult, onSubmit, schema, uiSchema, value]);
-
-  const handleChange: OnChange = React.useCallback(
-    (event) => {
-      onChange?.((oldValue) => formNextValue(oldValue, event));
-    },
-    [onChange]
-  );
-
-  const onArrayRemove = React.useCallback(
-    (path: ComponentPath) => {
-      onChange?.((oldValue) => formArrayRemove(oldValue, path));
-    },
-    [onChange]
-  );
-
-  const handleUpdate = React.useCallback(
-    (updater: (value: any) => void) => {
-      onChange?.((oldValue) => {
-        const res: any = produce(oldValue, (draft: any) => {
-          updater(draft);
-        });
-        return res;
-      });
-    },
-    [onChange]
-  );
-
-  React.useEffect(() => {
-    if (liveValidate) {
-      handleValidateResult(validate(value, schema, uiSchema ?? {}));
-    }
-  }, [handleValidateResult, liveValidate, schema, uiSchema, value]);
-
-  React.useEffect(() => {
+  formMethods.watch((value) => {
     setConds(resolveNextFormConds(value, uiSchema ?? {}));
-  }, [uiSchema, value]);
+  });
 
   return (
     <form
@@ -1363,29 +1046,34 @@ function ControlledForm<Schema extends FormSchema>({
         display: 'grid',
         gap: 32
       }}
-      onSubmit={(event) => {
-        event.preventDefault();
-        handleSubmit();
+      onSubmit={(e) => {
+        formMethods.handleSubmit(
+          (data) => {
+            onSubmit?.(data);
+          },
+          (errors) => {
+            // @ts-expect-error Tests cover this
+            onError?.(mapRhfErrors(errors));
+          }
+        )(e);
       }}
     >
       {title}
 
-      <FormContextProvider
-        value={{
-          conds,
-          errors,
-          onChange: handleChange,
-          components,
-          onArrayRemove
-        }}
-      >
-        <FormContext.Provider value={{ value, update: handleUpdate }}>
-          <ZodAnyComponent uiSchema={uiSchema} value={value} schema={objectSchema} />
-        </FormContext.Provider>
-      </FormContextProvider>
+      <Rhf.FormProvider {...formMethods}>
+        <FormContextProvider
+          value={{
+            conds,
+            components
+          }}
+        >
+          <ZodAnyComponent uiSchema={uiSchema} schema={objectSchema} />
+        </FormContextProvider>
+      </Rhf.FormProvider>
 
       {children ? (
-        children({ errors: flattenErrorsToZodIssues(errors) })
+        // @ts-expect-error Tests cover this
+        children({ errors: mapRhfErrors(formMethods.formState.errors) })
       ) : (
         <button type="submit">Submit</button>
       )}

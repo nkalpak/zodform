@@ -1,15 +1,9 @@
 import React from 'react';
 import { z } from 'zod';
 import { EnumDefault } from '../components/default/enum-default';
-import { Form, FormUiSchema, useForm } from '../core/form';
-
-interface IStringDefaultProps {
-  bla: string;
-}
+import { Form, FormUiSchema } from '../core/form';
 
 export function ConferenceRegistration() {
-  const [liveValidate, setLiveValidate] = React.useState(false);
-
   const [schema] = React.useState(() =>
     z.object({
       people: z
@@ -40,7 +34,9 @@ export function ConferenceRegistration() {
 
       isAccepting: z.boolean(),
       age: z.number(),
-      future: z.date()
+      future: z.date(),
+
+      stuffs: z.array(z.string()).min(1)
     })
   );
 
@@ -50,8 +46,6 @@ export function ConferenceRegistration() {
         ui: {
           title: 'Attendee',
           Layout: ({ children, value }) => {
-            const form = useForm<typeof schema>();
-
             return (
               <div
                 style={{
@@ -60,24 +54,11 @@ export function ConferenceRegistration() {
                   gap: 12
                 }}
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    form.update((old) => {
-                      old.people![0]!.firstName = 'John';
-                      old.people![0]!.lastName = 'Doe';
-                    });
-                  }}
-                >
-                  Do
-                </button>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   {children.firstName} {children.lastName}
                 </div>
                 {children.email} {children.phoneNumber}
-                <div>
-                  Who? {form.value.amount} {value.lastName}
-                </div>
+                <div>Who? {value.lastName}</div>
               </div>
             );
           }
@@ -125,15 +106,10 @@ export function ConferenceRegistration() {
       }}
     >
       <Form
-        liveValidate={liveValidate}
         onSubmit={console.log}
         title={<h1>Conference registration</h1>}
         schema={schema}
         uiSchema={uiSchema}
-        onErrorsChange={(errors) => {
-          const isInvalid = Object.keys(errors).length > 0;
-          setLiveValidate(isInvalid);
-        }}
       >
         {() => {
           return <button type="submit">Submit</button>;
@@ -185,7 +161,7 @@ export function Register() {
               {errors.length > 0 && (
                 <ul>
                   {errors.map((error) => (
-                    <li key={error.path.join('')}>{error.message}</li>
+                    <li key={error.name}>{error.message}</li>
                   ))}
                 </ul>
               )}
