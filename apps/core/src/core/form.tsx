@@ -928,6 +928,7 @@ export interface IFormProps<Schema extends FormSchema> {
   children?: FormChildren;
   liveValidate?: boolean;
   onErrorsChange?: (errors: zod.ZodIssue[]) => void;
+  className?: string;
 }
 
 /**
@@ -1162,7 +1163,8 @@ function UncontrolledForm<Schema extends FormSchema>({
 
   children,
   liveValidate = false,
-  onErrorsChange
+  onErrorsChange,
+  className
 }: IFormProps<Schema>) {
   const objectSchema = React.useMemo(() => resolveObjectSchema(schema), [schema]);
 
@@ -1249,10 +1251,7 @@ function UncontrolledForm<Schema extends FormSchema>({
 
   return (
     <form
-      style={{
-        display: 'grid',
-        gap: 32
-      }}
+      className={className}
       onSubmit={(event) => {
         event.preventDefault();
         handleSubmit(formData);
@@ -1293,7 +1292,8 @@ function ControlledForm<Schema extends FormSchema>({
   liveValidate,
   title,
   children,
-  onSubmit
+  onSubmit,
+  className
 }: IFormProps<Schema>) {
   const [errors, setErrors] = React.useState<ErrorsMap>(STABLE_NO_ERRORS);
   const [conds, setConds] = React.useState<FormConds>(resolveNextFormConds(value, uiSchema ?? {}));
@@ -1359,10 +1359,7 @@ function ControlledForm<Schema extends FormSchema>({
 
   return (
     <form
-      style={{
-        display: 'grid',
-        gap: 32
-      }}
+      className={className}
       onSubmit={(event) => {
         event.preventDefault();
         handleSubmit();
